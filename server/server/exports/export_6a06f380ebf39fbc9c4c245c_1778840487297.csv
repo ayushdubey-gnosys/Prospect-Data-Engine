@@ -1,0 +1,11 @@
+_id,company_name,cin,industry,city,state,email,phone,website,turnover,source,tags,fileId,__v,createdAt,updatedAt
+,TechNova Solutions,U72900GJ2024PTC123456,Software,Ahmedabad,Gujarat,info@technova.com,9876543210,https://technova.com,5000000,manual,,,0,5/15/26,5/15/26
+,Skyline Marketing,U74999MH2023PTC654321,Marketing,Mumbai,Maharashtra,contact@skyline.com,9123456780,https://skyline.com,3200000,google_sheet,,,0,5/15/26,5/15/26
+,GreenLeaf Agro,U01100RJ2022PTC112233,Agriculture,Jaipur,Rajasthan,support@greenleafagro.com,9988776655,https://greenleafagro.com,7500000,mca,,,0,5/15/26,5/15/26
+,NextGen Finance,U65990DL2021PTC445566,Finance,Delhi,Delhi,hello@nextgenfinance.com,9090909090,https://nextgenfinance.com,9800000,manual,,,0,5/15/26,5/15/26
+,UrbanBuild Constructions,U45200KA2020PTC778899,Construction,Bangalore,Karnataka,admin@urbanbuild.com,9876501234,https://urbanbuild.com,15000000,google_sheet,,,0,5/15/26,5/15/26
+,Bright Future Education,U80903UP2022PTC223344,Education,Lucknow,Uttar Pradesh,info@brightfuture.com,9012345678,https://brightfuture.com,2100000,manual,,,0,5/15/26,5/15/26
+,HealthCare Plus,U85110TN2021PTC334455,Healthcare,Chennai,Tamil Nadu,contact@healthcareplus.com,9345678901,https://healthcareplus.com,12500000,mca,,,0,5/15/26,5/15/26
+,Digital World,U72900WB2020PTC556677,IT Services,Kolkata,West Bengal,sales@digitalworld.com,9871234567,https://digitalworld.com,6700000,google_sheet,,,0,5/15/26,5/15/26
+,FreshMart Retail,U52100PB2023PTC778866,Retail,Chandigarh,Punjab,help@freshmart.com,9988001122,https://freshmart.com,4300000,manual,,,0,5/15/26,5/15/26
+,BlueOcean Logistics,U63030KL2022PTC889900,Logistics,Kochi,Kerala,team@blueocean.com,9776655443,https://blueocean.com,8800000,mca,,,0,5/15/26,5/15/26

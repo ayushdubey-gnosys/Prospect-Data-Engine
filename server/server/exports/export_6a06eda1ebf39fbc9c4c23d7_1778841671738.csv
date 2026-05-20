@@ -1,0 +1,2 @@
+_id,company_name,cin,industry,city,state,email,phone,website,turnover,source,tags,fileId,__v,createdAt,updatedAt
+,EcoFarm Industries,U01110RJ2020PTC111005,Agriculture,Jaipur,Rajasthan,info@ecofarm.com,9876000005,https://ecofarm.com,3900000,google_sheet,,,0,5/15/26,5/15/26

@@ -1,0 +1,51 @@
+id,companyName,email,phone,city,state,industry,website
+1,TechNova Solutions,contact@technova.com,9876543210,Mumbai,Maharashtra,Software,httpstechnova.com
+2,BluePeak Systems,info@bluepeak.com,9876543211,Delhi,Delhi,IT Services,httpsbluepeak.com
+3,GreenLeaf Pvt Ltd,support@greenleaf.com,9876543212,Bangalore,Karnataka,Agriculture,httpsgreenleaf.com
+4,NextGen Labs,hello@nextgenlabs.com,9876543213,Hyderabad,Telangana,Biotech,httpsnextgenlabs.com
+5,UrbanBuild Infra,admin@urbanbuild.com,9876543214,Pune,Maharashtra,Construction,httpsurbanbuild.com
+6,FinEdge Capital,info@finedge.com,9876543215,Ahmedabad,Gujarat,Finance,httpsfinedge.com
+7,CloudSync Tech,team@cloudsync.com,9876543216,Chennai,Tamil Nadu,Cloud Computing,httpscloudsync.com
+8,VisionWare Solutions,sales@visionware.com,9876543217,Kolkata,West Bengal,Software,httpsvisionware.com
+9,CoreMatrix Pvt Ltd,contact@corematrix.com,9876543218,Jaipur,Rajasthan,Consulting,httpscorematrix.com
+10,PixelCraft Media,hello@pixelcraft.com,9876543219,Surat,Gujarat,Marketing,httpspixelcraft.com
+11,BrightPath Logistics,info@brightpath.com,9876543220,Nagpur,Maharashtra,Logistics,httpsbrightpath.com
+12,SecureNet Systems,support@securenet.com,9876543221,Indore,Madhya Pradesh,Cybersecurity,httpssecurenet.com
+13,AlphaBridge Tech,team@alphabridge.com,9876543222,Lucknow,Uttar Pradesh,Software,httpsalphabridge.com
+14,QuantumLeap AI,contact@quantumleap.com,9876543223,Noida,Uttar Pradesh,Artificial Intelligence,httpsquantumleap.com
+15,FutureWave Digital,hello@futurewave.com,9876543224,Gurgaon,Haryana,Digital Marketing,httpsfuturewave.com
+16,PrimeVision Healthcare,info@primevision.com,9876543225,Kochi,Kerala,Healthcare,httpsprimevision.com
+17,EcoSmart Energy,sales@ecosmart.com,9876543226,Bhopal,Madhya Pradesh,Renewable Energy,httpsecosmart.com
+18,SmartGrid Networks,admin@smartgrid.com,9876543227,Patna,Bihar,Telecom,httpssmartgrid.com
+19,DataHive Analytics,contact@datahive.com,9876543228,Kanpur,Uttar Pradesh,Data Analytics,httpsdatahive.com
+20,InnoCraft Labs,info@innocraft.com,9876543229,Chandigarh,Chandigarh,R&D,httpsinnocraft.com
+21,NovaEdge Retail,support@novaedge.com,9876543230,Vadodara,Gujarat,Retail,httpsnovaedge.com
+22,Skyline Ventures,hello@skyline.com,9876543231,Visakhapatnam,Andhra Pradesh,Investment,httpsskyline.com
+23,BrightByte Solutions,contact@brightbyte.com,9876543232,Coimbatore,Tamil Nadu,Software,httpsbrightbyte.com
+24,EliteCore Industries,info@elitecore.com,9876543233,Nashik,Maharashtra,Manufacturing,httpselitecore.com
+25,OrbitX Technologies,sales@orbitx.com,9876543234,Rajkot,Gujarat,IT Services,httpsorbitx.com
+26,HexaFusion Labs,team@hexafusion.com,9876543235,Thane,Maharashtra,AI Research,httpshexafusion.com
+27,SilverLine Exports,admin@silverline.com,9876543236,Ludhiana,Punjab,Exports,httpssilverline.com
+28,ApexNova Pvt Ltd,contact@apexnova.com,9876543237,Amritsar,Punjab,Consulting,httpsapexnova.com
+29,CodeSphere Systems,info@codesphere.com,9876543238,Mysore,Karnataka,Software,httpscodesphere.com
+30,Vertex Dynamics,support@vertex.com,9876543239,Ranchi,Jharkhand,Engineering,httpsvertex.com
+31,RapidFlow Logistics,team@rapidflow.com,9876543240,Guwahati,Assam,Logistics,httpsrapidflow.com
+32,ZenithWave Media,hello@zenithwave.com,9876543241,Dehradun,Uttarakhand,Media,httpszenithwave.com
+33,ClearMind Solutions,contact@clearmind.com,9876543242,Shimla,Himachal Pradesh,Consulting,httpsclearmind.com
+34,VisionNext AI,info@visionnext.com,9876543243,Jodhpur,Rajasthan,Artificial Intelligence,httpsvisionnext.com
+35,InfinityWorks Tech,sales@infinityworks.com,9876543244,Udaipur,Rajasthan,Software,httpsinfinityworks.com
+36,HyperNova Systems,team@hypernova.com,9876543245,Agra,Uttar Pradesh,Cybersecurity,httpshypernova.com
+37,TrueAxis Finance,admin@trueaxis.com,9876543246,Meerut,Uttar Pradesh,Finance,httpstrueaxis.com
+38,BlueOrbit Healthcare,contact@blueorbit.com,9876543247,Raipur,Chhattisgarh,Healthcare,httpsblueorbit.com
+39,FutureNest Realty,info@futurenest.com,9876543248,Bhubaneswar,Odisha,Real Estate,httpsfuturenest.com
+40,LogicCore Analytics,support@logiccore.com,9876543249,Srinagar,Jammu and Kashmir,Analytics,httpslogiccore.com
+41,MetaFusion Digital,hello@metafusion.com,9876543250,Goa,Goa,Marketing,httpsmetafusion.com
+42,SmartVision Retail,contact@smartvision.com,9876543251,Varanasi,Uttar Pradesh,Retail,httpssmartvision.com
+43,AlphaNest Systems,info@alphanest.com,9876543252,Gwalior,Madhya Pradesh,IT Services,httpsalphanest.com
+44,ByteBridge Technologies,sales@bytebridge.com,9876543253,Jabalpur,Madhya Pradesh,Software,httpsbytebridge.com
+45,NeoCraft Industries,team@neocraft.com,9876543254,Salem,Tamil Nadu,Manufacturing,httpsneocraft.com
+46,FutureLink Telecom,admin@futurelink.com,9876543255,Tirupati,Andhra Pradesh,Telecom,httpsfuturelink.com
+47,UrbanPulse Media,contact@urbanpulse.com,9876543256,Warangal,Telangana,Media,httpsurbanpulse.com
+48,AeroSync Technologies,info@aerosync.com,9876543257,Belgaum,Karnataka,Aerospace,httpsaerosync.com
+49,PrimeCore Ventures,support@primecore.com,9876543258,Hubli,Karnataka,Investment,httpsprimecore.com
+50,NextOrbit Solutions,hello@nextorbit.com,9876543259,Faridabad,Haryana,Software,httpsnextorbit.com
