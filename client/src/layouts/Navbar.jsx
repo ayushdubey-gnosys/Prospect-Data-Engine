@@ -1,14 +1,18 @@
 import React from 'react';
-import { LogOut, User as UserIcon } from 'lucide-react';
+import { LogOut, User as UserIcon, Terminal } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import api from '../api/axios';
 import { queryClient } from '../api/queryClient';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const Navbar = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Route path parsing for clean visibility breadcrumb
+  const currentPath = location.pathname.split('/').filter(Boolean)[0] || 'overview';
 
   const handleLogout = async () => {
     try {
@@ -22,24 +26,54 @@ const Navbar = () => {
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
-      <div className="flex items-center space-x-4">
-        {/* Placeholder for future breadcrumbs or title */}
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm select-none">
+
+      {/* Semi-Bold System Navigation Trace */}
+      <div className="flex items-center space-x-3 text-sm">
+        <Terminal className="h-4 w-4 text-slate-800" />
+        <span className="font-semibold text-slate-900 tracking-wider uppercase text-xs">
+          Industrial Data Node
+        </span>
+        <span className="text-slate-300 font-semibold">/</span>
+        <span className="bg-slate-900 text-white font-mono font-semibold px-2 py-0.5 rounded text-xs tracking-wide">
+          {currentPath}
+        </span>
       </div>
+
+      {/* Operator Credentials & Actions */}
       <div className="flex items-center space-x-6">
-        <div className="flex items-center space-x-2 text-sm text-gray-700">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+
+        {/* User Operator Identity Box - Semi-Bold Contrast */}
+        <div className="flex items-center space-x-3 border-r border-slate-200 pr-6">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm">
             <UserIcon className="h-4 w-4" />
           </div>
-          <span className="font-medium">{user?.name || 'User'}</span>
+
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-slate-900 leading-tight">
+              {user?.name || 'Operator Identity'}
+            </span>
+            <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mt-1">
+              {user?.role || 'Access Guest'}
+            </span>
+          </div>
         </div>
+
+        {/* Semi-Bold Action Trigger */}
         <button
           onClick={handleLogout}
-          className="flex items-center text-sm font-medium text-gray-500 hover:text-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md p-1"
+          className="
+            flex items-center text-sm font-semibold text-slate-700 
+            hover:text-red-700 bg-slate-50 hover:bg-red-50 
+            border border-slate-200 hover:border-red-200 
+            rounded-lg px-3 py-1.5 transition-all duration-150 
+            focus:outline-none focus:ring-2 focus:ring-red-500
+          "
         >
-          <LogOut className="h-5 w-5 mr-1" />
-          Logout
+          <LogOut className="h-4 w-4 mr-2 text-slate-500 group-hover:text-red-700 shrink-0" />
+          Disconnect
         </button>
+
       </div>
     </header>
   );

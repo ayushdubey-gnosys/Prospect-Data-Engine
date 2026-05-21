@@ -20,26 +20,47 @@ const exportCompanies = async (req, res) => {
     // Fetch all companies matching filters (excluding tags for simplicity or map them)
     const companies = await Company.find(filters).populate("tags").lean();
 
-    // Map companies to a flat structure for Excel
-    const rows = companies.map(c => ({
-      "Company Name": c.company_name || "",
-      "City": c.city || "",
-      "Country": c.country || "",
-      "Industry": c.industry || "",
-      "Phone": c.phone || "",
-      "Website": c.website || "",
-      "Social Media": c.socialMedia || "",
-      "Company Owner": c.companyOwnerName || "",
-      "Turnover": c.turnover || "",
-      "Source": c.source || "",
-      "Tags": c.tags ? c.tags.map(t => t.name).join(", ") : "",
-      "Employee Contacts": c.contacts && c.contacts.length > 0 
-        ? c.contacts.map(con => `${con.name || ""} (${con.position || ""} - ${con.contactNumber || ""}${con.email ? `, ${con.email}` : ""})`).join("; ")
-        : "",
-    }));
+    let selectedColumns = null;
+    if (req.query.columns) {
+      selectedColumns = req.query.columns.split(",");
+    }
 
-    const fileName = `companies_export_${Date.now()}.xlsx`;
-    const outPath = exportService.exportToExcel(rows, fileName);
+    // Map companies to a flat structure for Excel/CSV
+    const rows = companies.map(c => {
+      const row = {};
+      const addField = (colName, value) => {
+        if (!selectedColumns || selectedColumns.includes(colName)) {
+          row[colName] = value;
+        }
+      };
+
+      addField("Company Name", c.company_name || "");
+      addField("City", c.city || "");
+      addField("Country", c.country || "");
+      addField("Industry", c.industry || "");
+      addField("Phone", c.phone || "");
+      addField("Website", c.website || "");
+      addField("Social Media", c.socialMedia || "");
+      addField("Company Owner", c.companyOwnerName || "");
+      addField("Turnover", c.turnover || "");
+      addField("Source", c.source || "");
+      addField("Tags", c.tags ? c.tags.map(t => t.name).join(", ") : "");
+      addField("Employee Contacts", c.contacts && c.contacts.length > 0 
+        ? c.contacts.map(con => `${con.name || ""} (${con.position || ""} - ${con.contactNumber || ""}${con.email ? `, ${con.email}` : ""})`).join("; ")
+        : "");
+
+      return row;
+    });
+
+    const format = req.query.format || "xlsx";
+    const fileName = `companies_export_${Date.now()}.${format}`;
+    let outPath;
+    
+    if (format === "csv") {
+      outPath = exportService.exportToCSV(rows, fileName);
+    } else {
+      outPath = exportService.exportToExcel(rows, fileName);
+    }
     
     // Create export history
     const ExportHistory = require("../../models/exportHistory.model");

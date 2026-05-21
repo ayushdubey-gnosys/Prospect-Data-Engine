@@ -9,9 +9,11 @@ import RegisterPage from '../features/auth/pages/RegisterPage';
 import DashboardPage from '../features/dashboard/pages/DashboardPage';
 import CompaniesPage from '../features/companies/pages/CompaniesPage';
 import FileDetailsPage from '../features/files/pages/FileDetailsPage';
+import UploadedFilesPage from '../features/files/pages/UploadedFilesPage';
 import ImportPage from '../features/import/pages/ImportPage';
 import ExportPage from '../features/export/pages/ExportPage';
 import TagsPage from '../features/tags/pages/TagsPage';
+import UsersPage from '../features/dashboard/pages/UsersPage';
 import ProfilePage from '../features/profile/pages/ProfilePage';
 
 const AppRoutes = () => {
@@ -32,6 +34,7 @@ const AppRoutes = () => {
       >
         <Route index element={<DashboardPage />} />
         <Route path="companies" element={<CompaniesPage />} />
+        <Route path="uploaded-files" element={<UploadedFilesPage />} />
         <Route path="files/:fileId" element={<FileDetailsPage />} />
         <Route
           path="import"
@@ -54,6 +57,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={['admin', 'sales']}>
               <TagsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="users"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <UsersPage />
             </ProtectedRoute>
           }
         />

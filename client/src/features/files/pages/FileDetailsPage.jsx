@@ -10,6 +10,7 @@ import FilterSidebar from '../components/FilterSidebar';
 import FileCompaniesTable from '../components/FileCompaniesTable';
 import api from '../../../api/axios';
 import { toast } from 'react-toastify';
+import ExportConfigModal from '../../../components/ui/ExportConfigModal';
 
 const FileDetailsPage = () => {
   const { fileId } = useParams();
@@ -28,6 +29,7 @@ const FileDetailsPage = () => {
 
   const { data: countriesData } = useCountries(fileId);
   const countries = countriesData || [];
+  
 
   const { data, isLoading, refetch } = useFileCompanies(fileId, filters);
 
@@ -36,31 +38,45 @@ const FileDetailsPage = () => {
   }, [filters]);
 
   const exportMutation = useExport();
+  const [isExporting, setIsExporting] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const handleReset = () => setFilters({ page: 1, limit: 25, city: '', industry: '', country: '', search: '' });
 
-  const handleExport = async () => {
+  const handleExport = () => {
+    setIsExportModalOpen(true);
+  };
+
+  const handleConfirmExport = async (selectedColumns, format) => {
     try {
+      setIsExporting(true);
       const params = {};
       if (filters.city) params.city = filters.city;
       if (filters.industry) params.industry = filters.industry;
       if (filters.country) params.country = filters.country;
       if (filters.search) params.search = filters.search;
-      // default to CSV
-      params.format = 'csv';
+      params.format = format;
+      params.columns = selectedColumns.join(',');
 
       const res = await api.get(`/files/${fileId}/export?${new URLSearchParams(params).toString()}`, { responseType: 'blob' });
-      const blob = new Blob([res.data]);
+      const blob = new Blob([res.data], {
+        type: format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `export_${fileId}.csv`;
+      a.download = `export_${fileId}.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+
+      setIsExportModalOpen(false);
+      toast.success(`${format === 'csv' ? 'CSV' : 'Excel'} Export Successful`);
     } catch (err) {
       toast.error('Export failed');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -80,7 +96,7 @@ const FileDetailsPage = () => {
           setFilters={setFilters}
           onReset={handleReset}
           onExport={handleExport}
-          isExporting={exportMutation.isLoading}
+          isExporting={isExporting}
           canExport={canExport}
         />
       </div>
@@ -109,6 +125,14 @@ const FileDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      <ExportConfigModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onConfirm={handleConfirmExport}
+        isExporting={isExporting}
+        defaultFormat="csv"
+      />
     </div>
   );
 };

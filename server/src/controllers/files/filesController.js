@@ -68,27 +68,41 @@ const getFileCountries = async (req, res, next) => {
 const filterAndExport = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { city, industry, country, search, format = "csv" } = req.query;
+    const { city, industry, country, search, format = "csv", columns } = req.query;
 
     const query = companyService.buildFilterQuery({ fileId: id, city, industry, country, search });
     const companies = await Company.find(query).populate("tags").lean();
 
-    const rows = companies.map(c => ({
-      "Company Name": c.company_name || "",
-      "City": c.city || "",
-      "Country": c.country || "",
-      "Industry": c.industry || "",
-      "Phone": c.phone || "",
-      "Website": c.website || "",
-      "Social Media": c.socialMedia || "",
-      "Company Owner": c.companyOwnerName || "",
-      "Turnover": c.turnover || "",
-      "Source": c.source || "",
-      "Tags": c.tags ? c.tags.map(t => t.name).join(", ") : "",
-      "Employee Contacts": c.contacts && c.contacts.length > 0 
+    let selectedColumns = null;
+    if (columns) {
+      selectedColumns = columns.split(",");
+    }
+
+    const rows = companies.map(c => {
+      const row = {};
+      const addField = (colName, value) => {
+        if (!selectedColumns || selectedColumns.includes(colName)) {
+          row[colName] = value;
+        }
+      };
+
+      addField("Company Name", c.company_name || "");
+      addField("City", c.city || "");
+      addField("Country", c.country || "");
+      addField("Industry", c.industry || "");
+      addField("Phone", c.phone || "");
+      addField("Website", c.website || "");
+      addField("Social Media", c.socialMedia || "");
+      addField("Company Owner", c.companyOwnerName || "");
+      addField("Turnover", c.turnover || "");
+      addField("Source", c.source || "");
+      addField("Tags", c.tags ? c.tags.map(t => t.name).join(", ") : "");
+      addField("Employee Contacts", c.contacts && c.contacts.length > 0 
         ? c.contacts.map(con => `${con.name || ""} (${con.position || ""} - ${con.contactNumber || ""}${con.email ? `, ${con.email}` : ""})`).join("; ")
-        : "",
-    }));
+        : "");
+
+      return row;
+    });
 
     if (format === "xlsx" || format === "excel") {
       const outPath = exportService.exportToExcel(rows, `export_${id}_${Date.now()}.xlsx`);

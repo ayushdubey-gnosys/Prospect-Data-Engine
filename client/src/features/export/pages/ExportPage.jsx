@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import api from '../../../api/axios';
 import Button from '../../../components/ui/Button';
 import Table from '../../../components/ui/Table';
+import ExportConfigModal from '../../../components/ui/ExportConfigModal';
 
 const ExportPage = () => {
   const [filters, setFilters] = useState({
@@ -14,6 +15,7 @@ const ExportPage = () => {
   });
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Fetch countries list for filters
   const { data: countriesList = [] } = useQuery({
@@ -52,35 +54,42 @@ const ExportPage = () => {
     queryFn: () => api.get('/export/history').then((res) => res.data),
   });
 
-  const handleExport = async () => {
+  const handleExport = () => {
+    setIsExportModalOpen(true);
+  };
+
+  const handleConfirmExport = async (selectedColumns, format) => {
     try {
       setIsExporting(true);
       const queryParams = new URLSearchParams();
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.city) queryParams.append('city', filters.city);
       if (filters.industry) queryParams.append('industry', filters.industry);
+      queryParams.append('columns', selectedColumns.join(','));
+      queryParams.append('format', format);
 
       const response = await api.get(`/export/companies?${queryParams.toString()}`, {
         responseType: 'blob',
       });
 
       const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        type: format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `companies_export_${Date.now()}.xlsx`);
+      link.setAttribute('download', `companies_export_${Date.now()}.${format}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.success('Excel Export Successful');
+      toast.success(`${format === 'csv' ? 'CSV' : 'Excel'} Export Successful`);
+      setIsExportModalOpen(false);
       refetchHistory();
     } catch (error) {
       console.error(error);
-      toast.error('Excel Export Failed');
+      toast.error('Export Failed');
     } finally {
       setIsExporting(false);
     }
@@ -284,6 +293,14 @@ const ExportPage = () => {
           emptyMessage="No export logs found."
         />
       </div>
+
+      <ExportConfigModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onConfirm={handleConfirmExport}
+        isExporting={isExporting}
+        defaultFormat="xlsx"
+      />
     </div>
   );
 };

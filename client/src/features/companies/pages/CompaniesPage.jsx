@@ -8,6 +8,8 @@ import Button from '../../../components/ui/Button';
 import CreateCompanyModal from '../components/CreateCompanyModal';
 import TagAssignmentModal from '../components/TagAssignmentModal';
 import CompanyDetailsModal from '../components/CompanyDetailsModal';
+import ExportConfigModal from '../../../components/ui/ExportConfigModal';
+import { toast } from 'react-toastify';
 
 const fetchCompanies = async (searchParams, page = 1) => {
   const query = new URLSearchParams();
@@ -52,6 +54,9 @@ const CompaniesPage = () => {
     industry: '',
     country: '',
   });
+
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleOpenDetails = (id) => {
     setSelectedCompanyId(id);
@@ -128,13 +133,43 @@ const CompaniesPage = () => {
   // Export Handler
   // =========================
   const handleExport = () => {
-    const query = new URLSearchParams();
-    if (activeFilters.city) query.append('city', activeFilters.city);
-    if (activeFilters.industry) query.append('industry', activeFilters.industry);
-    if (activeFilters.country) query.append('country', activeFilters.country);
+    setIsExportModalOpen(true);
+  };
 
-    const url = `http://localhost:3000/api/export/companies${query.toString() ? `?${query.toString()}` : ''}`;
-    window.open(url, '_blank');
+  const handleConfirmExport = async (selectedColumns, format) => {
+    try {
+      setIsExporting(true);
+      const query = new URLSearchParams();
+      if (activeFilters.city) query.append('city', activeFilters.city);
+      if (activeFilters.industry) query.append('industry', activeFilters.industry);
+      if (activeFilters.country) query.append('country', activeFilters.country);
+      query.append('columns', selectedColumns.join(','));
+      query.append('format', format);
+
+      const response = await api.get(`/export/companies?${query.toString()}`, {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], {
+        type: format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `companies_export_${Date.now()}.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setIsExportModalOpen(false);
+      toast.success('Export Successful');
+    } catch (error) {
+      console.error(error);
+      toast.error('Export Failed');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // =========================
@@ -704,6 +739,17 @@ const CompaniesPage = () => {
           setIsDetailsOpen(false);
           handleOpenTagAssignment([company._id], company.tags);
         }}
+      />
+
+      {/* =========================
+          Export Column Select Modal
+      ========================== */}
+      <ExportConfigModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onConfirm={handleConfirmExport}
+        isExporting={isExporting}
+        defaultFormat="xlsx"
       />
     </div>
   );
