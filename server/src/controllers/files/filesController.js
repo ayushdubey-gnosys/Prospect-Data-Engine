@@ -14,11 +14,21 @@ const getAllFiles = async (req, res, next) => {
 
     if (userId) {
       query.uploadedBy = userId;
-    } else if (req.user && req.user.role !== "admin" && req.user.role !== "superadmin") {
-      // Filter by users in the same role PLUS admin/superadmin for non-admins
+    } else if (req.user && req.user.role !== "admin" && req.user.role !== "superadmin" && req.user.role !== "marketing") {
       const User = require("../../models/user.model");
-      const roleUsers = await User.find({ role: { $in: [req.user.role, "admin", "superadmin"] } }).select("_id");
-      query.uploadedBy = { $in: roleUsers.map((u) => u._id) };
+      // Ensure the current user always sees their own uploaded files, and also
+      // include files uploaded by users in the same role (case-insensitive)
+      // plus admin/superadmin accounts.
+      const roleUsers = await User.find({
+        $or: [
+          { role: new RegExp(`^${req.user.role}$`, "i") },
+          { role: /admin/i },
+          { role: /superadmin/i },
+        ],
+      }).select("_id");
+
+      const roleUserIds = roleUsers.map((u) => u._id);
+      query.$or = [{ uploadedBy: req.user._id }, { uploadedBy: { $in: roleUserIds } }];
     }
 
     const total = await UploadedFile.countDocuments(query);

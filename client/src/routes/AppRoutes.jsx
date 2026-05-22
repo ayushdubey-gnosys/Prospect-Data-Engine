@@ -34,7 +34,7 @@ const AppRoutes = () => {
       >
         <Route index element={<DashboardPage />} />
         <Route path="companies" element={<CompaniesPage />} />
-        <Route path="uploaded-files" element={<UploadedFilesPage />} />
+        <Route path="uploaded-files" element={<ProtectedRoute allowedRoles={['admin', 'sales', "marketing"]}><UploadedFilesPage /></ProtectedRoute>} />
         <Route path="files/:fileId" element={<FileDetailsPage />} />
         <Route
           path="import"

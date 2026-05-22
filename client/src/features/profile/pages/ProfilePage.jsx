@@ -1,51 +1,131 @@
-import React from 'react';
-import { useAuth } from '../../../hooks/useAuth';
-import { User, Mail, Calendar } from 'lucide-react';
+import React from "react";
+import { useAuth } from "../../../hooks/useAuth";
+import { User, Mail, Calendar, Shield, Copy } from "lucide-react";
+import { toast } from "react-toastify";
 
 const ProfilePage = () => {
   const { user } = useAuth();
 
+  const getInitials = (name) => {
+    if (!name) return "U";
+
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const handleCopyEmail = () => {
+    if (user?.email) {
+      navigator.clipboard.writeText(user.email);
+      toast.success("Email copied");
+    }
+  };
+
+  const formattedDate = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "N/A";
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">User Profile</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your account details.</p>
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-medium text-gray-900">Profile</h1>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Manage your account information
+        </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden max-w-2xl">
-        <div className="h-32 bg-gradient-to-r from-blue-500 to-blue-600"></div>
-        <div className="px-8 pb-8">
-          <div className="relative flex justify-between items-end -mt-12 mb-6">
-            <div className="w-24 h-24 bg-white rounded-full p-2 shadow-lg">
-              <div className="w-full h-full bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                <User className="w-10 h-10" />
+      {/* Main Card */}
+      <div className="bg-white border border-gray-200 shadow-xl shadow-gray-400/50 rounded-2xl overflow-hidden">
+        {/* Top Section */}
+        <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-5">
+          {/* Avatar */}
+          <div className="w-16 h-16 rounded-2xl bg-gray-900 text-white flex items-center justify-center text-lg font-medium">
+            {getInitials(user?.name)}
+          </div>
+
+          {/* User Info */}
+          <div className="space-y-2">
+            <h2 className="text-xl font-medium text-gray-900">
+              {user?.name || "Unknown User"}
+            </h2>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-100 text-gray-700 text-sm font-normal">
+                <Shield className="w-4 h-4" />
+                {user?.role || "User"}
+              </div>
+
+              <div className="px-3 py-1 rounded-lg bg-gray-100 text-gray-700 text-sm font-normal">
+                Active
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Details */}
+        <div className="divide-y divide-gray-100">
+          {/* Name */}
+          <div className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <User className="w-4 h-4 text-gray-500" />
+
+              <div>
+                <p className="text-sm text-gray-500">Full Name</p>
+
+                <p className="text-sm font-normal text-gray-900 mt-1">
+                  {user?.name || "N/A"}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{user?.name || 'Unknown User'}</h2>
-              <p className="text-gray-500">Administrator</p>
+          {/* Email */}
+          <div className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Mail className="w-4 h-4 text-gray-500" />
+
+              <div>
+                <p className="text-sm text-gray-500">Email Address</p>
+
+                <p className="text-sm font-normal text-gray-900 mt-1 break-all">
+                  {user?.email || "N/A"}
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
-              <div className="flex items-start space-x-3">
-                <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Email Address</p>
-                  <p className="text-gray-900">{user?.email || 'N/A'}</p>
+            {user?.email && (
+              <button
+                onClick={handleCopyEmail}
+                className="h-9 px-4 border border-gray-200 rounded-lg text-sm font-normal text-gray-700 hover:bg-gray-50 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <Copy className="w-4 h-4" />
+                  Copy
                 </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Member Since</p>
-                  <p className="text-gray-900">
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
+              </button>
+            )}
+          </div>
+
+          {/* Member Since */}
+          <div className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-4 h-4 text-gray-500" />
+
+              <div>
+                <p className="text-sm text-gray-500">Member Since</p>
+
+                <p className="text-sm font-normal text-gray-900 mt-1">
+                  {formattedDate}
+                </p>
               </div>
             </div>
           </div>

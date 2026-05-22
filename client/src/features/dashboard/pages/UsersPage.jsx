@@ -7,152 +7,258 @@ import { toast } from 'react-toastify';
 
 const UsersPage = () => {
   const { user: authUser } = useAuth();
+
   const isAdmin = authUser?.role === 'admin';
 
-  // Fetch users list
-  const { data: users = [], isLoading, refetch: refetchUsers } = useQuery({
+  // Fetch Users
+  const {
+    data: users = [],
+    isLoading,
+    refetch: refetchUsers,
+  } = useQuery({
     queryKey: ['users'],
-    queryFn: () => api.get('/users').then((res) => res.data.data || []),
+    queryFn: () =>
+      api.get('/users').then((res) => res.data.data || []),
     enabled: isAdmin,
   });
 
-  // Mutate user role
+  // Update Role
   const handleUpdateRole = async (userId, newRole) => {
     try {
       await api.put(`/users/${userId}`, { role: newRole });
-      toast.success('User role updated successfully');
+
+      toast.success('User role updated');
+
       refetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update user role');
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to update role'
+      );
     }
   };
 
-  // Delete user
+  // Delete User
   const handleDeleteUser = async (userId) => {
     if (userId === authUser?._id) {
-      toast.error('You cannot delete your own admin account');
+      toast.error('You cannot delete yourself');
       return;
     }
-    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return;
-    }
+
+    if (!window.confirm('Delete this user?')) return;
+
     try {
       await api.delete(`/users/${userId}`);
-      toast.success('User deleted successfully');
+
+      toast.success('User deleted');
+
       refetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete user');
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to delete user'
+      );
     }
   };
 
+  // User Initials
+  const getInitials = (name) => {
+    if (!name) return 'U';
+
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Access Denied
   if (!isAdmin) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
-        <div className="p-4 bg-red-50 rounded-full text-red-650 mb-4 animate-bounce">
-          <ShieldAlert className="w-12 h-12" />
+      <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+          <ShieldAlert className="w-8 h-8 text-gray-600" />
         </div>
-        <h2 className="text-xl font-bold text-gray-800">Access Denied</h2>
-        <p className="text-gray-500 mt-2 max-w-md">You do not have the necessary permissions to access system user management. Only administrators can view this page.</p>
+
+        <h2 className="text-xl font-medium text-gray-900">
+          Access Denied
+        </h2>
+
+        <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+          Only administrators can access this page.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6">
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2.5">
-            <Users className="w-7 h-7 text-indigo-600" />
-            User Management
+          <h1 className="text-2xl font-medium text-gray-900 flex items-center gap-2">
+            <Users className="w-6 h-6 text-gray-700" />
+            Users
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage system user privileges, roles, and platform access.</p>
+
+          <p className="text-sm text-gray-500 mt-1">
+            Manage platform users and roles
+          </p>
         </div>
-        <div className="text-sm text-gray-600 font-semibold bg-indigo-50/50 text-indigo-700 px-4 py-2 rounded-xl border border-indigo-100/50 shrink-0">
-          Total Registered Users: {isLoading ? '...' : users.length}
+
+        <div className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-600">
+          Total Users : {isLoading ? '...' : users.length}
         </div>
+
       </div>
 
-      {/* Main Table Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Table Card */}
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+
         {isLoading ? (
-          <div className="p-12 text-center text-gray-500 text-sm">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-650 mx-auto mb-4"></div>
-            Loading platform users...
+          <div className="p-10 text-center text-sm text-gray-500">
+            Loading users...
+          </div>
+        ) : users.length === 0 ? (
+          <div className="p-10 text-center text-sm text-gray-500">
+            No users found
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-left">
-              <thead className="bg-gray-50/75">
+
+            <table className="min-w-full">
+
+              {/* Table Head */}
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th scope="col" className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                  <th scope="col" className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email Address</th>
-                  <th scope="col" className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Access Role</th>
-                  <th scope="col" className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined Date</th>
-                  <th scope="col" className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                    User
+                  </th>
+
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                    Email
+                  </th>
+
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                    Role
+                  </th>
+
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
+                    Joined
+                  </th>
+
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase">
+                    Action
+                  </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {users.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500 text-sm">
-                      No system users found.
-                    </td>
-                  </tr>
-                ) : (
-                  users.map((u) => (
-                    <tr key={u._id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm border border-indigo-100">
-                          {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
+
+              {/* Table Body */}
+              <tbody className="divide-y divide-gray-100">
+
+                {users.map((u) => (
+                  <tr
+                    key={u._id}
+                    className="hover:bg-gray-50 transition"
+                  >
+
+                    {/* User */}
+                    <td className="px-6 py-4">
+
+                      <div className="flex items-center gap-3">
+
+                        <div className="w-10 h-10 rounded-xl bg-gray-900 text-white flex items-center justify-center text-sm font-medium">
+                          {getInitials(u.name)}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-gray-950 flex items-center gap-1.5">
+
+                        <div>
+                          <p className="text-sm font-normal text-gray-900">
                             {u.name || 'Unnamed'}
-                            {u._id === authUser?._id && (
-                              <span className="px-2 py-0.5 text-[9px] font-bold bg-indigo-100 text-indigo-800 rounded-full border border-indigo-200">
-                                You
-                              </span>
-                            )}
-                          </span>
+                          </p>
+
+                          {u._id === authUser?._id && (
+                            <span className="text-xs text-gray-500">
+                              You
+                            </span>
+                          )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">{u.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <select
-                          value={u.role}
-                          onChange={(e) => handleUpdateRole(u._id, e.target.value)}
-                          className="rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700 focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 shadow-sm"
-                        >
-                          <option value="admin">Admin</option>
-                          <option value="sales">Sales</option>
-                          <option value="marketing">Marketing</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(u.createdAt).toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                        <button
-                          onClick={() => handleDeleteUser(u._id)}
-                          disabled={u._id === authUser?._id}
-                          className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-lg disabled:opacity-30 disabled:pointer-events-none transition-colors border border-transparent hover:border-red-100"
-                          title={u._id === authUser?._id ? "You cannot delete yourself" : "Delete User"}
-                        >
-                          <Trash2 className="w-4 h-4 inline" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+
+                      </div>
+
+                    </td>
+
+                    {/* Email */}
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {u.email}
+                    </td>
+
+                    {/* Role */}
+                    <td className="px-6 py-4">
+
+                      <select
+                        value={u.role}
+                        onChange={(e) =>
+                          handleUpdateRole(
+                            u._id,
+                            e.target.value
+                          )
+                        }
+                        className="h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none focus:border-gray-400"
+                      >
+                        <option value="admin">
+                          Admin
+                        </option>
+
+                        <option value="sales">
+                          Sales
+                        </option>
+
+                        <option value="marketing">
+                          Marketing
+                        </option>
+                      </select>
+
+                    </td>
+
+                    {/* Joined */}
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {new Date(
+                        u.createdAt
+                      ).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </td>
+
+                    {/* Action */}
+                    <td className="px-6 py-4 text-right">
+
+                      <button
+                        onClick={() =>
+                          handleDeleteUser(u._id)
+                        }
+                        disabled={u._id === authUser?._id}
+                        className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed ml-auto"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+
+                    </td>
+
+                  </tr>
+                ))}
+
               </tbody>
+
             </table>
+
           </div>
         )}
+
       </div>
     </div>
   );
