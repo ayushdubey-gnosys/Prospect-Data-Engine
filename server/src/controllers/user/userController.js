@@ -62,8 +62,26 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+const getUsersForFilter = async (req, res, next) => {
+  try {
+    const userRole = req.user.role;
+    let query = {};
+
+    const targetRole = req.query.targetRole || userRole;
+    
+    // Everyone should see the target role (or their own role) PLUS admin and superadmin
+    query.role = { $in: [targetRole, "admin", "superadmin"] };
+
+    const users = await User.find(query).select("name email role _id").sort({ name: 1 });
+    res.json({ success: true, data: users });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllUsers,
   updateUser,
   deleteUser,
+  getUsersForFilter,
 };

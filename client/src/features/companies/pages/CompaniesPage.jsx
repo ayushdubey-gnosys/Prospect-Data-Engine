@@ -11,14 +11,14 @@ import CompanyDetailsModal from '../components/CompanyDetailsModal';
 import ExportConfigModal from '../../../components/ui/ExportConfigModal';
 import { toast } from 'react-toastify';
 
-const fetchCompanies = async (searchParams, page = 1) => {
+const fetchCompanies = async (searchParams, page = 1, limit = 10) => {
   const query = new URLSearchParams();
 
   if (searchParams.city) query.append('city', searchParams.city);
   if (searchParams.industry) query.append('industry', searchParams.industry);
   if (searchParams.country) query.append('country', searchParams.country);
   query.append('page', page);
-  query.append('limit', 10);
+  query.append('limit', limit);
 
   const response = await api.get(`/company?${query.toString()}`);
 
@@ -110,6 +110,7 @@ const CompaniesPage = () => {
   // Fetch Companies
   // =========================
   const [page, setPage] = useState(1);
+  const [limitPerPage, setLimitPerPage] = useState(10);
 
   // Reset page when search filters change
   const handleSearch = (e) => {
@@ -120,8 +121,8 @@ const CompaniesPage = () => {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ['companies', activeFilters, page],
-    queryFn: () => fetchCompanies(activeFilters, page),
+    queryKey: ['companies', activeFilters, page, limitPerPage],
+    queryFn: () => fetchCompanies(activeFilters, page, limitPerPage),
   });
 
   const companies = data?.companies || [];
@@ -638,10 +639,29 @@ const CompaniesPage = () => {
         {/* Pagination Footer */}
         {total > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-t border-gray-100">
-            <div className="text-xs sm:text-sm text-gray-500 font-medium">
-              Showing <span className="font-semibold text-gray-700">{Math.min((page - 1) * limit + 1, total)}</span> to{" "}
-              <span className="font-semibold text-gray-700">{Math.min(page * limit, total)}</span> of{" "}
-              <span className="font-semibold text-gray-700">{total}</span> companies
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="text-xs sm:text-sm text-gray-500 font-medium">
+                Showing <span className="font-semibold text-gray-700">{limit === 'all' ? 1 : Math.min((page - 1) * limit + 1, total)}</span> to{" "}
+                <span className="font-semibold text-gray-700">{limit === 'all' ? total : Math.min(page * limit, total)}</span> of{" "}
+                <span className="font-semibold text-gray-700">{total}</span> companies
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm text-gray-500 font-medium">Rows per page:</span>
+                <select
+                  className="border border-gray-300 rounded-md p-1 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer"
+                  value={limitPerPage}
+                  onChange={(e) => {
+                    const val = e.target.value === 'all' ? 'all' : Number(e.target.value);
+                    setLimitPerPage(val);
+                    setPage(1);
+                  }}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value="all">View All</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center gap-1.5">

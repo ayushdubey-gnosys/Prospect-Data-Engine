@@ -17,7 +17,7 @@ import {
   Cpu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useFiles } from '../../files/hooks/useFiles';
+
 import { useAuth } from '../../../hooks/useAuth';
 
 const StatCard = ({
@@ -74,8 +74,6 @@ const DashboardPage = () => {
     queryFn: () => api.get('/company/stats').then((res) => res.data),
   });
 
-  const { data: filesData, isLoading: filesLoading } = useFiles();
-  const recentFiles = filesData?.slice(0, 5) || [];
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] p-6 lg:p-8 font-sans antialiased text-slate-900">
@@ -220,100 +218,7 @@ const DashboardPage = () => {
         />
       </div>
 
-      {/* Structured File Transmissions Ledger */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-          <div>
-            <h2 className="text-xs font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-indigo-600" /> Recent Asset Pipeline Transmissions
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Sequence ledger of parsed binary spreadsheet layers handled by the ingestion broker.
-            </p>
-          </div>
 
-          <button
-            onClick={() => navigate('/uploaded-files')}
-            className="px-3 py-1.5 rounded border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors duration-150 shadow-sm"
-          >
-            Explore File Vault
-          </button>
-        </div>
-
-        <div className="p-6">
-          {filesLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-5 h-5 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin" />
-            </div>
-          ) : recentFiles.length === 0 ? (
-            <div className="text-center py-16 border border-dashed border-slate-200 rounded-xl bg-slate-50/30">
-              <Cpu className="w-6 h-6 text-slate-400 mx-auto mb-2 animate-pulse" />
-              <h3 className="text-xs font-semibold text-slate-800">No active operational streams</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Initialize your pipeline by importing an Excel or CSV workbook asset.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-lg overflow-hidden shadow-sm">
-              {recentFiles.map((file) => {
-                const isExcel =
-                  file.originalName?.endsWith('.xlsx') ||
-                  file.fileName?.endsWith('.xlsx') ||
-                  file.sourceType === 'excel';
-
-                return (
-                  <div
-                    key={file._id}
-                    onClick={() => navigate(`/files/${file._id}`)}
-                    className="group flex items-center justify-between p-4 bg-white hover:bg-slate-50/80 transition-colors duration-100 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className={`w-9 h-9 rounded text-[10px] font-semibold flex items-center justify-center border shrink-0 font-mono shadow-sm ${isExcel
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                          : 'bg-indigo-50 text-indigo-700 border-indigo-100'
-                        }`}>
-                        {isExcel ? 'XLSX' : 'CSV'}
-                      </div>
-
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-slate-900 text-xs truncate group-hover:text-indigo-600 transition-colors duration-100">
-                          {file.originalName || file.fileName}
-                        </h3>
-
-                        <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 flex-wrap">
-                          <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px] text-slate-600 border border-slate-200/40">
-                            HEX: {file._id.slice(-6).toUpperCase()}
-                          </span>
-                          <span className="text-slate-300">•</span>
-                          <span>
-                            {new Date(file.uploadedAt || file.createdAt).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
-                            })}
-                          </span>
-                          <span className="text-slate-300">•</span>
-                          <span className="font-semibold text-indigo-950 bg-indigo-50/60 px-1.5 py-0.5 rounded border border-indigo-100/50">
-                            {(file.totalRecords ?? 0).toLocaleString()} data sequences
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/files/${file._id}`);
-                      }}
-                      className="w-8 h-8 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-all duration-150 shadow-sm"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-600 transition-colors" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 };

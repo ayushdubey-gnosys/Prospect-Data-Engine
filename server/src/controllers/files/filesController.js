@@ -5,17 +5,46 @@ const Company = require("../../models/company.model");
 
 const getAllFiles = async (req, res, next) => {
   try {
-    const files = await UploadedFile.find().sort({ createdAt: -1 }).lean();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    let query = {};
+    const { userId } = req.query;
+
+    if (userId) {
+      query.uploadedBy = userId;
+    } else if (req.user && req.user.role !== "admin" && req.user.role !== "superadmin") {
+      // Filter by users in the same role PLUS admin/superadmin for non-admins
+      const User = require("../../models/user.model");
+      const roleUsers = await User.find({ role: { $in: [req.user.role, "admin", "superadmin"] } }).select("_id");
+      query.uploadedBy = { $in: roleUsers.map((u) => u._id) };
+    }
+
+    const total = await UploadedFile.countDocuments(query);
+
+    const files = await UploadedFile.find(query)
+      .populate("uploadedBy", "name email role")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     // attach totalRecords count from companies collection for each file
     const filesWithCounts = await Promise.all(
       files.map(async (f) => {
-        const total = await Company.countDocuments({ fileId: f._id });
-        return { ...f, totalRecords: total };
+        const totalDocs = await Company.countDocuments({ fileId: f._id });
+        return { ...f, totalRecords: totalDocs };
       })
     );
 
-    res.json({ data: filesWithCounts });
+    res.json({
+      data: filesWithCounts,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     next(error);
   }

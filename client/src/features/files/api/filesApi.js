@@ -1,8 +1,9 @@
 import api from '../../../api/axios';
 
-export const fetchFiles = async () => {
-  const res = await api.get('/files');
-  return res.data.data || [];
+export const fetchFiles = async (params = {}) => {
+  const search = new URLSearchParams(params).toString();
+  const res = await api.get(`/files${search ? '?' + search : ''}`);
+  return res.data;
 };
 
 export const fetchFileCompanies = async (fileId, params = {}) => {
