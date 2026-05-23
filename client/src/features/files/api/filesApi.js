@@ -12,19 +12,21 @@ export const fetchFileCompanies = async (fileId, params = {}) => {
   return res.data;
 };
 
-export const fetchFileCities = async (fileId) => {
-  const res = await api.get(`/files/${fileId}/cities`);
+export const fetchFileCities = async (fileId, params = {}) => {
+  const search = new URLSearchParams(params).toString();
+  const res = await api.get(`/files/${fileId}/cities${search ? '?' + search : ''}`);
   return res.data.data || [];
 };
 
-export const fetchFileIndustries = async (fileId, city) => {
-  const q = city ? `?city=${encodeURIComponent(city)}` : '';
-  const res = await api.get(`/files/${fileId}/industries${q}`);
+export const fetchFileIndustries = async (fileId, params = {}) => {
+  const search = new URLSearchParams(params).toString();
+  const res = await api.get(`/files/${fileId}/industries${search ? '?' + search : ''}`);
   return res.data.data || [];
 };
 
-export const fetchFileCountries = async (fileId) => {
-  const res = await api.get(`/files/${fileId}/countries`);
+export const fetchFileCountries = async (fileId, params = {}) => {
+  const search = new URLSearchParams(params).toString();
+  const res = await api.get(`/files/${fileId}/countries${search ? '?' + search : ''}`);
   return res.data.data || [];
 };
 

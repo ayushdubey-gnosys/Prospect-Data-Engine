@@ -1,6 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchFileCities } from '../api/filesApi';
 
-export const useCities = (fileId) => {
-  return useQuery({ queryKey: ['file', fileId, 'cities'], queryFn: () => fetchFileCities(fileId), enabled: !!fileId });
+export const useCities = (fileId, params = {}) => {
+  return useQuery({
+    queryKey: ['file', fileId, 'cities', params.country, params.industry],
+    queryFn: () => fetchFileCities(fileId, params),
+    enabled: !!fileId,
+  });
 };

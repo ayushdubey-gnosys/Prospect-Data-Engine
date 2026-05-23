@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Download, FileDown, Calendar, User, Tag, Search, Filter } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -29,21 +29,55 @@ const ExportPage = () => {
 
   // Fetch countries list for filters
   const { data: countriesList = [] } = useQuery({
-    queryKey: ['exportFilters', 'countries'],
-    queryFn: () => api.get('/filters/countries').then((res) => res.data.data || []),
+    queryKey: ['exportFilters', 'countries', filters.industry, filters.city],
+    queryFn: () => {
+      const queryParams = new URLSearchParams();
+      if (filters.industry) queryParams.append('industry', filters.industry);
+      if (filters.city) queryParams.append('city', filters.city);
+      return api.get(`/filters/countries?${queryParams.toString()}`).then((res) => res.data.data || []);
+    },
   });
 
   // Fetch cities list based on selected country
   const { data: citiesList = [] } = useQuery({
-    queryKey: ['exportFilters', 'cities', filters.country],
-    queryFn: () => api.get(`/filters/cities${filters.country ? `?country=${filters.country}` : ''}`).then((res) => res.data.data || []),
+    queryKey: ['exportFilters', 'cities', filters.country, filters.industry],
+    queryFn: () => {
+      const queryParams = new URLSearchParams();
+      if (filters.country) queryParams.append('country', filters.country);
+      if (filters.industry) queryParams.append('industry', filters.industry);
+      return api.get(`/filters/cities?${queryParams.toString()}`).then((res) => res.data.data || []);
+    },
   });
 
   // Fetch industries list for filters
   const { data: industriesList = [] } = useQuery({
-    queryKey: ['exportFilters', 'industries'],
-    queryFn: () => api.get('/filters/industries').then((res) => res.data.data || []),
+    queryKey: ['exportFilters', 'industries', filters.country, filters.city],
+    queryFn: () => {
+      const queryParams = new URLSearchParams();
+      if (filters.country) queryParams.append('country', filters.country);
+      if (filters.city) queryParams.append('city', filters.city);
+      return api.get(`/filters/industries?${queryParams.toString()}`).then((res) => res.data.data || []);
+    },
   });
+
+  // Reset dependent filters if they are no longer present in the updated option lists
+  useEffect(() => {
+    if (filters.country && countriesList.length > 0 && !countriesList.includes(filters.country)) {
+      setFilters(f => ({ ...f, country: '', city: '' }));
+    }
+  }, [countriesList, filters.country]);
+
+  useEffect(() => {
+    if (filters.city && citiesList.length > 0 && !citiesList.includes(filters.city)) {
+      setFilters(f => ({ ...f, city: '' }));
+    }
+  }, [citiesList, filters.city]);
+
+  useEffect(() => {
+    if (filters.industry && industriesList.length > 0 && !industriesList.includes(filters.industry)) {
+      setFilters(f => ({ ...f, industry: '' }));
+    }
+  }, [industriesList, filters.industry]);
 
   // Fetch total records count matching selected filters
   const { data: countData, isLoading: isCountLoading } = useQuery({
@@ -214,11 +248,10 @@ const ExportPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
               <select
                 className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                disabled={!filters.country}
                 value={filters.city}
                 onChange={(e) => setFilters({ ...filters, city: e.target.value })}
               >
-                <option value="">{filters.country ? 'All Cities' : 'Select a Country First'}</option>
+                <option value="">All Cities</option>
                 {citiesList.map((city) => (
                   <option key={city} value={city}>{city}</option>
                 ))}

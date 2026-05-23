@@ -75,18 +75,25 @@ const getCompaniesByFile = async ({ fileId, page = 1, limit = 25, search, sortBy
   };
 };
 
-const getDistinctCities = async (fileId) => {
-  return Company.distinct("city", { fileId });
+const getDistinctCities = async (fileId, { country, industry } = {}) => {
+  const filter = { fileId };
+  if (country) filter.country = country;
+  if (industry) filter.industry = industry;
+  return Company.distinct("city", filter);
 };
 
-const getDistinctIndustries = async (fileId, city) => {
+const getDistinctIndustries = async (fileId, { country, city } = {}) => {
   const filter = { fileId };
+  if (country) filter.country = country;
   if (city) filter.city = city;
   return Company.distinct("industry", filter);
 };
 
-const getDistinctCountries = async (fileId) => {
-  return Company.distinct("country", { fileId });
+const getDistinctCountries = async (fileId, { industry, city } = {}) => {
+  const filter = { fileId };
+  if (industry) filter.industry = industry;
+  if (city) filter.city = city;
+  return Company.distinct("country", filter);
 };
 
 module.exports = {

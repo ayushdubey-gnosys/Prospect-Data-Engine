@@ -21,13 +21,13 @@ const FileDetailsPage = () => {
 
   const [filters, setFilters] = useState({ page: 1, limit: 25, city: '', industry: '', country: '', search: '' });
 
-  const { data: citiesData } = useCities(fileId);
+  const { data: citiesData } = useCities(fileId, { country: filters.country, industry: filters.industry });
   const cities = citiesData || [];
 
-  const { data: industriesData } = useIndustries(fileId, filters.city);
+  const { data: industriesData } = useIndustries(fileId, { country: filters.country, city: filters.city });
   const industries = industriesData || [];
 
-  const { data: countriesData } = useCountries(fileId);
+  const { data: countriesData } = useCountries(fileId, { industry: filters.industry, city: filters.city });
   const countries = countriesData || [];
   
 
@@ -36,6 +36,24 @@ const FileDetailsPage = () => {
   useEffect(() => {
     refetch();
   }, [filters]);
+
+  useEffect(() => {
+    if (filters.country && countries.length > 0 && !countries.includes(filters.country)) {
+      setFilters(f => ({ ...f, country: '', page: 1 }));
+    }
+  }, [countries, filters.country]);
+
+  useEffect(() => {
+    if (filters.city && cities.length > 0 && !cities.includes(filters.city)) {
+      setFilters(f => ({ ...f, city: '', page: 1 }));
+    }
+  }, [cities, filters.city]);
+
+  useEffect(() => {
+    if (filters.industry && industries.length > 0 && !industries.includes(filters.industry)) {
+      setFilters(f => ({ ...f, industry: '', page: 1 }));
+    }
+  }, [industries, filters.industry]);
 
   const exportMutation = useExport();
   const [isExporting, setIsExporting] = useState(false);

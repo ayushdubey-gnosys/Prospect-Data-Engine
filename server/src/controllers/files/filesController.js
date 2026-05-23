@@ -76,7 +76,8 @@ const getFileCompanies = async (req, res, next) => {
 const getFileCities = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const cities = await companyService.getDistinctCities(id);
+    const { country, industry } = req.query;
+    const cities = await companyService.getDistinctCities(id, { country, industry });
     res.json({ data: cities.filter(Boolean).sort() });
   } catch (error) {
     next(error);
@@ -86,8 +87,8 @@ const getFileCities = async (req, res, next) => {
 const getFileIndustries = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { city } = req.query;
-    const industries = await companyService.getDistinctIndustries(id, city);
+    const { country, city } = req.query;
+    const industries = await companyService.getDistinctIndustries(id, { country, city });
     res.json({ data: industries.filter(Boolean).sort() });
   } catch (error) {
     next(error);
@@ -97,7 +98,8 @@ const getFileIndustries = async (req, res, next) => {
 const getFileCountries = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const countries = await companyService.getDistinctCountries(id);
+    const { industry, city } = req.query;
+    const countries = await companyService.getDistinctCountries(id, { industry, city });
     res.json({ data: countries.filter(Boolean).sort() });
   } catch (error) {
     next(error);

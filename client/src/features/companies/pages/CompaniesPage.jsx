@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, Download, Tag } from 'lucide-react';
 import api from '../../../api/axios';
@@ -49,12 +49,6 @@ const CompaniesPage = () => {
     country: '',
   });
 
-  const [activeFilters, setActiveFilters] = useState({
-    city: '',
-    industry: '',
-    country: '',
-  });
-
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -73,9 +67,12 @@ const CompaniesPage = () => {
   // Fetch Countries
   // =========================
   const { data: countriesList = [] } = useQuery({
-    queryKey: ['filters', 'countries'],
+    queryKey: ['filters', 'countries', filters.industry, filters.city],
     queryFn: async () => {
-      const res = await api.get('/filters/countries');
+      const queryParams = new URLSearchParams();
+      if (filters.industry) queryParams.append('industry', filters.industry);
+      if (filters.city) queryParams.append('city', filters.city);
+      const res = await api.get(`/filters/countries?${queryParams.toString()}`);
       return res.data.data;
     },
   });
@@ -84,13 +81,12 @@ const CompaniesPage = () => {
   // Fetch Cities
   // =========================
   const { data: citiesList = [] } = useQuery({
-    queryKey: ['filters', 'cities', filters.country],
+    queryKey: ['filters', 'cities', filters.country, filters.industry],
     queryFn: async () => {
-      const res = await api.get(
-        `/filters/cities${filters.country ? `?country=${filters.country}` : ''
-        }`
-      );
-
+      const queryParams = new URLSearchParams();
+      if (filters.country) queryParams.append('country', filters.country);
+      if (filters.industry) queryParams.append('industry', filters.industry);
+      const res = await api.get(`/filters/cities?${queryParams.toString()}`);
       return res.data.data;
     },
   });
@@ -99,12 +95,34 @@ const CompaniesPage = () => {
   // Fetch Industries
   // =========================
   const { data: industriesList = [] } = useQuery({
-    queryKey: ['filters', 'industries'],
+    queryKey: ['filters', 'industries', filters.country, filters.city],
     queryFn: async () => {
-      const res = await api.get('/filters/industries');
+      const queryParams = new URLSearchParams();
+      if (filters.country) queryParams.append('country', filters.country);
+      if (filters.city) queryParams.append('city', filters.city);
+      const res = await api.get(`/filters/industries?${queryParams.toString()}`);
       return res.data.data;
     },
   });
+
+  // Reset dependent filters if they are no longer present in the updated option lists
+  useEffect(() => {
+    if (filters.country && countriesList.length > 0 && !countriesList.includes(filters.country)) {
+      setFilters(f => ({ ...f, country: '', city: '' }));
+    }
+  }, [countriesList, filters.country]);
+
+  useEffect(() => {
+    if (filters.city && citiesList.length > 0 && !citiesList.includes(filters.city)) {
+      setFilters(f => ({ ...f, city: '' }));
+    }
+  }, [citiesList, filters.city]);
+
+  useEffect(() => {
+    if (filters.industry && industriesList.length > 0 && !industriesList.includes(filters.industry)) {
+      setFilters(f => ({ ...f, industry: '' }));
+    }
+  }, [industriesList, filters.industry]);
 
   // =========================
   // Fetch Companies
@@ -112,17 +130,15 @@ const CompaniesPage = () => {
   const [page, setPage] = useState(1);
   const [limitPerPage, setLimitPerPage] = useState(10);
 
-  // Reset page when search filters change
-  const handleSearch = (e) => {
-    e.preventDefault();
+  // Reset page and selection when search filters change immediately
+  useEffect(() => {
     setPage(1);
-    setActiveFilters(filters);
-    setSelectedIds([]); // Clear selection when search changes
-  };
+    setSelectedIds([]);
+  }, [filters]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['companies', activeFilters, page, limitPerPage],
-    queryFn: () => fetchCompanies(activeFilters, page, limitPerPage),
+    queryKey: ['companies', filters, page, limitPerPage],
+    queryFn: () => fetchCompanies(filters, page, limitPerPage),
   });
 
   const companies = data?.companies || [];
@@ -141,9 +157,9 @@ const CompaniesPage = () => {
     try {
       setIsExporting(true);
       const query = new URLSearchParams();
-      if (activeFilters.city) query.append('city', activeFilters.city);
-      if (activeFilters.industry) query.append('industry', activeFilters.industry);
-      if (activeFilters.country) query.append('country', activeFilters.country);
+      if (filters.city) query.append('city', filters.city);
+      if (filters.industry) query.append('industry', filters.industry);
+      if (filters.country) query.append('country', filters.country);
       query.append('columns', selectedColumns.join(','));
       query.append('format', format);
 
@@ -498,12 +514,8 @@ const CompaniesPage = () => {
         </div>
       </div>
 
-      {/* =========================
-          Filters
-      ========================== */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <form
-          onSubmit={handleSearch}
+        <div
           className="flex flex-wrap gap-4 items-end"
         >
           {/* Industry */}
@@ -585,16 +597,16 @@ const CompaniesPage = () => {
             </select>
           </div>
 
-          {/* Search Button */}
+          {/* Reset Button */}
           <Button
-            type="submit"
+            type="button"
+            onClick={() => setFilters({ city: '', industry: '', country: '' })}
             variant="secondary"
             className="w-full sm:w-auto"
           >
-            <Search className="w-4 h-4 mr-2" />
-            Search
+            Reset
           </Button>
-        </form>
+        </div>
       </div>
 
       {/* =========================
