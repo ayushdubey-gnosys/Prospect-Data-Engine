@@ -15,6 +15,7 @@ import ExportPage from '../features/export/pages/ExportPage';
 import TagsPage from '../features/tags/pages/TagsPage';
 import UsersPage from '../features/dashboard/pages/UsersPage';
 import ProfilePage from '../features/profile/pages/ProfilePage';
+import AboutPage from '../features/dashboard/pages/AboutPage';
 
 const AppRoutes = () => {
   return (
@@ -69,6 +70,7 @@ const AppRoutes = () => {
           }
         />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="about" element={<AboutPage />} />
       </Route>
 
       {/* Catch-all route */}

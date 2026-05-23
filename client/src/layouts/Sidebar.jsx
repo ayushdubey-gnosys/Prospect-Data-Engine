@@ -10,6 +10,7 @@ import {
   FolderOpen,
   Users,
   Layers,
+  Info,
 } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
@@ -27,6 +28,7 @@ const Sidebar = () => {
     { name: 'Tags', path: '/tags', icon: Tags, roles: ['admin', 'sales'] },
     { name: 'Users', path: '/users', icon: Users, roles: ['admin'] },
     { name: 'Profile', path: '/profile', icon: User },
+    { name: 'About', path: '/about', icon: Info },
   ];
 
   const filteredItems = navItems.filter(
