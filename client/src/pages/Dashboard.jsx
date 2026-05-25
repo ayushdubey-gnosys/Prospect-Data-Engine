@@ -34,8 +34,8 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         const [statsRes, chartsRes] = await Promise.all([
-          axios.get("http://localhost:3000/api/company/stats"),
-          axios.get("http://localhost:3000/api/company/charts"),
+          axios.get("https://prospect-data-engine.onrender.com/api/company/stats"),
+          axios.get("https://prospect-data-engine.onrender.com/api/company/charts"),
         ]);
         setStats(statsRes.data);
         setCharts(chartsRes.data);

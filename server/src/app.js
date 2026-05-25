@@ -35,9 +35,21 @@ app.get("/", (req, res) => {
 });
 
 
+const whitelist = [
+  process.env.CLIENT_URL || "http://localhost:3000",
+  "https://prospect-data-engine.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (whitelist.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
