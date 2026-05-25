@@ -19,7 +19,7 @@ const app = express();
 
 
 // ======================
-// CORE MIDDLEWARE
+// BASIC MIDDLEWARE
 // ======================
 app.use(cookieParser());
 app.use(express.json());
@@ -39,7 +39,6 @@ const whitelist = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // allow server-to-server / postman
     if (!origin) return callback(null, true);
 
     if (whitelist.includes(origin)) {
@@ -59,10 +58,17 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
+
+// ======================
+// APPLY CORS (ONLY ONCE)
+// ======================
 app.use(cors(corsOptions));
 
-// IMPORTANT: preflight support
-app.options("/*", cors(corsOptions));
+
+// ======================
+// PRE-FLIGHT FIX (IMPORTANT)
+// ======================
+app.options("*", cors(corsOptions));
 
 
 // ======================
