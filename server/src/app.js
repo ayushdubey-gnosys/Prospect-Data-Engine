@@ -17,22 +17,19 @@ const errorMiddleware = require("./middleware/errorMiddleware");
 
 const app = express();
 
-// ======================================
-// MIDDLEWARES
-// ======================================
 
+// ======================
+// CORE MIDDLEWARE
+// ======================
 app.use(cookieParser());
-
 app.use(express.json());
-
 app.use(helmet());
-
 app.use(compression());
 
-// ======================================
-// CORS
-// ======================================
 
+// ======================
+// CORS CONFIG (FIXED)
+// ======================
 const whitelist = [
   "http://localhost:5173",
   "https://prospect-data-engine.vercel.app",
@@ -42,7 +39,7 @@ const whitelist = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // allow postman/mobile apps (no origin)
+    // allow server-to-server / postman
     if (!origin) return callback(null, true);
 
     if (whitelist.includes(origin)) {
@@ -64,13 +61,13 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// respond to preflight requests for all routes
-app.options("*", cors(corsOptions));
+// IMPORTANT: preflight support
+app.options("/*", cors(corsOptions));
 
-// ======================================
+
+// ======================
 // TEST ROUTE
-// ======================================
-
+// ======================
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
@@ -78,34 +75,27 @@ app.get("/", (req, res) => {
   });
 });
 
-// ======================================
+
+// ======================
 // ROUTES
-// ======================================
-
+// ======================
 app.use("/api/auth", authRoutes);
-
 app.use("/api/company", companyRoutes);
-
 app.use("/api/import", importRoutes);
-
 app.use("/api/export", exportRoutes);
-
 app.use("/api/tag", tagRoutes);
-
 app.use("/api/files", filesRoutes);
-
 app.use("/api/filters", filtersRoutes);
-
 app.use("/api/users", userRoutes);
 
-// ======================================
-// ERROR MIDDLEWARE
-// ======================================
 
+// ======================
+// ERROR HANDLER
+// ======================
 app.use(errorMiddleware);
 
-// ======================================
-// EXPORT APP
-// ======================================
 
+// ======================
+// EXPORT
+// ======================
 module.exports = app;
