@@ -22,7 +22,14 @@ const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route
+        path="/register"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <RegisterPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Protected Routes inside Dashboard Layout */}
       <Route

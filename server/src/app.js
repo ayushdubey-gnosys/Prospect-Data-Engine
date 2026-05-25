@@ -25,7 +25,7 @@ app.use(express.json());
 
 app.use(helmet());
 app.use(compression());
-app.use(morgan("dev"));
+// app.use(morgan("dev"));
 
 app.get("/", (req, res) => {
   res.json({

@@ -1,71 +1,306 @@
+const mongoose = require("mongoose");
 const Company = require("../models/company.model");
 
-const bulkInsertCompanies = async (companies, fileId) => {
-  if (!Array.isArray(companies) || companies.length === 0) return { inserted: 0 };
+// ==========================================
+// BULK INSERT COMPANIES
+// ==========================================
 
-  const ops = companies.map((c) => {
-    const doc = { ...c, fileId };
-    
-    // Deduplication logic
-    let filter = {};
-    if (doc.company_name && doc.city) {
-      filter = { company_name: doc.company_name, city: doc.city };
-    } else {
-      // If no unique fields, just use a dummy filter that won't match, causing insert
-      filter = { _id: new require('mongoose').Types.ObjectId() };
+const bulkInsertCompanies = async (
+  companies,
+  fileId
+) => {
+  try {
+    // ==============================
+    // Validate Array
+    // ==============================
+
+    if (
+      !Array.isArray(companies) ||
+      companies.length === 0
+    ) {
+      return {
+        inserted: 0,
+        updated: 0,
+      };
     }
 
-    return {
-      updateOne: {
-        filter,
-        update: { $set: doc },
-        upsert: true
+    // ==============================
+    // Remove Invalid Rows
+    // company_name required
+    // ==============================
+
+    const validCompanies = companies.filter(
+      (c) =>
+        c &&
+        typeof c === "object" &&
+        c.company_name &&
+        String(c.company_name).trim() !== ""
+    );
+
+    if (validCompanies.length === 0) {
+      return {
+        inserted: 0,
+        updated: 0,
+      };
+    }
+
+    // ==============================
+    // Create Bulk Operations
+    // ==============================
+
+    const ops = validCompanies.map((c) => {
+      // ------------------------------
+      // Clean Undefined Values
+      // ------------------------------
+
+      const cleanedDoc = {};
+
+      Object.keys(c).forEach((key) => {
+        if (
+          c[key] !== undefined &&
+          c[key] !== null &&
+          c[key] !== ""
+        ) {
+          cleanedDoc[key] = c[key];
+        }
+      });
+
+      // attach file id
+      cleanedDoc.fileId = fileId;
+
+      // ==============================
+      // Deduplication Filter
+      // ==============================
+
+      let filter = {};
+
+      // duplicate based on
+      // company_name + city
+      if (
+        cleanedDoc.company_name &&
+        cleanedDoc.city
+      ) {
+        filter = {
+          company_name: {
+            $regex: new RegExp(
+              "^" +
+                cleanedDoc.company_name
+                  .trim()
+                  .replace(
+                    /[-\/\\^$*+?.()|[\]{}]/g,
+                    "\\$&"
+                  ) +
+                "$",
+              "i"
+            ),
+          },
+
+          city: {
+            $regex: new RegExp(
+              "^" +
+                cleanedDoc.city
+                  .trim()
+                  .replace(
+                    /[-\/\\^$*+?.()|[\]{}]/g,
+                    "\\$&"
+                  ) +
+                "$",
+              "i"
+            ),
+          },
+        };
       }
+
+      // duplicate based on
+      // company_name + website
+      else if (
+        cleanedDoc.company_name &&
+        cleanedDoc.website
+      ) {
+        filter = {
+          company_name: {
+            $regex: new RegExp(
+              "^" +
+                cleanedDoc.company_name
+                  .trim()
+                  .replace(
+                    /[-\/\\^$*+?.()|[\]{}]/g,
+                    "\\$&"
+                  ) +
+                "$",
+              "i"
+            ),
+          },
+
+          website: {
+            $regex: new RegExp(
+              "^" +
+                cleanedDoc.website
+                  .trim()
+                  .replace(
+                    /[-\/\\^$*+?.()|[\]{}]/g,
+                    "\\$&"
+                  ) +
+                "$",
+              "i"
+            ),
+          },
+        };
+      }
+
+      // fallback insert
+      else {
+        filter = {
+          _id: new mongoose.Types.ObjectId(),
+        };
+      }
+
+      return {
+        updateOne: {
+          filter,
+
+          update: {
+            $set: cleanedDoc,
+          },
+
+          upsert: true,
+        },
+      };
+    });
+
+    // ==============================
+    // Bulk Write
+    // ==============================
+
+    const result =
+      await Company.bulkWrite(ops, {
+        ordered: false,
+      });
+
+    // ==============================
+    // Return Result
+    // ==============================
+
+    return {
+      inserted:
+        result.upsertedCount || 0,
+
+      updated:
+        result.modifiedCount || 0,
     };
-  });
+  } catch (err) {
+    console.error(
+      "MongoDB BulkWrite Error:",
+      err
+    );
 
-  const result = await Company.bulkWrite(ops, { ordered: false }).catch(err => {
-    console.error("MongoDB BulkWrite Error details:", err);
     throw err;
-  });
-
-  return { inserted: result.upsertedCount || 0, updated: result.modifiedCount || 0 };
+  }
 };
 
-const buildFilterQuery = ({ fileId, city, industry, country, search }) => {
+// ==========================================
+// BUILD FILTER QUERY
+// ==========================================
+
+const buildFilterQuery = ({
+  fileId,
+  city,
+  industry,
+  country,
+  search,
+}) => {
   const query = { fileId };
 
-  if (city) query.city = city;
-  if (industry) query.industry = industry;
-  if (country) query.country = country;
+  // ==============================
+  // Filters
+  // ==============================
+
+  if (city) {
+    query.city = city;
+  }
+
+  if (industry) {
+    query.industry = industry;
+  }
+
+  if (country) {
+    query.country = country;
+  }
+
+  // ==============================
+  // Search
+  // ==============================
 
   if (search) {
     const regex = new RegExp(search, "i");
+
     query.$or = [
       { company_name: regex },
       { email: regex },
       { website: regex },
       { city: regex },
       { country: regex },
+      { phone: regex },
     ];
   }
 
   return query;
 };
 
-const getCompaniesByFile = async ({ fileId, page = 1, limit = 25, search, sortBy, sortDir, city, industry, country }) => {
-  const query = buildFilterQuery({ fileId, city, industry, country, search });
+// ==========================================
+// GET COMPANIES BY FILE
+// ==========================================
 
-  const skip = (Math.max(1, page) - 1) * limit;
+const getCompaniesByFile = async ({
+  fileId,
+  page = 1,
+  limit = 25,
+  search,
+  sortBy,
+  sortDir,
+  city,
+  industry,
+  country,
+}) => {
+  const query = buildFilterQuery({
+    fileId,
+    city,
+    industry,
+    country,
+    search,
+  });
+
+  const skip =
+    (Math.max(1, page) - 1) *
+    parseInt(limit);
+
+  // ==============================
+  // Sorting
+  // ==============================
 
   const sort = {};
-  if (sortBy) sort[sortBy] = sortDir === "desc" ? -1 : 1;
-  else sort.createdAt = -1;
 
-  const [data, total] = await Promise.all([
-    Company.find(query).sort(sort).skip(skip).limit(parseInt(limit)).lean(),
-    Company.countDocuments(query),
-  ]);
+  if (sortBy) {
+    sort[sortBy] =
+      sortDir === "desc" ? -1 : 1;
+  } else {
+    sort.createdAt = -1;
+  }
+
+  // ==============================
+  // Fetch Data
+  // ==============================
+
+  const [data, total] =
+    await Promise.all([
+      Company.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+
+      Company.countDocuments(query),
+    ]);
 
   return {
     data,
@@ -75,26 +310,83 @@ const getCompaniesByFile = async ({ fileId, page = 1, limit = 25, search, sortBy
   };
 };
 
-const getDistinctCities = async (fileId, { country, industry } = {}) => {
+// ==========================================
+// DISTINCT CITIES
+// ==========================================
+
+const getDistinctCities = async (
+  fileId,
+  { country, industry } = {}
+) => {
   const filter = { fileId };
-  if (country) filter.country = country;
-  if (industry) filter.industry = industry;
-  return Company.distinct("city", filter);
+
+  if (country) {
+    filter.country = country;
+  }
+
+  if (industry) {
+    filter.industry = industry;
+  }
+
+  return Company.distinct(
+    "city",
+    filter
+  );
 };
 
-const getDistinctIndustries = async (fileId, { country, city } = {}) => {
-  const filter = { fileId };
-  if (country) filter.country = country;
-  if (city) filter.city = city;
-  return Company.distinct("industry", filter);
-};
+// ==========================================
+// DISTINCT INDUSTRIES
+// ==========================================
 
-const getDistinctCountries = async (fileId, { industry, city } = {}) => {
-  const filter = { fileId };
-  if (industry) filter.industry = industry;
-  if (city) filter.city = city;
-  return Company.distinct("country", filter);
-};
+const getDistinctIndustries =
+  async (
+    fileId,
+    { country, city } = {}
+  ) => {
+    const filter = { fileId };
+
+    if (country) {
+      filter.country = country;
+    }
+
+    if (city) {
+      filter.city = city;
+    }
+
+    return Company.distinct(
+      "industry",
+      filter
+    );
+  };
+
+// ==========================================
+// DISTINCT COUNTRIES
+// ==========================================
+
+const getDistinctCountries =
+  async (
+    fileId,
+    { industry, city } = {}
+  ) => {
+    const filter = { fileId };
+
+    if (industry) {
+      filter.industry = industry;
+    }
+
+    if (city) {
+      filter.city = city;
+    }
+
+    return Company.distinct(
+      "country",
+      filter
+    );
+  };
+
+// ==========================================
+// EXPORTS
+// ==========================================
 
 module.exports = {
   bulkInsertCompanies,
