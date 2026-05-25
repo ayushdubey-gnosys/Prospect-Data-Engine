@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
-const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 
 const authRoutes = require("./routes/auth/authRoutes");
@@ -16,52 +15,86 @@ const userRoutes = require("./routes/user/userRoutes");
 
 const errorMiddleware = require("./middleware/errorMiddleware");
 
-
 const app = express();
 
+// ======================================
+// MIDDLEWARES
+// ======================================
 
 app.use(cookieParser());
+
 app.use(express.json());
 
 app.use(helmet());
+
 app.use(compression());
-// app.use(morgan("dev"));
 
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "PDE Backend Running",
-  });
-});
-
+// ======================================
+// CORS
+// ======================================
 
 const whitelist = [
-  process.env.CLIENT_URL || "http://localhost:3000",
+  "http://localhost:5173",
   "https://prospect-data-engine.vercel.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (whitelist.indexOf(origin) !== -1) {
+      // allow postman/mobile apps
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (whitelist.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(
+          new Error(
+            `CORS blocked for origin: ${origin}`
+          )
+        );
       }
     },
+
     credentials: true,
   })
 );
 
+// ======================================
+// TEST ROUTE
+// ======================================
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "PDE Backend Running",
+  });
+});
+
+// ======================================
+// ROUTES
+// ======================================
+
 app.use("/api/auth", authRoutes);
+
 app.use("/api/company", companyRoutes);
+
 app.use("/api/import", importRoutes);
+
 app.use("/api/export", exportRoutes);
+
 app.use("/api/tag", tagRoutes);
+
 app.use("/api/files", filesRoutes);
+
 app.use("/api/filters", filtersRoutes);
+
 app.use("/api/users", userRoutes);
+
+// ======================================
+// ERROR MIDDLEWARE
+// ======================================
 
 app.use(errorMiddleware);
 
