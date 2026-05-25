@@ -558,6 +558,7 @@ const CompaniesPage = () => {
                   ...filters,
                   country: e.target.value,
                   city: '',
+                  industry: '',
                 })
               }
             >
