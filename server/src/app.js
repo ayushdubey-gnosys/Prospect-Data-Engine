@@ -104,4 +104,8 @@ app.use("/api/users", userRoutes);
 
 app.use(errorMiddleware);
 
+// ======================================
+// EXPORT APP
+// ======================================
+
 module.exports = app;
