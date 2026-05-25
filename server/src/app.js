@@ -36,30 +36,36 @@ app.use(compression());
 const whitelist = [
   "http://localhost:5173",
   "https://prospect-data-engine.vercel.app",
+  "http://pde.gnosysdigital.com",
+  "http://63.143.38.172",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // allow postman/mobile apps
-      if (!origin) {
-        return callback(null, true);
-      }
+const corsOptions = {
+  origin: function (origin, callback) {
+    // allow postman/mobile apps (no origin)
+    if (!origin) return callback(null, true);
 
-      if (whitelist.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(
-          new Error(
-            `CORS blocked for origin: ${origin}`
-          )
-        );
-      }
-    },
+    if (whitelist.includes(origin)) {
+      return callback(null, true);
+    }
 
-    credentials: true,
-  })
-);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+
+// respond to preflight requests for all routes
+app.options("*", cors(corsOptions));
 
 // ======================================
 // TEST ROUTE
