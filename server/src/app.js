@@ -68,7 +68,7 @@ app.use(cors(corsOptions));
 // ======================
 // PRE-FLIGHT FIX (IMPORTANT)
 // ======================
-app.options("*", cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 
 // ======================
