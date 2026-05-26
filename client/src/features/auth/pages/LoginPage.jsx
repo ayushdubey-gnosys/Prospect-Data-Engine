@@ -180,6 +180,7 @@ const LoginPage = () => {
                 placeholder="Enter your email"
                 {...register('email')}
                 className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:border-gray-400 transition"
+                autoComplete="email"
               />
 
               {errors.email && (
@@ -200,6 +201,7 @@ const LoginPage = () => {
                 placeholder="Enter your password"
                 {...register('password')}
                 className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:border-gray-400 transition"
+                autoComplete="current-password"
               />
 
               {errors.password && (
