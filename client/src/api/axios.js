@@ -1,8 +1,16 @@
 import axios from 'axios';
 
+// Default to a relative `/api` path in development so Vite can proxy requests.
+// In production, prefer an env var `VITE_API_URL`. If the page is loaded
+// over HTTPS and the provided base URL uses HTTP, upgrade it to HTTPS to
+// avoid mixed-content blocking by browsers.
+let baseURL = import.meta.env.VITE_API_URL || '/api';
+if (typeof window !== 'undefined' && window.location.protocol === 'https:' && typeof baseURL === 'string' && baseURL.startsWith('http:')) {
+  baseURL = baseURL.replace(/^http:/, 'https:');
+}
+
 const api = axios.create({
-  // Default to a relative `/api` path in development so Vite can proxy requests
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL,
   withCredentials: true,
 });
 

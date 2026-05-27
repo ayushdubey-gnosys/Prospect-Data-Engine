@@ -33,7 +33,7 @@ app.use(compression());
 const whitelist = [
   "http://localhost:5173",
 
-  "http://pde.gnosysdigital.com",
+  "https://pde.gnosysdigital.com",
   "http://63.143.38.172",
 ];
 
