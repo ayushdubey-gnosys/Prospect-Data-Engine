@@ -18,7 +18,9 @@ const uploadDir = path.join(
 );
 
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  fs.mkdirSync(uploadDir, {
+    recursive: true,
+  });
 }
 
 // =======================================
@@ -58,60 +60,245 @@ const normalize = (str) =>
 // =======================================
 
 const mapRowToCompany = (row) => {
+  // =======================================
+  // Smart Getter
+  // =======================================
+
   const get = (keys) => {
+    const normalizedRowKeys = Object.keys(row);
+
     for (const key of keys) {
       const normalizedKey = normalize(key);
 
-      const foundKey = Object.keys(row).find(
-        (rk) => normalize(rk) === normalizedKey
-      );
+      const foundKey = normalizedRowKeys.find((rk) => {
+        const normalizedRowKey = normalize(rk);
+
+        return (
+          normalizedRowKey === normalizedKey ||
+          normalizedRowKey.includes(normalizedKey) ||
+          normalizedKey.includes(normalizedRowKey)
+        );
+      });
 
       if (
         foundKey &&
         row[foundKey] !== null &&
-        row[foundKey] !== undefined &&
-        String(row[foundKey]).trim() !== ""
+        row[foundKey] !== undefined
       ) {
-        return String(row[foundKey]).trim();
+        const value = String(row[foundKey]).trim();
+
+        if (
+          value !== "" &&
+          value !== "-" &&
+          value !== "--" &&
+          value.toLowerCase() !== "nan" &&
+          value.toLowerCase() !== "null" &&
+          value.toLowerCase() !== "undefined" &&
+          value.toLowerCase() !== "n/a"
+        ) {
+          return value;
+        }
       }
     }
 
     return undefined;
   };
 
-  return {
-    company_name:
-      get([
-        "company_name",
-        "company name",
-        "company",
-        "name",
-      ]) || undefined,
+  // =======================================
+  // Company Data
+  // =======================================
 
-    phone:
-      get([
-        "contact",
-        "contact number",
-        "phone",
-        "mobile",
-      ]) || undefined,
+  const company = {
+    company_name: get([
+      "company_name",
+      "company name",
+      "company",
+      "business name",
+      "organization",
+      "organisation",
+      "firm",
+      "name",
+    ]),
 
-    website:
-      get([
-        "website",
-        "url",
-        "domain",
-      ]) || undefined,
+    phone: get([
+      "phone",
+      "mobile",
+      "contact",
+      "contact no",
+      "contact no.",
+      "contact number",
+      "company phone",
+      "company mobile",
+      "telephone",
+      "tel",
+      "office number",
+      "office phone",
+    ]),
 
-    email:
-      get([
-        "email",
-        "email id",
-        "emailid",
-      ]) || undefined,
+    website: get([
+      "website",
+      "website url",
+      "site",
+      "company website",
+      "url",
+      "domain",
+      "web",
+    ]),
+
+    email: get([
+      "email",
+      "email id",
+      "emailid",
+      "mail",
+      "company email",
+      "official email",
+    ]),
+
+    industry: get([
+      "industry",
+      "business type",
+      "sector",
+      "category",
+      "domain",
+    ]),
+
+    city: get([
+      "city",
+      "town",
+      "location",
+      "district",
+    ]),
+
+    state: get([
+      "state",
+      "province",
+      "region",
+    ]),
+
+    country: get([
+      "country",
+      "nation",
+    ]),
+
+    socialMedia: get([
+      "social media",
+      "social",
+      "linkedin",
+      "facebook",
+      "instagram",
+      "twitter",
+      "x",
+      "social link",
+      "social profile",
+    ]),
+
+    companyOwnerName: get([
+      "owner",
+      "owner name",
+      "company owner",
+      "business owner",
+      "founder",
+      "founder name",
+      "ceo",
+      "director",
+      "managing director",
+      "proprietor",
+    ]),
+
+    turnover: get([
+      "turnover",
+      "revenue",
+      "annual revenue",
+      "income",
+      "sales",
+    ]),
 
     source: "excel",
   };
+
+  // =======================================
+  // Employee / Contact Data
+  // =======================================
+
+  const employeeName = get([
+    "employee name",
+    "employee",
+    "staff name",
+    "contact person",
+    "person name",
+    "representative",
+    "employee fullname",
+    "contact name",
+  ]);
+
+  const employeePosition = get([
+    "employee position",
+    "designation",
+    "position",
+    "job title",
+    "role",
+    "employee role",
+  ]);
+
+  const employeePhone = get([
+    "employee contact",
+    "employee phone",
+    "employee mobile",
+    "employee number",
+    "employee contact number",
+    "employee contact no",
+    "employee contact no.",
+    "contact no",
+    "contact no.",
+    "contact number",
+    "mobile number",
+    "phone number",
+    "employee telephone",
+  ]);
+
+  const employeeEmail = get([
+    "employee email",
+    "employee mail",
+    "contact email",
+    "person email",
+    "staff email",
+  ]);
+
+  // =======================================
+  // Contacts
+  // =======================================
+
+  if (
+    employeeName ||
+    employeePosition ||
+    employeePhone ||
+    employeeEmail
+  ) {
+    company.contacts = [
+      {
+        name: employeeName || null,
+        position: employeePosition || null,
+        contactNumber: employeePhone || null,
+        email: employeeEmail || null,
+      },
+    ];
+  }
+
+  // =======================================
+  // Remove Empty Fields
+  // =======================================
+
+  Object.keys(company).forEach((key) => {
+    if (
+      company[key] === undefined ||
+      company[key] === null ||
+      company[key] === ""
+    ) {
+      delete company[key];
+    }
+  });
+
+  return company;
 };
 
 // =======================================
@@ -135,8 +322,9 @@ const uploadHandler = [
 
       const existingFile =
         await UploadedFile.findOne({
-          originalName: req.file.originalname,
-        }).populate("uploadedBy");
+          originalName:
+            req.file.originalname,
+        });
 
       if (existingFile) {
         if (
@@ -163,30 +351,30 @@ const uploadHandler = [
         );
 
       // =======================================
-      // Map Data
+      // Debug Logs
+      // =======================================
+
+      console.log(
+        "CSV HEADERS:",
+        Object.keys(rows[0] || {})
+      );
+
+      // =======================================
+      // Map Companies
       // =======================================
 
       const companies = rows
-        .map((row) => mapRowToCompany(row))
+        .map((row) =>
+          mapRowToCompany(row)
+        )
         .filter(
           (c) =>
-            c.company_name ||
-            c.phone ||
-            c.website ||
-            c.email
+            Object.keys(c).length > 1
         );
-
-      // =======================================
-      // Required company_name
-      // =======================================
-
-      const validCompanies = companies.filter(
-        (c) => c.company_name
-      );
 
       console.log(
         "Mapped Companies:",
-        validCompanies.slice(0, 5)
+        companies.slice(0, 5)
       );
 
       // =======================================
@@ -214,12 +402,12 @@ const uploadHandler = [
         });
 
       // =======================================
-      // Insert Data
+      // Insert Companies
       // =======================================
 
       const result =
         await companyService.bulkInsertCompanies(
-          validCompanies,
+          companies,
           uploadedDoc._id
         );
 
@@ -228,11 +416,15 @@ const uploadHandler = [
       // =======================================
 
       return res.status(201).json({
-        message: "File uploaded successfully",
+        success: true,
+
+        message:
+          "File uploaded successfully",
 
         totalRows: rows.length,
 
-        validRows: validCompanies.length,
+        processedRows:
+          companies.length,
 
         inserted: result.inserted,
 

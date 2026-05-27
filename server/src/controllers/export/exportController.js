@@ -17,6 +17,10 @@ const exportCompanies = async (req, res) => {
       filters.industry = { $regex: req.query.industry, $options: "i" };
     }
 
+    if (req.query.country) {
+      filters.country = { $regex: req.query.country, $options: "i" };
+    }
+
     // Fetch all companies matching filters (excluding tags for simplicity or map them)
     const companies = await Company.find(filters).populate("tags").lean();
 

@@ -32,7 +32,7 @@ app.use(compression());
 // ======================
 const whitelist = [
   "http://localhost:5173",
-  "https://prospect-data-engine.vercel.app",
+
   "http://pde.gnosysdigital.com",
   "http://63.143.38.172",
 ];

@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 
 const companySchema = new mongoose.Schema(
   {
-    company_name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+   company_name: {
+  type: String,
+  trim: true,
+  default: null,
+},
 
     industry: {
       type: String,
@@ -99,13 +99,7 @@ const companySchema = new mongoose.Schema(
 
     source: {
       type: String,
-      enum: [
-        "google_sheet",
-        "mca",
-        "manual",
-        "csv",
-        "excel",
-      ],
+      enum: ["google_sheet", "mca", "manual", "csv", "excel"],
       default: "manual",
     },
 
@@ -126,7 +120,7 @@ const companySchema = new mongoose.Schema(
   {
     timestamps: true,
     minimize: false,
-  }
+  },
 );
 
 // ======================================
@@ -145,7 +139,4 @@ companySchema.index({ company_name: 1 });
 
 companySchema.index({ website: 1 });
 
-module.exports = mongoose.model(
-  "Company",
-  companySchema
-);
+module.exports = mongoose.model("Company", companySchema);
