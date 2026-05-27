@@ -10,7 +10,7 @@ const createCompany = async (req, res) => {
     // Auto-create and assign industry tag if industry is present
     if (companyData.industry && companyData.industry.trim()) {
       const trimmed = companyData.industry.trim();
-      const esc = trimmed.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const esc = trimmed.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
       let tag = await Tag.findOne({
         name: { $regex: new RegExp("^" + esc + "$", "i") },
       });
@@ -27,7 +27,7 @@ const createCompany = async (req, res) => {
     }
 
     const company = await Company.create(companyData);
-    
+
     // Return the company populated with tags
     const populated = await Company.findById(company._id).populate("tags");
 
@@ -67,14 +67,18 @@ const getCompanies = async (req, res) => {
       const industriesToTag = [
         ...new Set(
           untaggedCompanies
-            .map((c) => (c.industry && typeof c.industry === "string" ? c.industry.trim() : ""))
-            .filter(Boolean)
+            .map((c) =>
+              c.industry && typeof c.industry === "string"
+                ? c.industry.trim()
+                : "",
+            )
+            .filter(Boolean),
         ),
       ];
       const tagMap = {};
 
       for (const ind of industriesToTag) {
-        const esc = ind.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const esc = ind.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
         let tag = await Tag.findOne({
           name: { $regex: new RegExp("^" + esc + "$", "i") },
         });
@@ -104,8 +108,8 @@ const getCompanies = async (req, res) => {
 
     // Pagination Parameters
     const page = parseInt(req.query.page) || 1;
-    const isAll = req.query.limit === 'all';
-    const limit = isAll ? total : (parseInt(req.query.limit) || 10);
+    const isAll = req.query.limit === "all";
+    const limit = isAll ? total : parseInt(req.query.limit) || 10;
     const skip = isAll ? 0 : (page - 1) * limit;
 
     const companies = await Company.find(filters)
@@ -118,7 +122,7 @@ const getCompanies = async (req, res) => {
       companies,
       total,
       page,
-      limit: isAll ? 'all' : limit,
+      limit: isAll ? "all" : limit,
       totalPages: isAll ? 1 : Math.ceil(total / limit),
     });
   } catch (error) {
@@ -142,13 +146,9 @@ const getCompany = async (req, res) => {
 
 const updateCompany = async (req, res) => {
   try {
-    const company = await Company.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const company = await Company.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
 
     res.json(company);
   } catch (error) {
@@ -189,7 +189,12 @@ const bulkTagCompanies = async (req, res) => {
 
       // Find tag case-insensitively to avoid duplicates
       let tag = await Tag.findOne({
-        name: { $regex: new RegExp("^" + trimmedName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + "$", "i") },
+        name: {
+          $regex: new RegExp(
+            "^" + trimmedName.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$",
+            "i",
+          ),
+        },
       });
 
       if (!tag) {
@@ -202,13 +207,13 @@ const bulkTagCompanies = async (req, res) => {
       // Replaces tags with the selected set
       await Company.updateMany(
         { _id: { $in: companyIds } },
-        { $set: { tags: tagIds } }
+        { $set: { tags: tagIds } },
       );
     } else {
       // Default: adds tags to the existing list, avoiding duplicates
       await Company.updateMany(
         { _id: { $in: companyIds } },
-        { $addToSet: { tags: { $each: tagIds } } }
+        { $addToSet: { tags: { $each: tagIds } } },
       );
     }
 
@@ -225,14 +230,26 @@ const bulkTagCompanies = async (req, res) => {
 
 const getDashboardStats = async (req, res) => {
   try {
-    const [totalCompanies, totalCountries, totalCities, totalIndustries, activeTags, totalImports, totalUsers] = await Promise.all([
+    const [
+      totalCompanies,
+      totalCountries,
+      totalCities,
+      totalIndustries,
+      activeTags,
+      totalImports,
+      totalUsers,
+    ] = await Promise.all([
       Company.countDocuments(),
-      Company.distinct("country").then(countries => countries.filter(Boolean).length),
-      Company.distinct("city").then(cities => cities.filter(Boolean).length),
-      Company.distinct("industry").then(industries => industries.filter(Boolean).length),
+      Company.distinct("country").then(
+        (countries) => countries.filter(Boolean).length,
+      ),
+      Company.distinct("city").then((cities) => cities.filter(Boolean).length),
+      Company.distinct("industry").then(
+        (industries) => industries.filter(Boolean).length,
+      ),
       Tag.countDocuments(),
       UploadedFile.countDocuments(),
-      User.countDocuments()
+      User.countDocuments(),
     ]);
 
     res.json({
@@ -256,19 +273,25 @@ const getDashboardCharts = async (req, res) => {
         { $match: { country: { $nin: [null, ""] } } },
         { $group: { _id: "$country", count: { $sum: 1 } } },
         { $sort: { count: -1 } },
-        { $limit: 10 }
+        { $limit: 10 },
       ]),
       Company.aggregate([
         { $match: { industry: { $nin: [null, ""] } } },
         { $group: { _id: "$industry", count: { $sum: 1 } } },
         { $sort: { count: -1 } },
-        { $limit: 10 }
-      ])
+        { $limit: 10 },
+      ]),
     ]);
 
     res.json({
-      companiesByCountry: companiesByCountry.map(c => ({ name: c._id, value: c.count })),
-      companiesByIndustry: companiesByIndustry.map(i => ({ name: i._id, value: i.count }))
+      companiesByCountry: companiesByCountry.map((c) => ({
+        name: c._id,
+        value: c.count,
+      })),
+      companiesByIndustry: companiesByIndustry.map((i) => ({
+        name: i._id,
+        value: i.count,
+      })),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
