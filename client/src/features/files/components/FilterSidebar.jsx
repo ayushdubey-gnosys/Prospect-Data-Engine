@@ -2,7 +2,7 @@ import React from 'react';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 
-const FilterSidebar = ({ cities, industries, countries = [], filters, setFilters, onReset, onExport, isExporting, canExport }) => {
+const FilterSidebar = ({ cities, industries, countries = [], tagsList = [], filters, setFilters, onReset, onExport, isExporting, canExport }) => {
   const selectClassName = "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
 
   return (
@@ -22,7 +22,7 @@ const FilterSidebar = ({ cities, industries, countries = [], filters, setFilters
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Country</label>
           <select
@@ -61,6 +61,20 @@ const FilterSidebar = ({ cities, industries, countries = [], filters, setFilters
             <option value="">All industries</option>
             {industries.map((i) => (
               <option key={i} value={i}>{i}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tag</label>
+          <select
+            value={filters.tag || ''}
+            onChange={(e) => setFilters({ ...filters, tag: e.target.value, page: 1 })}
+            className={selectClassName}
+          >
+            <option value="">All tags</option>
+            {tagsList.map((t) => (
+              <option key={t._id} value={t.name}>{t.name}</option>
             ))}
           </select>
         </div>

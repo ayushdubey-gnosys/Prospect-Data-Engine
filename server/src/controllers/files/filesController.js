@@ -63,9 +63,20 @@ const getAllFiles = async (req, res, next) => {
 const getFileCompanies = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { page = 1, limit = 25, search, sortBy, sortDir, city, industry, country } = req.query;
+    const { page = 1, limit = 25, search, sortBy, sortDir, city, industry, country, tag } = req.query;
 
-    const result = await companyService.getCompaniesByFile({ fileId: id, page, limit, search, sortBy, sortDir, city, industry, country });
+    let tagId = null;
+    if (tag) {
+      const Tag = require("../../models/tag.model");
+      const tagDoc = await Tag.findOne({ name: tag });
+      if (tagDoc) {
+        tagId = tagDoc._id;
+      } else {
+        return res.json({ data: [], total: 0, page: parseInt(page), limit: parseInt(limit) });
+      }
+    }
+
+    const result = await companyService.getCompaniesByFile({ fileId: id, page, limit, search, sortBy, sortDir, city, industry, country, tagId });
 
     res.json(result);
   } catch (error) {
@@ -76,8 +87,14 @@ const getFileCompanies = async (req, res, next) => {
 const getFileCities = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { country, industry } = req.query;
-    const cities = await companyService.getDistinctCities(id, { country, industry });
+    const { country, industry, tag } = req.query;
+    let tagId = null;
+    if (tag) {
+      const Tag = require("../../models/tag.model");
+      const tagDoc = await Tag.findOne({ name: tag });
+      tagId = tagDoc ? tagDoc._id : "000000000000000000000000";
+    }
+    const cities = await companyService.getDistinctCities(id, { country, industry, tagId });
     res.json({ data: cities.filter(Boolean).sort() });
   } catch (error) {
     next(error);
@@ -87,8 +104,14 @@ const getFileCities = async (req, res, next) => {
 const getFileIndustries = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { country, city } = req.query;
-    const industries = await companyService.getDistinctIndustries(id, { country, city });
+    const { country, city, tag } = req.query;
+    let tagId = null;
+    if (tag) {
+      const Tag = require("../../models/tag.model");
+      const tagDoc = await Tag.findOne({ name: tag });
+      tagId = tagDoc ? tagDoc._id : "000000000000000000000000";
+    }
+    const industries = await companyService.getDistinctIndustries(id, { country, city, tagId });
     res.json({ data: industries.filter(Boolean).sort() });
   } catch (error) {
     next(error);
@@ -98,9 +121,28 @@ const getFileIndustries = async (req, res, next) => {
 const getFileCountries = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { industry, city } = req.query;
-    const countries = await companyService.getDistinctCountries(id, { industry, city });
+    const { industry, city, tag } = req.query;
+    let tagId = null;
+    if (tag) {
+      const Tag = require("../../models/tag.model");
+      const tagDoc = await Tag.findOne({ name: tag });
+      tagId = tagDoc ? tagDoc._id : "000000000000000000000000";
+    }
+    const countries = await companyService.getDistinctCountries(id, { industry, city, tagId });
     res.json({ data: countries.filter(Boolean).sort() });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getFileTags = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { industry, city, country } = req.query;
+    const tagIds = await companyService.getDistinctTags(id, { industry, city, country });
+    const Tag = require("../../models/tag.model");
+    const tags = await Tag.find({ _id: { $in: tagIds } });
+    res.json({ data: tags.map(t => ({ _id: t._id, name: t.name })).sort((a, b) => a.name.localeCompare(b.name)) });
   } catch (error) {
     next(error);
   }
@@ -109,9 +151,20 @@ const getFileCountries = async (req, res, next) => {
 const filterAndExport = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { city, industry, country, search, format = "csv", columns } = req.query;
+    const { city, industry, country, search, format = "csv", columns, tag } = req.query;
 
-    const query = companyService.buildFilterQuery({ fileId: id, city, industry, country, search });
+    let tagId = null;
+    if (tag) {
+      const Tag = require("../../models/tag.model");
+      const tagDoc = await Tag.findOne({ name: tag });
+      if (tagDoc) {
+        tagId = tagDoc._id;
+      } else {
+        tagId = "000000000000000000000000"; // non existent objectid
+      }
+    }
+
+    const query = companyService.buildFilterQuery({ fileId: id, city, industry, country, search, tagId });
     const companies = await Company.find(query).populate("tags").lean();
 
     let selectedColumns = null;
@@ -163,5 +216,6 @@ module.exports = {
   getFileCities,
   getFileIndustries,
   getFileCountries,
+  getFileTags,
   filterAndExport,
 };

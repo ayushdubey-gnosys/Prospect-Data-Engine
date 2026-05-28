@@ -17,6 +17,7 @@ const fetchCompanies = async (searchParams, page = 1, limit = 10) => {
   if (searchParams.city) query.append('city', searchParams.city);
   if (searchParams.industry) query.append('industry', searchParams.industry);
   if (searchParams.country) query.append('country', searchParams.country);
+  if (searchParams.tag) query.append('tag', searchParams.tag);
   query.append('page', page);
   query.append('limit', limit);
 
@@ -47,6 +48,7 @@ const CompaniesPage = () => {
     city: '',
     industry: '',
     country: '',
+    tag: '',
   });
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -64,14 +66,30 @@ const CompaniesPage = () => {
   };
 
   // =========================
-  // Fetch Countries
+  // Fetch Tags
   // =========================
-  const { data: countriesList = [] } = useQuery({
-    queryKey: ['filters', 'countries', filters.industry, filters.city],
+  const { data: tagsList = [] } = useQuery({
+    queryKey: ['filters', 'tags', filters.industry, filters.city, filters.country],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (filters.industry) queryParams.append('industry', filters.industry);
       if (filters.city) queryParams.append('city', filters.city);
+      if (filters.country) queryParams.append('country', filters.country);
+      const res = await api.get(`/filters/tags?${queryParams.toString()}`);
+      return res.data.data;
+    },
+  });
+
+  // =========================
+  // Fetch Countries
+  // =========================
+  const { data: countriesList = [] } = useQuery({
+    queryKey: ['filters', 'countries', filters.industry, filters.city, filters.tag],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams();
+      if (filters.industry) queryParams.append('industry', filters.industry);
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.tag) queryParams.append('tag', filters.tag);
       const res = await api.get(`/filters/countries?${queryParams.toString()}`);
       return res.data.data;
     },
@@ -81,11 +99,12 @@ const CompaniesPage = () => {
   // Fetch Cities
   // =========================
   const { data: citiesList = [] } = useQuery({
-    queryKey: ['filters', 'cities', filters.country, filters.industry],
+    queryKey: ['filters', 'cities', filters.country, filters.industry, filters.tag],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.industry) queryParams.append('industry', filters.industry);
+      if (filters.tag) queryParams.append('tag', filters.tag);
       const res = await api.get(`/filters/cities?${queryParams.toString()}`);
       return res.data.data;
     },
@@ -95,11 +114,12 @@ const CompaniesPage = () => {
   // Fetch Industries
   // =========================
   const { data: industriesList = [] } = useQuery({
-    queryKey: ['filters', 'industries', filters.country, filters.city],
+    queryKey: ['filters', 'industries', filters.country, filters.city, filters.tag],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.city) queryParams.append('city', filters.city);
+      if (filters.tag) queryParams.append('tag', filters.tag);
       const res = await api.get(`/filters/industries?${queryParams.toString()}`);
       return res.data.data;
     },
@@ -123,6 +143,12 @@ const CompaniesPage = () => {
       setFilters(f => ({ ...f, industry: '' }));
     }
   }, [industriesList, filters.industry]);
+
+  useEffect(() => {
+    if (filters.tag && tagsList.length > 0 && !tagsList.some(t => t.name === filters.tag)) {
+      setFilters(f => ({ ...f, tag: '' }));
+    }
+  }, [tagsList, filters.tag]);
 
   // =========================
   // Fetch Companies
@@ -160,6 +186,7 @@ const CompaniesPage = () => {
       if (filters.city) query.append('city', filters.city);
       if (filters.industry) query.append('industry', filters.industry);
       if (filters.country) query.append('country', filters.country);
+      if (filters.tag) query.append('tag', filters.tag);
       query.append('columns', selectedColumns.join(','));
       query.append('format', format);
 
@@ -598,10 +625,36 @@ const CompaniesPage = () => {
             </select>
           </div>
 
+          {/* Tag */}
+          <div className="w-full sm:w-auto flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tag
+            </label>
+
+            <select
+              className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500"
+              value={filters.tag}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  tag: e.target.value,
+                })
+              }
+            >
+              <option value="">All Tags</option>
+
+              {tagsList.map((t) => (
+                <option key={t._id} value={t.name}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Reset Button */}
           <Button
             type="button"
-            onClick={() => setFilters({ city: '', industry: '', country: '' })}
+            onClick={() => setFilters({ city: '', industry: '', country: '', tag: '' })}
             variant="secondary"
             className="w-full sm:w-auto"
           >

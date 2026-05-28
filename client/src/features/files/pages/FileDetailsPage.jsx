@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { useFileCompanies } from '../hooks/useFileCompanies';
 import { useCities } from '../hooks/useCities';
@@ -19,16 +20,28 @@ const FileDetailsPage = () => {
   const role = user?.role || 'sales';
   const canExport = role === 'admin' || role === 'marketing';
 
-  const [filters, setFilters] = useState({ page: 1, limit: 25, city: '', industry: '', country: '', search: '' });
+  const [filters, setFilters] = useState({ page: 1, limit: 25, city: '', industry: '', country: '', search: '', tag: '' });
 
-  const { data: citiesData } = useCities(fileId, { country: filters.country, industry: filters.industry });
+  const { data: citiesData } = useCities(fileId, { country: filters.country, industry: filters.industry, tag: filters.tag });
   const cities = citiesData || [];
 
-  const { data: industriesData } = useIndustries(fileId, { country: filters.country, city: filters.city });
+  const { data: industriesData } = useIndustries(fileId, { country: filters.country, city: filters.city, tag: filters.tag });
   const industries = industriesData || [];
 
-  const { data: countriesData } = useCountries(fileId, { industry: filters.industry, city: filters.city });
+  const { data: countriesData } = useCountries(fileId, { industry: filters.industry, city: filters.city, tag: filters.tag });
   const countries = countriesData || [];
+
+  const { data: tagsList = [] } = useQuery({
+    queryKey: ['fileTags', fileId, filters.industry, filters.city, filters.country],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams();
+      if (filters.industry) queryParams.append('industry', filters.industry);
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.country) queryParams.append('country', filters.country);
+      const res = await api.get(`/files/${fileId}/tags?${queryParams.toString()}`);
+      return res.data.data;
+    },
+  });
   
 
   const { data, isLoading, refetch } = useFileCompanies(fileId, filters);
@@ -55,11 +68,17 @@ const FileDetailsPage = () => {
     }
   }, [industries, filters.industry]);
 
+  useEffect(() => {
+    if (filters.tag && tagsList.length > 0 && !tagsList.some(t => t.name === filters.tag)) {
+      setFilters(f => ({ ...f, tag: '', page: 1 }));
+    }
+  }, [tagsList, filters.tag]);
+
   const exportMutation = useExport();
   const [isExporting, setIsExporting] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const handleReset = () => setFilters({ page: 1, limit: 25, city: '', industry: '', country: '', search: '' });
+  const handleReset = () => setFilters({ page: 1, limit: 25, city: '', industry: '', country: '', search: '', tag: '' });
 
   const handleExport = () => {
     setIsExportModalOpen(true);
@@ -73,6 +92,7 @@ const FileDetailsPage = () => {
       if (filters.industry) params.industry = filters.industry;
       if (filters.country) params.country = filters.country;
       if (filters.search) params.search = filters.search;
+      if (filters.tag) params.tag = filters.tag;
       params.format = format;
       params.columns = selectedColumns.join(',');
 
@@ -110,6 +130,7 @@ const FileDetailsPage = () => {
           cities={cities}
           industries={industries}
           countries={countries}
+          tagsList={tagsList}
           filters={filters}
           setFilters={setFilters}
           onReset={handleReset}

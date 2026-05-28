@@ -55,6 +55,16 @@ const getCompanies = async (req, res) => {
       filters.country = { $regex: req.query.country, $options: "i" };
     }
 
+    if (req.query.tag) {
+      const tagDoc = await Tag.findOne({ name: req.query.tag });
+      if (tagDoc) {
+        filters.tags = tagDoc._id;
+      } else {
+        filters.tags = null;
+      }
+    }
+
+
     // --- Dynamic Auto Industry Tagging for ALL matching companies ---
     // Scan for companies matching filters that have an industry but NO tags
     const untaggedCompanies = await Company.find({

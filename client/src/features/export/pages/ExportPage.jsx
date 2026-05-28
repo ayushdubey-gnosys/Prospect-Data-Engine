@@ -12,6 +12,7 @@ const ExportPage = () => {
     country: '',
     city: '',
     industry: '',
+    tag: '',
   });
 
   const [isExporting, setIsExporting] = useState(false);
@@ -25,6 +26,12 @@ const ExportPage = () => {
   const { data: usersList = [] } = useQuery({
     queryKey: ['filterUsers', 'marketing'],
     queryFn: () => api.get('/users/filter-list?targetRole=marketing').then((res) => res.data.data || []),
+  });
+
+  // Fetch tags
+  const { data: tagsList = [] } = useQuery({
+    queryKey: ['tagsList'],
+    queryFn: () => api.get('/tag').then((res) => res.data || []),
   });
 
   // Fetch countries list for filters
@@ -87,6 +94,7 @@ const ExportPage = () => {
       if (filters.city) queryParams.append('city', filters.city);
       if (filters.industry) queryParams.append('industry', filters.industry);
       if (filters.country) queryParams.append('country', filters.country);
+      if (filters.tag) queryParams.append('tag', filters.tag);
       queryParams.append('limit', 1);
       return api.get(`/company?${queryParams.toString()}`).then((res) => res.data);
     }
@@ -113,6 +121,7 @@ const ExportPage = () => {
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.city) queryParams.append('city', filters.city);
       if (filters.industry) queryParams.append('industry', filters.industry);
+      if (filters.tag) queryParams.append('tag', filters.tag);
       queryParams.append('columns', selectedColumns.join(','));
       queryParams.append('format', format);
 
@@ -143,11 +152,52 @@ const ExportPage = () => {
     }
   };
 
+  const handleRegenerate = async (historyFilters) => {
+    try {
+      setIsExporting(true);
+      const queryParams = new URLSearchParams();
+      Object.entries(historyFilters).forEach(([key, value]) => {
+        if (value && key !== 'columns' && key !== 'format') queryParams.append(key, value);
+      });
+
+      if (historyFilters.columns) {
+        queryParams.append('columns', historyFilters.columns);
+      }
+      const format = historyFilters.format || 'xlsx';
+      queryParams.append('format', format);
+
+      const response = await api.get(`/export/companies?${queryParams.toString()}`, {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], {
+        type: format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `companies_export_regenerated_${Date.now()}.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`${format === 'csv' ? 'CSV' : 'Excel'} Regenerate Successful`);
+      refetchHistory();
+    } catch (error) {
+      console.error(error);
+      toast.error('Regenerate Failed');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleResetFilters = () => {
     setFilters({
       country: '',
       city: '',
       industry: '',
+      tag: '',
     });
   };
 
@@ -206,6 +256,20 @@ const ExportPage = () => {
           {row.totalRecords || 0} Records
         </span>
       )
+    },
+    {
+      header: 'Actions',
+      cell: (row) => (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleRegenerate(row.filters)}
+          disabled={isExporting}
+          className="flex items-center gap-1.5"
+        >
+          <FileDown className="w-4 h-4" /> Regenerate
+        </Button>
+      )
     }
   ];
 
@@ -227,7 +291,7 @@ const ExportPage = () => {
             <h2 className="text-lg font-semibold text-gray-800">Filter Export Dataset</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Country Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
@@ -269,6 +333,21 @@ const ExportPage = () => {
                 <option value="">All Industries</option>
                 {industriesList.map((industry) => (
                   <option key={industry} value={industry}>{industry}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tag Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tag</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                value={filters.tag}
+                onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
+              >
+                <option value="">All Tags</option>
+                {tagsList.map((t) => (
+                  <option key={t._id} value={t.name}>{t.name}</option>
                 ))}
               </select>
             </div>

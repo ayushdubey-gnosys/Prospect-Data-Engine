@@ -208,6 +208,7 @@ const buildFilterQuery = ({
   industry,
   country,
   search,
+  tagId,
 }) => {
   const query = { fileId };
 
@@ -225,6 +226,10 @@ const buildFilterQuery = ({
 
   if (country) {
     query.country = country;
+  }
+
+  if (tagId) {
+    query.tags = tagId;
   }
 
   // ==============================
@@ -261,6 +266,7 @@ const getCompaniesByFile = async ({
   city,
   industry,
   country,
+  tagId,
 }) => {
   const query = buildFilterQuery({
     fileId,
@@ -268,6 +274,7 @@ const getCompaniesByFile = async ({
     industry,
     country,
     search,
+    tagId,
   });
 
   const skip =
@@ -316,7 +323,7 @@ const getCompaniesByFile = async ({
 
 const getDistinctCities = async (
   fileId,
-  { country, industry } = {}
+  { country, industry, tagId } = {}
 ) => {
   const filter = { fileId };
 
@@ -326,6 +333,10 @@ const getDistinctCities = async (
 
   if (industry) {
     filter.industry = industry;
+  }
+
+  if (tagId) {
+    filter.tags = tagId;
   }
 
   return Company.distinct(
@@ -341,7 +352,7 @@ const getDistinctCities = async (
 const getDistinctIndustries =
   async (
     fileId,
-    { country, city } = {}
+    { country, city, tagId } = {}
   ) => {
     const filter = { fileId };
 
@@ -351,6 +362,10 @@ const getDistinctIndustries =
 
     if (city) {
       filter.city = city;
+    }
+
+    if (tagId) {
+      filter.tags = tagId;
     }
 
     return Company.distinct(
@@ -366,7 +381,7 @@ const getDistinctIndustries =
 const getDistinctCountries =
   async (
     fileId,
-    { industry, city } = {}
+    { industry, city, tagId } = {}
   ) => {
     const filter = { fileId };
 
@@ -378,8 +393,41 @@ const getDistinctCountries =
       filter.city = city;
     }
 
+    if (tagId) {
+      filter.tags = tagId;
+    }
+
     return Company.distinct(
       "country",
+      filter
+    );
+  };
+
+// ==========================================
+// DISTINCT TAGS
+// ==========================================
+
+const getDistinctTags =
+  async (
+    fileId,
+    { industry, city, country } = {}
+  ) => {
+    const filter = { fileId };
+
+    if (industry) {
+      filter.industry = industry;
+    }
+
+    if (city) {
+      filter.city = city;
+    }
+
+    if (country) {
+      filter.country = country;
+    }
+
+    return Company.distinct(
+      "tags",
       filter
     );
   };
@@ -395,4 +443,5 @@ module.exports = {
   getDistinctCities,
   getDistinctIndustries,
   getDistinctCountries,
+  getDistinctTags,
 };

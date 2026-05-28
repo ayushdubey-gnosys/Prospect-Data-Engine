@@ -14,6 +14,8 @@ router.get("/:id/industries", protect, filesController.getFileIndustries);
 
 router.get("/:id/countries", protect, filesController.getFileCountries);
 
+router.get("/:id/tags", protect, filesController.getFileTags);
+
 router.get("/:id/export", protect, authorize("admin", "marketing"), filesController.filterAndExport);
 
 module.exports = router;

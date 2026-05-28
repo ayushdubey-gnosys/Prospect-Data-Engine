@@ -3,7 +3,7 @@ import { fetchFileIndustries } from '../api/filesApi';
 
 export const useIndustries = (fileId, params = {}) => {
   return useQuery({
-    queryKey: ['file', fileId, 'industries', params.country, params.city],
+    queryKey: ['file', fileId, 'industries', params.country, params.city, params.tag],
     queryFn: () => fetchFileIndustries(fileId, params),
     enabled: !!fileId,
   });
