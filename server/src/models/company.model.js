@@ -113,7 +113,6 @@ const companySchema = new mongoose.Schema(
     fileId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "UploadedFile",
-      required: true,
       index: true,
     },
   },

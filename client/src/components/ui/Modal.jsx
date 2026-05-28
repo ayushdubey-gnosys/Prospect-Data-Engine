@@ -30,7 +30,7 @@ const Modal = ({ isOpen, onClose, title, children, className = '' }) => {
         onClick={onClose}
       ></div>
       
-      <div className={`relative bg-white rounded-lg shadow-xl w-full max-w-md mx-auto flex flex-col max-h-[90vh] ${className}`}>
+      <div className={`relative bg-white rounded-lg shadow-xl w-full ${className.includes('max-w-') ? '' : 'max-w-md'} mx-auto flex flex-col max-h-[90vh] ${className}`}>
         <div className="flex items-center justify-between p-4 border-b shrink-0">
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
           <button

@@ -40,7 +40,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="Company Details"
-      className="max-w-2xl"
+      className="max-w-5xl"
     >
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-12 space-y-4">

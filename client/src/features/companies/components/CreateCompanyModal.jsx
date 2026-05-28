@@ -131,7 +131,7 @@ const CreateCompanyModal = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Create Company"
-      className="max-w-2xl"
+      className="max-w-4xl"
     >
       <form
         onSubmit={handleSubmit(onSubmit)}
