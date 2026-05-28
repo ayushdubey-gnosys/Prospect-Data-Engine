@@ -433,11 +433,144 @@ const getDistinctTags =
   };
 
 // ==========================================
+// CHECK DUPLICATE DATA
+// ==========================================
+
+const checkDuplicateData = async (companies) => {
+  if (!Array.isArray(companies) || companies.length === 0) {
+    return {
+      totalChecked: 0,
+      duplicateCount: 0,
+      duplicates: [],
+    };
+  }
+
+  const duplicates = [];
+
+  for (const c of companies) {
+    if (!c.company_name || String(c.company_name).trim() === "") {
+      continue;
+    }
+
+    const companyNameRegex = new RegExp(
+      "^" +
+        c.company_name
+          .trim()
+          .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+        "$",
+      "i"
+    );
+
+    // Build OR conditions for matching
+    const orConditions = [];
+
+    // Match by company_name + email
+    if (c.email && String(c.email).trim() !== "") {
+      orConditions.push({
+        company_name: companyNameRegex,
+        email: {
+          $regex: new RegExp(
+            "^" +
+              c.email
+                .trim()
+                .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+              "$",
+            "i"
+          ),
+        },
+      });
+    }
+
+    // Match by company_name + website
+    if (c.website && String(c.website).trim() !== "") {
+      orConditions.push({
+        company_name: companyNameRegex,
+        website: {
+          $regex: new RegExp(
+            "^" +
+              c.website
+                .trim()
+                .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+              "$",
+            "i"
+          ),
+        },
+      });
+    }
+
+    // Match by email alone (strong unique identifier)
+    if (c.email && String(c.email).trim() !== "") {
+      orConditions.push({
+        email: {
+          $regex: new RegExp(
+            "^" +
+              c.email
+                .trim()
+                .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+              "$",
+            "i"
+          ),
+        },
+      });
+    }
+
+    // Match by website alone (strong unique identifier)
+    if (c.website && String(c.website).trim() !== "") {
+      orConditions.push({
+        website: {
+          $regex: new RegExp(
+            "^" +
+              c.website
+                .trim()
+                .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+              "$",
+            "i"
+          ),
+        },
+      });
+    }
+
+    if (orConditions.length === 0) {
+      // Fallback: just check company_name
+      orConditions.push({
+        company_name: companyNameRegex,
+      });
+    }
+
+    const existing = await Company.findOne({
+      $or: orConditions,
+    }).lean();
+
+    if (existing) {
+      duplicates.push({
+        company_name: c.company_name,
+        email: c.email || null,
+        website: c.website || null,
+        matchedWith: {
+          company_name: existing.company_name,
+          email: existing.email || null,
+          website: existing.website || null,
+        },
+      });
+    }
+  }
+
+  return {
+    totalChecked: companies.filter(
+      (c) => c.company_name && String(c.company_name).trim() !== ""
+    ).length,
+    duplicateCount: duplicates.length,
+    duplicates,
+  };
+};
+
+// ==========================================
 // EXPORTS
 // ==========================================
 
 module.exports = {
   bulkInsertCompanies,
+  checkDuplicateData,
   buildFilterQuery,
   getCompaniesByFile,
   getDistinctCities,

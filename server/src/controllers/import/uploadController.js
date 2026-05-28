@@ -336,7 +336,8 @@ const uploadHandler = [
 
         return res.status(400).json({
           message:
-            "File with same name already uploaded",
+            "This file already exists with file name: " +
+            req.file.originalname,
         });
       }
 
@@ -378,6 +379,105 @@ const uploadHandler = [
       );
 
       // =======================================
+      // Data-Level Duplicate Check
+      // =======================================
+
+      const dupCheck =
+        await companyService.checkDuplicateData(
+          companies
+        );
+
+      // If ALL records are duplicates, reject the upload entirely
+      if (
+        dupCheck.duplicateCount > 0 &&
+        dupCheck.duplicateCount >=
+          dupCheck.totalChecked
+      ) {
+        // Clean up the uploaded file
+        if (
+          req.file.path &&
+          fs.existsSync(req.file.path)
+        ) {
+          fs.unlinkSync(req.file.path);
+        }
+
+        // Build duplicate details for error response
+        const duplicateDetails =
+          dupCheck.duplicates
+            .slice(0, 10)
+            .map((d) => ({
+              company_name: d.company_name,
+              email: d.email,
+              website: d.website,
+            }));
+
+        return res.status(409).json({
+          success: false,
+
+          message:
+            "This data already exists in the database. All " +
+            dupCheck.duplicateCount +
+            " records from this file are duplicates.",
+
+          error:
+            "Data already exists! Even after renaming the file, the data inside matches existing records.",
+
+          duplicateCount:
+            dupCheck.duplicateCount,
+
+          totalRecords:
+            dupCheck.totalChecked,
+
+          duplicateDetails,
+        });
+      }
+
+      // If SOME records are duplicates, filter them out
+      let companiesToInsert = companies;
+      let skippedDuplicates = 0;
+
+      if (dupCheck.duplicateCount > 0) {
+        const dupSet = new Set(
+          dupCheck.duplicates.map(
+            (d) =>
+              (d.company_name || "")
+                .toLowerCase()
+                .trim() +
+              "|" +
+              (d.email || "")
+                .toLowerCase()
+                .trim() +
+              "|" +
+              (d.website || "")
+                .toLowerCase()
+                .trim()
+          )
+        );
+
+        companiesToInsert = companies.filter(
+          (c) => {
+            const key =
+              (c.company_name || "")
+                .toLowerCase()
+                .trim() +
+              "|" +
+              (c.email || "")
+                .toLowerCase()
+                .trim() +
+              "|" +
+              (c.website || "")
+                .toLowerCase()
+                .trim();
+
+            return !dupSet.has(key);
+          }
+        );
+
+        skippedDuplicates =
+          dupCheck.duplicateCount;
+      }
+
+      // =======================================
       // Save Upload History
       // =======================================
 
@@ -402,12 +502,12 @@ const uploadHandler = [
         });
 
       // =======================================
-      // Insert Companies
+      // Insert Companies (non-duplicates only)
       // =======================================
 
       const result =
         await companyService.bulkInsertCompanies(
-          companies,
+          companiesToInsert,
           uploadedDoc._id
         );
 
@@ -419,16 +519,22 @@ const uploadHandler = [
         success: true,
 
         message:
-          "File uploaded successfully",
+          skippedDuplicates > 0
+            ? "File uploaded with " +
+              skippedDuplicates +
+              " duplicate records skipped"
+            : "File uploaded successfully",
 
         totalRows: rows.length,
 
         processedRows:
-          companies.length,
+          companiesToInsert.length,
 
         inserted: result.inserted,
 
         updated: result.updated,
+
+        skippedDuplicates,
 
         file: uploadedDoc,
       });

@@ -37,13 +37,36 @@ const ImportPage = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       }),
     onSuccess: (res) => {
-      toast.success(res.data?.message || 'File imported successfully');
+      const data = res.data;
+      if (data?.skippedDuplicates > 0) {
+        toast.warning(
+          `${data.message}. ${data.inserted} new records added, ${data.skippedDuplicates} duplicates skipped.`,
+          { autoClose: 6000 }
+        );
+      } else {
+        toast.success(data?.message || 'File imported successfully');
+      }
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       queryClient.invalidateQueries({ queryKey: ['importHistory'] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || 'Failed to import file');
+      const data = error.response?.data;
+      const errorMsg = data?.message || data?.error || 'Failed to import file';
+      
+      // Show duplicate details if available
+      if (data?.duplicateCount && data?.duplicateDetails?.length > 0) {
+        const details = data.duplicateDetails
+          .slice(0, 3)
+          .map((d) => d.company_name)
+          .join(', ');
+        toast.error(
+          `${errorMsg}\n\nDuplicate records: ${details}${data.duplicateCount > 3 ? ` and ${data.duplicateCount - 3} more...` : ''}`,
+          { autoClose: 8000 }
+        );
+      } else {
+        toast.error(errorMsg);
+      }
     },
   });
 
