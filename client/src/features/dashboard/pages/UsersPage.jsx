@@ -1,9 +1,10 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../../api/axios';
-import { Users, Trash2, ShieldAlert } from 'lucide-react';
+import { Users, Trash2, ShieldAlert, UserPlus } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 const UsersPage = () => {
   const { user: authUser } = useAuth();
@@ -109,8 +110,18 @@ const UsersPage = () => {
           </p>
         </div>
 
-        <div className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-600">
-          Total Users : {isLoading ? '...' : users.length}
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-600">
+            Total Users : {isLoading ? '...' : users.length}
+          </div>
+          
+          <Link
+            to="/register"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Create New User
+          </Link>
         </div>
 
       </div>
@@ -206,7 +217,8 @@ const UsersPage = () => {
                             e.target.value
                           )
                         }
-                        className="h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none focus:border-gray-400"
+                        disabled={u.role === 'admin' && u._id !== authUser?._id}
+                        className="h-10 px-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none focus:border-gray-400 disabled:opacity-50 disabled:bg-gray-50"
                       >
                         <option value="admin">
                           Admin

@@ -93,8 +93,8 @@ const LoginPage = () => {
               </h1>
 
               <p className="text-sm text-white/70">
-                Dwarakadheesh Group - Prospect Data Engine
-              </p>
+                Dwarkadhish Group - Prospect Data Engine
+              </p>  
             </div>
           </div>
 
@@ -119,7 +119,7 @@ const LoginPage = () => {
           {/* Bottom */}
           <div className="flex items-center gap-2 text-sm text-white/60">
 
-            <span>© 2026 Dwarakadheesh Group </span>
+            <span>© 2026 Dwarakadhish Group </span>
           </div>
 
         </div>

@@ -355,10 +355,8 @@ const uploadHandler = [
       // Debug Logs
       // =======================================
 
-      console.log(
-        "CSV HEADERS:",
-        Object.keys(rows[0] || {})
-      );
+     
+      
 
       // =======================================
       // Map Companies
@@ -373,10 +371,6 @@ const uploadHandler = [
             Object.keys(c).length > 1
         );
 
-      console.log(
-        "Mapped Companies:",
-        companies.slice(0, 5)
-      );
 
       // =======================================
       // Data-Level Duplicate Check

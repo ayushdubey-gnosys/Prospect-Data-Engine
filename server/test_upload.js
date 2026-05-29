@@ -38,12 +38,12 @@ const req = http.request(options, (res) => {
     data += chunk;
   });
   res.on('end', () => {
-    console.log('STATUS:', res.statusCode);
+
     try {
-       const json = JSON.parse(data);
-       console.log('RESPONSE:', JSON.stringify(json, null, 2));
-    } catch(e) {
-       console.log('RAW RESPONSE:', data);
+      const json = JSON.parse(data);
+
+    } catch (e) {
+      console.log('RAW RESPONSE:', data);
     }
   });
 });

@@ -27,7 +27,13 @@ const updateUser = async (req, res, next) => {
     if (name) user.name = name;
     if (email) user.email = email;
     if (phone !== undefined) user.phone = phone;
-    if (role) user.role = role;
+    
+    if (role && role !== user.role) {
+      if (user.role === 'admin' && user._id.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "You cannot update the role of another admin" });
+      }
+      user.role = role;
+    }
 
     await user.save();
 

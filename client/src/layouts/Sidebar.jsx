@@ -40,7 +40,7 @@ const Sidebar = () => {
       {/* Top Brands & Navigation */}
       <div>
         {/* Brand Header - Clean Compact Height */}
-        <div className="h-16 px-5 flex items-center border-b border-[#1f2937] bg-[#0b0f19]">
+        <NavLink to="/" className="h-16 px-5 flex items-center border-b border-[#1f2937] bg-[#0b0f19] cursor-pointer hover:bg-[#111827] transition-colors">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-md shadow-blue-900/40">
               <Layers className="w-4 h-4 text-white" />
@@ -54,7 +54,7 @@ const Sidebar = () => {
               </p>
             </div>
           </div>
-        </div>
+        </NavLink>
 
         {/* Menu Section */}
         <div className="px-3 py-5">

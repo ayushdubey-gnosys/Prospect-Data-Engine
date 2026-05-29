@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { User, Mail, Calendar, Shield, Copy } from "lucide-react";
+import { User, Mail, Calendar, Shield, Copy, Lock, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
+import api from "../../../api/axios";
 
 const ProfilePage = () => {
   const { user } = useAuth();
+  
+  const [passwords, setPasswords] = useState({ oldPassword: '', newPassword: '' });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -21,6 +25,24 @@ const ProfilePage = () => {
     if (user?.email) {
       navigator.clipboard.writeText(user.email);
       toast.success("Email copied");
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (!passwords.oldPassword || !passwords.newPassword) {
+      return toast.error("Please fill in both password fields");
+    }
+    
+    try {
+      setIsUpdating(true);
+      await api.put('/auth/update-password', passwords);
+      toast.success("Password updated successfully");
+      setPasswords({ oldPassword: '', newPassword: '' });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update password");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -128,6 +150,48 @@ const ProfilePage = () => {
                 </p>
               </div>
             </div>
+          </div>
+          
+          {/* Update Password */}
+          <div className="p-5 flex flex-col sm:flex-row sm:items-start gap-4 bg-gray-50/50">
+            <div className="flex items-center gap-3 sm:w-1/3 pt-2">
+              <Lock className="w-4 h-4 text-gray-500" />
+              <div>
+                <p className="text-sm text-gray-900 font-medium">Update Password</p>
+                <p className="text-xs text-gray-500 mt-0.5">Change your account password securely.</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdatePassword} className="flex-1 space-y-3 max-w-sm">
+              <div>
+                <input
+                  type="password"
+                  placeholder="Old Password"
+                  value={passwords.oldPassword}
+                  onChange={(e) => setPasswords(p => ({ ...p, oldPassword: e.target.value }))}
+                  className="w-full h-10 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+              <div>
+                <input
+                  type="password"
+                  placeholder="New Password"
+                  value={passwords.newPassword}
+                  onChange={(e) => setPasswords(p => ({ ...p, newPassword: e.target.value }))}
+                  className="w-full h-10 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isUpdating}
+                className="h-10 px-4 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+              >
+                {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
+                Update Password
+              </button>
+            </form>
           </div>
         </div>
       </div>
