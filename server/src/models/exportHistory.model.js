@@ -23,6 +23,14 @@ const exportHistorySchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    ignoredColumns: {
+      type: [String],
+      default: [],
+    },
+    regenerateCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

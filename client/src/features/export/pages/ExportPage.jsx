@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Download, FileDown, Calendar, User, Tag, Search, Filter } from 'lucide-react';
+import { Download, FileDown, Calendar, User, Tag, Search, Filter, History, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../../api/axios';
 import Button from '../../../components/ui/Button';
 import Table from '../../../components/ui/Table';
 import ExportConfigModal from '../../../components/ui/ExportConfigModal';
+import RegenerateHistoryModal from '../../../components/ui/RegenerateHistoryModal';
 
 const ExportPage = () => {
   const [filters, setFilters] = useState({
@@ -21,6 +22,10 @@ const ExportPage = () => {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyLimit, setHistoryLimit] = useState(10);
   const [historyUser, setHistoryUser] = useState('');
+
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyModalExportId, setHistoryModalExportId] = useState(null);
+  const [historyModalExportData, setHistoryModalExportData] = useState(null);
 
   // Fetch users for filter
   const { data: usersList = [] } = useQuery({
@@ -152,31 +157,24 @@ const ExportPage = () => {
     }
   };
 
-  const handleRegenerate = async (historyFilters) => {
+  const handleRegenerate = async (exportRow) => {
     try {
       setIsExporting(true);
-      const queryParams = new URLSearchParams();
-      Object.entries(historyFilters).forEach(([key, value]) => {
-        if (value && key !== 'columns' && key !== 'format') queryParams.append(key, value);
-      });
-
-      if (historyFilters.columns) {
-        queryParams.append('columns', historyFilters.columns);
-      }
-      const format = historyFilters.format || 'xlsx';
-      queryParams.append('format', format);
-
-      const response = await api.get(`/export/companies?${queryParams.toString()}`, {
+      
+      const response = await api.post(`/export/regenerate/${exportRow._id}`, {
+        ignoredColumns: []
+      }, {
         responseType: 'blob',
       });
 
+      const format = exportRow.fileName?.endsWith('.csv') ? 'csv' : 'xlsx';
       const blob = new Blob([response.data], {
         type: format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `companies_export_regenerated_${Date.now()}.${format}`);
+      link.setAttribute('download', `regenerated_${Date.now()}.${format}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -260,15 +258,35 @@ const ExportPage = () => {
     {
       header: 'Actions',
       cell: (row) => (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => handleRegenerate(row.filters)}
-          disabled={isExporting}
-          className="flex items-center gap-1.5"
-        >
-          <FileDown className="w-4 h-4" /> Regenerate
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleRegenerate(row)}
+            disabled={isExporting}
+            className="flex items-center gap-1.5 h-9"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> Regenerate
+          </Button>
+
+          <button
+            onClick={() => {
+              setHistoryModalExportId(row._id);
+              setHistoryModalExportData(row);
+              setIsHistoryModalOpen(true);
+            }}
+            className="inline-flex items-center px-3 py-1.5 border border-purple-200 text-xs font-medium rounded-lg shadow-sm text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors h-9"
+            title="View Regeneration History"
+          >
+            <History className="w-3.5 h-3.5 mr-1.5 text-purple-500" />
+            History
+            {row.regenerateCount > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-200 text-purple-800">
+                {row.regenerateCount}
+              </span>
+            )}
+          </button>
+        </div>
       )
     }
   ];
@@ -522,6 +540,13 @@ const ExportPage = () => {
         onConfirm={handleConfirmExport}
         isExporting={isExporting}
         defaultFormat="xlsx"
+      />
+
+      <RegenerateHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        exportId={historyModalExportId}
+        exportData={historyModalExportData}
       />
     </div>
   );

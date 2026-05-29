@@ -134,7 +134,157 @@ const getExportHistory = async (req, res) => {
   }
 };
 
+// ─── Regenerate Export ───────────────────────────────────────────────────────
+
+const regenerateExport = async (req, res) => {
+  try {
+    const { exportId } = req.params;
+    const { ignoredColumns = [] } = req.body;
+
+    const ExportHistory = require("../../models/exportHistory.model");
+    const RegenerateHistory = require("../../models/regenerateHistory.model");
+    
+    const original = await ExportHistory.findById(exportId);
+    if (!original) {
+      return res.status(404).json({ success: false, message: 'Export record not found.' });
+    }
+
+    const ignored = Array.isArray(ignoredColumns)
+      ? ignoredColumns
+      : ignoredColumns ? ignoredColumns.split(',') : [];
+
+    const savedFilters = original.filters || {};
+    const query = {};
+
+    if (savedFilters.city) {
+      query.city = { $regex: savedFilters.city, $options: "i" };
+    }
+    if (savedFilters.state) {
+      query.state = { $regex: savedFilters.state, $options: "i" };
+    }
+    if (savedFilters.industry) {
+      query.industry = { $regex: savedFilters.industry, $options: "i" };
+    }
+    if (savedFilters.country) {
+      query.country = { $regex: savedFilters.country, $options: "i" };
+    }
+    if (savedFilters.tag) {
+      const Tag = require("../../models/tag.model");
+      const tagDoc = await Tag.findOne({ name: savedFilters.tag });
+      if (tagDoc) {
+        query.tags = tagDoc._id;
+      } else {
+        query.tags = null;
+      }
+    }
+
+    const companies = await Company.find(query).populate("tags").lean();
+
+    if (!companies.length) {
+      return res.status(404).json({ success: false, message: 'No records found for the original filters.' });
+    }
+
+    let selectedColumns = null;
+    if (savedFilters.columns) {
+      selectedColumns = savedFilters.columns.split(",");
+    }
+
+    // Map companies to a flat structure for Excel/CSV
+    const rows = companies.map(c => {
+      const row = {};
+      const addField = (colName, value) => {
+        if ((!selectedColumns || selectedColumns.includes(colName)) && !ignored.includes(colName)) {
+          row[colName] = value;
+        }
+      };
+
+      addField("Company Name", c.company_name || "");
+      addField("City", c.city || "");
+      addField("Country", c.country || "");
+      addField("Industry", c.industry || "");
+      addField("Phone", c.phone || "");
+      addField("Website", c.website || "");
+      addField("Social Media", c.socialMedia || "");
+      addField("Company Owner", c.companyOwnerName || "");
+      addField("Turnover", c.turnover || "");
+      addField("Source", c.source || "");
+      addField("Tags", c.tags ? c.tags.map(t => t.name).join(", ") : "");
+      addField("Employee Contacts", c.contacts && c.contacts.length > 0 
+        ? c.contacts.map(con => `${con.name || ""} (${con.position || ""} - ${con.contactNumber || ""}${con.email ? `, ${con.email}` : ""})`).join("; ")
+        : "");
+
+      return row;
+    });
+
+    const format = original.fileName?.endsWith('.csv') ? 'csv' : 'xlsx';
+    const timestamp = Date.now();
+    const fileName = `regen_${exportId}_${timestamp}.${format}`;
+    
+    let filePath;
+    if (format === "csv") {
+      filePath = exportService.exportToCSV(rows, fileName);
+    } else {
+      filePath = exportService.exportToExcel(rows, fileName);
+    }
+
+    // Save regeneration history
+    await RegenerateHistory.create({
+      originalExport: exportId,
+      filters:        original.filters,
+      ignoredColumns: ignored,
+      regeneratedBy:  req.user ? req.user._id : null,
+      totalRecords:   companies.length,
+      fileName,
+      filePath,
+    });
+
+    // Increment counter on original
+    await ExportHistory.findByIdAndUpdate(exportId, { $inc: { regenerateCount: 1 } });
+
+    res.download(filePath, fileName);
+  } catch (err) {
+    console.error('regenerateExport error:', err);
+    res.status(500).json({ success: false, message: 'Regeneration failed', error: err.message });
+  }
+};
+
+// ─── Get Regeneration History ────────────────────────────────────────────────
+
+const getRegenerateHistory = async (req, res) => {
+  try {
+    const { exportId } = req.params;
+
+    const ExportHistory = require("../../models/exportHistory.model");
+    const RegenerateHistory = require("../../models/regenerateHistory.model");
+
+    const original = await ExportHistory.findById(exportId)
+      .populate('exportedBy', 'name email role')
+      .lean();
+
+    if (!original) {
+      return res.status(404).json({ success: false, message: 'Export record not found.' });
+    }
+
+    const regenerations = await RegenerateHistory.find({ originalExport: exportId })
+      .populate('regeneratedBy', 'name email role')
+      .sort({ regeneratedAt: -1 })
+      .lean();
+
+    res.json({
+      success: true,
+      originalExport:      original,
+      totalRegenerations:  regenerations.length,
+      regenerations,
+    });
+  } catch (err) {
+    console.error('getRegenerateHistory error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch regeneration history', error: err.message });
+  }
+};
+
 module.exports = {
   exportCompanies,
   getExportHistory,
+  regenerateExport,
+  getRegenerateHistory,
 };
