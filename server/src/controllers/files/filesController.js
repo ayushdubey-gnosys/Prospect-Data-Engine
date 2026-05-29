@@ -198,12 +198,28 @@ const filterAndExport = async (req, res, next) => {
       return row;
     });
 
+    let outPath;
+    let fileName;
     if (format === "xlsx" || format === "excel") {
-      const outPath = exportService.exportToExcel(rows, `export_${id}_${Date.now()}.xlsx`);
-      return res.download(outPath);
+      fileName = `export_${id}_${Date.now()}.xlsx`;
+      outPath = exportService.exportToExcel(rows, fileName);
+    } else {
+      fileName = `export_${id}_${Date.now()}.csv`;
+      outPath = exportService.exportToCSV(rows, fileName);
     }
 
-    const outPath = exportService.exportToCSV(rows, `export_${id}_${Date.now()}.csv`);
+    const fileDoc = await UploadedFile.findById(id);
+    const sourceName = fileDoc ? `File: ${fileDoc.originalName || fileDoc.fileName}` : "Specific File";
+
+    const ExportHistory = require("../../models/exportHistory.model");
+    await ExportHistory.create({
+      fileName,
+      filters: req.query || {},
+      totalRecords: companies.length,
+      exportedBy: req.user ? req.user._id : null,
+      exportSource: sourceName
+    });
+
     return res.download(outPath);
   } catch (error) {
     next(error);

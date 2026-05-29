@@ -79,55 +79,51 @@ const RegenerateHistoryModal = ({ isOpen, onClose, exportId, exportData }) => {
 
           {/* Original Export Card */}
           {originalExport && (
-            <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-5 shadow-lg shadow-indigo-200/50 border border-indigo-500/20 text-white">
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
-              
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-md border border-white/10">
-                      <FileDown className="w-5 h-5 text-white" />
-                    </div>
-                    <h4 className="text-base font-bold tracking-tight text-white">Original Export Base</h4>
+            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
+                    <FileDown className="w-5 h-5 text-gray-700" />
                   </div>
-                  <div className="text-right">
-                    <span className="block text-[10px] font-medium text-indigo-200 uppercase tracking-widest mb-0.5">Date</span>
-                    <span className="font-semibold text-sm text-white bg-black/10 px-2.5 py-1 rounded-md backdrop-blur-sm border border-white/5">
-                      {formatDate(originalExport.exportedAt || originalExport.createdAt)}
-                    </span>
-                  </div>
+                  <h4 className="text-base font-bold text-gray-900">Original Export Base</h4>
                 </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-5 mb-4">
-                  <div>
-                    <span className="block text-[10px] font-medium text-indigo-200 uppercase tracking-widest mb-1">Exported By</span>
-                    <div className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-indigo-300" />
-                      <span className="font-semibold text-sm">{originalExport.exportedBy?.name || 'System'}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="block text-[10px] font-medium text-indigo-200 uppercase tracking-widest mb-1">Total Records</span>
-                    <div className="flex items-center gap-1.5">
-                      <Hash className="w-3.5 h-3.5 text-indigo-300" />
-                      <span className="font-semibold text-sm">{originalExport.totalRecords?.toLocaleString() || 0}</span>
-                    </div>
-                  </div>
-                  <div className="col-span-2 md:col-span-1">
-                    <span className="block text-[10px] font-medium text-indigo-200 uppercase tracking-widest mb-1">File Name</span>
-                    <span className="font-mono text-xs text-indigo-100 bg-black/20 px-2 py-1 rounded border border-white/5 truncate block">
-                      {originalExport.fileName}
-                    </span>
-                  </div>
+                <div className="text-right">
+                  <span className="block text-[10px] font-medium text-gray-400 uppercase tracking-widest mb-0.5">Date</span>
+                  <span className="font-semibold text-sm text-gray-700">
+                    {formatDate(originalExport.exportedAt || originalExport.createdAt)}
+                  </span>
                 </div>
-
-                {originalExport.filters && Object.keys(originalExport.filters).length > 0 && (
-                  <div className="pt-4 border-t border-white/10">
-                    <span className="block text-[10px] font-medium text-indigo-200 uppercase tracking-widest mb-2">Applied Filters</span>
-                    {renderFilterBadges(originalExport.filters)}
-                  </div>
-                )}
               </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-5 mb-4">
+                <div>
+                  <span className="block text-[10px] font-medium text-gray-400 uppercase tracking-widest mb-1">Exported By</span>
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="font-semibold text-sm text-gray-700">{originalExport.exportedBy?.name || 'System'}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="block text-[10px] font-medium text-gray-400 uppercase tracking-widest mb-1">Total Records</span>
+                  <div className="flex items-center gap-1.5">
+                    <Hash className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="font-semibold text-sm text-gray-700">{originalExport.totalRecords?.toLocaleString() || 0}</span>
+                  </div>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <span className="block text-[10px] font-medium text-gray-400 uppercase tracking-widest mb-1">File Name</span>
+                  <span className="font-mono text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100 truncate block">
+                    {originalExport.fileName}
+                  </span>
+                </div>
+              </div>
+
+              {originalExport.filters && Object.keys(originalExport.filters).length > 0 && (
+                <div className="pt-4 border-t border-gray-100">
+                  <span className="block text-[10px] font-medium text-gray-400 uppercase tracking-widest mb-2">Applied Filters</span>
+                  {renderFilterBadges(originalExport.filters)}
+                </div>
+              )}
             </div>
           )}
         </div>

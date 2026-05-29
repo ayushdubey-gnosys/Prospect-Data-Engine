@@ -31,6 +31,10 @@ const exportHistorySchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    exportSource: {
+      type: String,
+      default: "Centralized DB",
+    },
   },
   {
     timestamps: true,

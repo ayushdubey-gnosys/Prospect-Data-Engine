@@ -33,41 +33,50 @@ const ExportPage = () => {
     queryFn: () => api.get('/users/filter-list?targetRole=marketing').then((res) => res.data.data || []),
   });
 
-  // Fetch tags
+  // Fetch tags dynamically based on other filters
   const { data: tagsList = [] } = useQuery({
-    queryKey: ['tagsList'],
-    queryFn: () => api.get('/tag').then((res) => res.data || []),
-  });
-
-  // Fetch countries list for filters
-  const { data: countriesList = [] } = useQuery({
-    queryKey: ['exportFilters', 'countries', filters.industry, filters.city],
+    queryKey: ['exportFilters', 'tags', filters.industry, filters.city, filters.country],
     queryFn: () => {
       const queryParams = new URLSearchParams();
       if (filters.industry) queryParams.append('industry', filters.industry);
       if (filters.city) queryParams.append('city', filters.city);
+      if (filters.country) queryParams.append('country', filters.country);
+      return api.get(`/filters/tags?${queryParams.toString()}`).then((res) => res.data.data || []);
+    },
+  });
+
+  // Fetch countries list for filters
+  const { data: countriesList = [] } = useQuery({
+    queryKey: ['exportFilters', 'countries', filters.industry, filters.city, filters.tag],
+    queryFn: () => {
+      const queryParams = new URLSearchParams();
+      if (filters.industry) queryParams.append('industry', filters.industry);
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.tag) queryParams.append('tag', filters.tag);
       return api.get(`/filters/countries?${queryParams.toString()}`).then((res) => res.data.data || []);
     },
   });
 
-  // Fetch cities list based on selected country
+  // Fetch cities list based on selected filters
   const { data: citiesList = [] } = useQuery({
-    queryKey: ['exportFilters', 'cities', filters.country, filters.industry],
+    queryKey: ['exportFilters', 'cities', filters.country, filters.industry, filters.tag],
     queryFn: () => {
       const queryParams = new URLSearchParams();
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.industry) queryParams.append('industry', filters.industry);
+      if (filters.tag) queryParams.append('tag', filters.tag);
       return api.get(`/filters/cities?${queryParams.toString()}`).then((res) => res.data.data || []);
     },
   });
 
   // Fetch industries list for filters
   const { data: industriesList = [] } = useQuery({
-    queryKey: ['exportFilters', 'industries', filters.country, filters.city],
+    queryKey: ['exportFilters', 'industries', filters.country, filters.city, filters.tag],
     queryFn: () => {
       const queryParams = new URLSearchParams();
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.city) queryParams.append('city', filters.city);
+      if (filters.tag) queryParams.append('tag', filters.tag);
       return api.get(`/filters/industries?${queryParams.toString()}`).then((res) => res.data.data || []);
     },
   });
@@ -90,6 +99,12 @@ const ExportPage = () => {
       setFilters(f => ({ ...f, industry: '' }));
     }
   }, [industriesList, filters.industry]);
+
+  useEffect(() => {
+    if (filters.tag && tagsList.length > 0 && !tagsList.some(t => t.name === filters.tag)) {
+      setFilters(f => ({ ...f, tag: '' }));
+    }
+  }, [tagsList, filters.tag]);
 
   // Fetch total records count matching selected filters
   const { data: countData, isLoading: isCountLoading } = useQuery({
@@ -241,6 +256,15 @@ const ExportPage = () => {
       header: 'File Name',
       accessor: 'fileName',
       cell: (row) => <span className="font-mono text-xs text-gray-600">{row.fileName}</span>
+    },
+    {
+      header: 'Source',
+      accessor: 'exportSource',
+      cell: (row) => (
+        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${row.exportSource === 'Centralized DB' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`}>
+          {row.exportSource || 'Centralized DB'}
+        </span>
+      )
     },
     {
       header: 'Filters Applied',
