@@ -25,9 +25,9 @@ const RegenerateHistoryModal = ({ isOpen, onClose, exportId, exportData }) => {
     return (
       <div className="flex flex-wrap gap-2 mt-1">
         {active.map(([key, value]) => (
-          <div key={key} className="inline-flex items-center px-2.5 py-1 rounded-md bg-white/60 border border-indigo-100/50 shadow-sm backdrop-blur-sm">
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mr-1.5">{key}:</span>
-            <span className="text-[11px] font-semibold text-indigo-700">{value}</span>
+          <div key={key} className="inline-flex items-center px-2.5 py-1 rounded-md bg-white border border-zinc-200 shadow-sm">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mr-1.5">{key}:</span>
+            <span className="text-[11px] font-semibold text-zinc-900">{value}</span>
           </div>
         ))}
       </div>
@@ -59,21 +59,21 @@ const RegenerateHistoryModal = ({ isOpen, onClose, exportId, exportData }) => {
       <div className="flex flex-col h-full max-h-[85vh]">
         
         {/* Header Section */}
-        <div className="px-6 pt-5 pb-4 border-b border-gray-100 bg-white/50 backdrop-blur-md sticky top-0 z-10">
+        <div className="px-6 pt-5 pb-4 border-b border-gray-100 bg-white/50 backdrop-blur-md  top-0 z-10">
           {/* Stats Bar */}
-          <div className="flex items-center justify-between mb-5 px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-50/50 rounded-xl border border-gray-200/60 shadow-sm">
+          <div className="flex items-center justify-between mb-5 px-4 py-3 bg-white rounded-xl border border-zinc-200 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100">
-                <Activity className="w-5 h-5 text-indigo-600" />
+              <div className="p-2 bg-zinc-50 rounded-lg shadow-sm border border-zinc-100">
+                <Activity className="w-5 h-5 text-zinc-900" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-900">Total Regenerations</h3>
-                <p className="text-[11px] text-gray-500 font-medium">Times this specific data was re-exported</p>
+                <h3 className="text-sm font-bold text-zinc-900">Total Regenerations</h3>
+                <p className="text-[11px] text-zinc-500 font-medium">Times this specific data was re-exported</p>
               </div>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-black text-indigo-600 tracking-tight">{totalRegenerations}</span>
-              <span className="text-sm font-semibold text-gray-400">times</span>
+              <span className="text-3xl font-black text-zinc-900 tracking-tight">{totalRegenerations}</span>
+              <span className="text-sm font-semibold text-zinc-400">times</span>
             </div>
           </div>
 
@@ -138,10 +138,10 @@ const RegenerateHistoryModal = ({ isOpen, onClose, exportId, exportData }) => {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-16 space-y-4">
               <div className="relative w-12 h-12">
-                <div className="absolute inset-0 rounded-full border-4 border-gray-100"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-zinc-100"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-zinc-900 border-t-transparent animate-spin"></div>
               </div>
-              <span className="text-sm font-medium text-gray-500 animate-pulse">Loading history timeline...</span>
+              <span className="text-sm font-medium text-zinc-500 animate-pulse">Loading history timeline...</span>
             </div>
           ) : regenerations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-2xl border border-gray-100 border-dashed">
@@ -154,7 +154,7 @@ const RegenerateHistoryModal = ({ isOpen, onClose, exportId, exportData }) => {
           ) : (
             <div className="relative pl-6 space-y-8">
               {/* Vertical timeline line */}
-              <div className="absolute left-8 top-4 bottom-0 w-px bg-gradient-to-b from-indigo-200 via-gray-200 to-transparent"></div>
+              <div className="absolute left-8 top-4 bottom-0 w-px bg-gradient-to-b from-zinc-200 via-zinc-200 to-transparent"></div>
 
               {regenerations.map((regen, index) => {
                 const isLatest = index === 0;
@@ -163,32 +163,32 @@ const RegenerateHistoryModal = ({ isOpen, onClose, exportId, exportData }) => {
                     {/* Timeline Node */}
                     <div className={`absolute -left-[1.35rem] top-4 w-5 h-5 rounded-full border-[3px] shadow-sm z-10 transition-colors ${
                       isLatest 
-                        ? 'bg-indigo-600 border-indigo-100 ring-4 ring-indigo-50 shadow-indigo-200' 
-                        : 'bg-white border-gray-300 group-hover:border-indigo-400'
+                        ? 'bg-zinc-900 border-white ring-4 ring-zinc-100 shadow-zinc-200' 
+                        : 'bg-white border-zinc-300 group-hover:border-zinc-500'
                     }`}></div>
 
                     {/* Content Card */}
                     <div className={`ml-8 rounded-2xl p-5 transition-all duration-200 border ${
                       isLatest
-                        ? 'bg-white border-indigo-100 shadow-md shadow-indigo-100/50 ring-1 ring-indigo-50'
-                        : 'bg-white border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200'
+                        ? 'bg-white border-zinc-200 shadow-md ring-1 ring-zinc-50'
+                        : 'bg-white border-zinc-100 shadow-sm hover:shadow-md hover:border-zinc-200'
                     }`}>
                       
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                         {/* User Info */}
                         <div className="flex items-start gap-3">
                           <div className={`mt-1 p-2.5 rounded-xl ${
-                            isLatest ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-500'
+                            isLatest ? 'bg-zinc-100 text-zinc-900' : 'bg-gray-50 text-gray-500'
                           }`}>
                             <RefreshCw className={`w-5 h-5 ${isLatest ? 'animate-[spin_4s_linear_infinite]' : ''}`} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                              <span className="text-base font-bold text-zinc-900 transition-colors">
                                 {regen.regeneratedBy?.name || 'Unknown User'}
                               </span>
                               {isLatest && (
-                                <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-indigo-600 text-white shadow-sm shadow-indigo-200">
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-zinc-900 text-white shadow-sm">
                                   Latest
                                 </span>
                               )}
