@@ -165,6 +165,7 @@ const ImportPage = () => {
             className="hidden"
             ref={fileInputRef}
             onChange={handleFileChange}
+            disabled={uploadMutation.isPending}
           />
           <div className="flex flex-col items-center justify-center space-y-4">
             <div className="p-4 bg-blue-50 rounded-full text-blue-500">
@@ -186,6 +187,7 @@ const ImportPage = () => {
             <Button
               variant={file ? 'primary' : 'outline'}
               onClick={() => fileInputRef.current?.click()}
+              disabled={uploadMutation.isPending}
             >
               {file ? 'Change File' : 'Select File'}
             </Button>
@@ -193,10 +195,15 @@ const ImportPage = () => {
         </div>
 
         {file && (
-          <div className="mt-6 flex justify-end">
-            <Button onClick={handleUpload} isLoading={uploadMutation.isPending}>
-              Start Import
+          <div className="mt-6 flex flex-col items-end">
+            <Button onClick={handleUpload} isLoading={uploadMutation.isPending} disabled={uploadMutation.isPending}>
+              {uploadMutation.isPending ? 'Processing Import...' : 'Start Import'}
             </Button>
+            {uploadMutation.isPending && (
+              <p className="text-sm text-indigo-600 mt-2 font-medium animate-pulse">
+                Data is being parsed and inserted into the database. Please do not close this window.
+              </p>
+            )}
           </div>
         )}
       </div>

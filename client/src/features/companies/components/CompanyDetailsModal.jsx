@@ -24,6 +24,7 @@ import Button from "../../../components/ui/Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../api/axios";
 import { toast } from "react-toastify";
+import { openMailComposer } from "../../../utils/mailUtils";
 
 const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
   const { data: company, isLoading, isError } = useCompany(companyId);
@@ -209,7 +210,17 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
 
           {/* Contact Details Card */}
           <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contact Channels</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contact Channels</h3>
+              <Button 
+                onClick={() => openMailComposer(company.email, company.company_name, user?.email)} 
+                variant="outline" 
+                size="sm"
+              >
+                <Mail className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+                Send Email
+              </Button>
+            </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Email */}
@@ -219,12 +230,13 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                   <div className="min-w-0">
                     <span className="block text-xs text-gray-400">Email Address</span>
                     {company.email ? (
-                      <a 
-                        href={`mailto:${company.email}`}
-                        className="font-semibold text-blue-600 hover:underline text-sm block truncate"
+                      <button 
+                        type="button"
+                        onClick={() => openMailComposer(company.email, company.company_name, user?.email)}
+                        className="font-semibold text-blue-600 hover:underline text-sm block truncate text-left cursor-pointer bg-transparent border-none p-0"
                       >
                         {company.email}
-                      </a>
+                      </button>
                     ) : (
                       <span className="text-sm text-gray-400 font-medium">None</span>
                     )}

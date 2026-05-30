@@ -10,6 +10,7 @@ import TagAssignmentModal from '../components/TagAssignmentModal';
 import CompanyDetailsModal from '../components/CompanyDetailsModal';
 import ExportConfigModal from '../../../components/ui/ExportConfigModal';
 import { toast } from 'react-toastify';
+import { openMailComposer } from '../../../utils/mailUtils';
 
 const fetchCompanies = async (searchParams, page = 1, limit = 10) => {
   const query = new URLSearchParams();
@@ -337,12 +338,13 @@ const CompaniesPage = () => {
       accessor: 'email',
       cell: (row) =>
         row.email ? (
-          <a
-            href={`mailto:${row.email}`}
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium select-all"
+          <button
+            type="button"
+            onClick={() => openMailComposer(row.email, row.company_name, user?.email)}
+            className="text-blue-600 hover:text-blue-800 hover:underline font-medium select-all text-left cursor-pointer bg-transparent border-none p-0"
           >
             {row.email}
-          </a>
+          </button>
         ) : (
           '-'
         ),

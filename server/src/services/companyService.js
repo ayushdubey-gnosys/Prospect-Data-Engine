@@ -45,148 +45,108 @@ const bulkInsertCompanies = async (
     }
 
     // ==============================
-    // Create Bulk Operations
+    // Process in Chunks
     // ==============================
 
-    const ops = validCompanies.map((c) => {
-      // ------------------------------
-      // Clean Undefined Values
-      // ------------------------------
+    const CHUNK_SIZE = 1000;
+    let totalInserted = 0;
+    let totalUpdated = 0;
 
-      const cleanedDoc = {};
+    for (let i = 0; i < validCompanies.length; i += CHUNK_SIZE) {
+      const chunk = validCompanies.slice(i, i + CHUNK_SIZE);
 
-      Object.keys(c).forEach((key) => {
-        if (
-          c[key] !== undefined &&
-          c[key] !== null &&
-          c[key] !== ""
-        ) {
-          cleanedDoc[key] = c[key];
+      const ops = chunk.map((c) => {
+        // Clean Undefined Values
+        const cleanedDoc = {};
+
+        Object.keys(c).forEach((key) => {
+          if (
+            c[key] !== undefined &&
+            c[key] !== null &&
+            c[key] !== ""
+          ) {
+            cleanedDoc[key] = c[key];
+          }
+        });
+
+        // attach file id
+        cleanedDoc.fileId = fileId;
+
+        // Deduplication Filter
+        let filter = {};
+
+        if (cleanedDoc.company_name && cleanedDoc.city) {
+          filter = {
+            company_name: {
+              $regex: new RegExp(
+                "^" +
+                  cleanedDoc.company_name
+                    .trim()
+                    .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+                  "$",
+                "i"
+              ),
+            },
+            city: {
+              $regex: new RegExp(
+                "^" +
+                  cleanedDoc.city
+                    .trim()
+                    .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+                  "$",
+                "i"
+              ),
+            },
+          };
+        } else if (cleanedDoc.company_name && cleanedDoc.website) {
+          filter = {
+            company_name: {
+              $regex: new RegExp(
+                "^" +
+                  cleanedDoc.company_name
+                    .trim()
+                    .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+                  "$",
+                "i"
+              ),
+            },
+            website: {
+              $regex: new RegExp(
+                "^" +
+                  cleanedDoc.website
+                    .trim()
+                    .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
+                  "$",
+                "i"
+              ),
+            },
+          };
+        } else {
+          filter = {
+            _id: new mongoose.Types.ObjectId(),
+          };
         }
+
+        return {
+          updateOne: {
+            filter,
+            update: { $set: cleanedDoc },
+            upsert: true,
+          },
+        };
       });
 
-      // attach file id
-      cleanedDoc.fileId = fileId;
-
-      // ==============================
-      // Deduplication Filter
-      // ==============================
-
-      let filter = {};
-
-      // duplicate based on
-      // company_name + city
-      if (
-        cleanedDoc.company_name &&
-        cleanedDoc.city
-      ) {
-        filter = {
-          company_name: {
-            $regex: new RegExp(
-              "^" +
-                cleanedDoc.company_name
-                  .trim()
-                  .replace(
-                    /[-\/\\^$*+?.()|[\]{}]/g,
-                    "\\$&"
-                  ) +
-                "$",
-              "i"
-            ),
-          },
-
-          city: {
-            $regex: new RegExp(
-              "^" +
-                cleanedDoc.city
-                  .trim()
-                  .replace(
-                    /[-\/\\^$*+?.()|[\]{}]/g,
-                    "\\$&"
-                  ) +
-                "$",
-              "i"
-            ),
-          },
-        };
-      }
-
-      // duplicate based on
-      // company_name + website
-      else if (
-        cleanedDoc.company_name &&
-        cleanedDoc.website
-      ) {
-        filter = {
-          company_name: {
-            $regex: new RegExp(
-              "^" +
-                cleanedDoc.company_name
-                  .trim()
-                  .replace(
-                    /[-\/\\^$*+?.()|[\]{}]/g,
-                    "\\$&"
-                  ) +
-                "$",
-              "i"
-            ),
-          },
-
-          website: {
-            $regex: new RegExp(
-              "^" +
-                cleanedDoc.website
-                  .trim()
-                  .replace(
-                    /[-\/\\^$*+?.()|[\]{}]/g,
-                    "\\$&"
-                  ) +
-                "$",
-              "i"
-            ),
-          },
-        };
-      }
-
-      // fallback insert
-      else {
-        filter = {
-          _id: new mongoose.Types.ObjectId(),
-        };
-      }
-
-      return {
-        updateOne: {
-          filter,
-
-          update: {
-            $set: cleanedDoc,
-          },
-
-          upsert: true,
-        },
-      };
-    });
-
-    // ==============================
-    // Bulk Write
-    // ==============================
-
-    const result =
-      await Company.bulkWrite(ops, {
+      const result = await Company.bulkWrite(ops, {
         ordered: false,
       });
 
-    // ==============================
-    // Return Result
-    // ==============================
+      totalInserted += result.upsertedCount || 0;
+      totalUpdated += result.modifiedCount || 0;
+    }
 
     return {
-      inserted:
-        result.upsertedCount || 0,
-
-      updated:
-        result.modifiedCount || 0,
+      inserted: totalInserted,
+      updated: totalUpdated,
     };
   } catch (err) {
     console.error(
@@ -447,120 +407,129 @@ const checkDuplicateData = async (companies) => {
     };
   }
 
+  const validCompanies = companies.filter(
+    (c) => c.company_name && String(c.company_name).trim() !== ""
+  );
+
+  if (validCompanies.length === 0) {
+    return {
+      totalChecked: 0,
+      duplicateCount: 0,
+      duplicates: [],
+    };
+  }
+
+  // ==============================
+  // Batch duplicate check using $or
+  // Process in chunks to avoid too-large queries
+  // ==============================
+
+  const CHUNK_SIZE = 500;
   const duplicates = [];
 
-  for (const c of companies) {
-    if (!c.company_name || String(c.company_name).trim() === "") {
-      continue;
+  for (let i = 0; i < validCompanies.length; i += CHUNK_SIZE) {
+    const chunk = validCompanies.slice(i, i + CHUNK_SIZE);
+
+    // Collect all unique company names, emails, and websites from this chunk
+    const companyNames = [];
+    const emails = [];
+    const websites = [];
+
+    for (const c of chunk) {
+      if (c.company_name) companyNames.push(c.company_name.trim().toLowerCase());
+      if (c.email && String(c.email).trim()) emails.push(c.email.trim().toLowerCase());
+      if (c.website && String(c.website).trim()) websites.push(c.website.trim().toLowerCase());
     }
 
-    const companyNameRegex = new RegExp(
-      "^" +
-        c.company_name
-          .trim()
-          .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-        "$",
-      "i"
-    );
-
-    // Build OR conditions for matching
+    // Build a single query to find any existing records matching names/emails/websites
     const orConditions = [];
 
-    // Match by company_name + email
-    if (c.email && String(c.email).trim() !== "") {
+    if (companyNames.length > 0) {
       orConditions.push({
-        company_name: companyNameRegex,
-        email: {
-          $regex: new RegExp(
-            "^" +
-              c.email
-                .trim()
-                .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-              "$",
-            "i"
+        company_name: {
+          $in: companyNames.map(
+            (n) => new RegExp("^" + n.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i")
           ),
         },
       });
     }
 
-    // Match by company_name + website
-    if (c.website && String(c.website).trim() !== "") {
-      orConditions.push({
-        company_name: companyNameRegex,
-        website: {
-          $regex: new RegExp(
-            "^" +
-              c.website
-                .trim()
-                .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-              "$",
-            "i"
-          ),
-        },
-      });
-    }
-
-    // Match by email alone (strong unique identifier)
-    if (c.email && String(c.email).trim() !== "") {
+    if (emails.length > 0) {
       orConditions.push({
         email: {
-          $regex: new RegExp(
-            "^" +
-              c.email
-                .trim()
-                .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-              "$",
-            "i"
+          $in: emails.map(
+            (e) => new RegExp("^" + e.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i")
           ),
         },
       });
     }
 
-    // Match by website alone (strong unique identifier)
-    if (c.website && String(c.website).trim() !== "") {
+    if (websites.length > 0) {
       orConditions.push({
         website: {
-          $regex: new RegExp(
-            "^" +
-              c.website
-                .trim()
-                .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-              "$",
-            "i"
+          $in: websites.map(
+            (w) => new RegExp("^" + w.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i")
           ),
         },
       });
     }
 
-    if (orConditions.length === 0) {
-      // Fallback: just check company_name
-      orConditions.push({
-        company_name: companyNameRegex,
-      });
-    }
+    if (orConditions.length === 0) continue;
 
-    const existing = await Company.findOne({
-      $or: orConditions,
-    }).lean();
+    // Single batch query for this chunk
+    const existingRecords = await Company.find(
+      { $or: orConditions },
+      { company_name: 1, email: 1, website: 1 }
+    ).lean();
 
-    if (existing) {
-      duplicates.push({
-        company_name: c.company_name,
-        email: c.email || null,
-        website: c.website || null,
-        matchedWith: {
-          company_name: existing.company_name,
-          email: existing.email || null,
-          website: existing.website || null,
-        },
-      });
+    // Build lookup sets from existing records for fast matching
+    const existingNameSet = new Set(
+      existingRecords.map((r) => (r.company_name || "").toLowerCase().trim())
+    );
+    const existingEmailSet = new Set(
+      existingRecords.filter((r) => r.email).map((r) => r.email.toLowerCase().trim())
+    );
+    const existingWebsiteSet = new Set(
+      existingRecords.filter((r) => r.website).map((r) => r.website.toLowerCase().trim())
+    );
+
+    // Check each company in this chunk against existing records
+    for (const c of chunk) {
+      const name = (c.company_name || "").toLowerCase().trim();
+      const email = (c.email || "").toLowerCase().trim();
+      const website = (c.website || "").toLowerCase().trim();
+
+      let isDuplicate = false;
+
+      // Match by company_name + email
+      if (name && email && existingNameSet.has(name) && existingEmailSet.has(email)) {
+        isDuplicate = true;
+      }
+      // Match by company_name + website
+      else if (name && website && existingNameSet.has(name) && existingWebsiteSet.has(website)) {
+        isDuplicate = true;
+      }
+      // Match by email alone
+      else if (email && existingEmailSet.has(email)) {
+        isDuplicate = true;
+      }
+      // Match by website alone
+      else if (website && existingWebsiteSet.has(website)) {
+        isDuplicate = true;
+      }
+
+      if (isDuplicate) {
+        duplicates.push({
+          company_name: c.company_name,
+          email: c.email || null,
+          website: c.website || null,
+        });
+      }
     }
   }
 
   return {
-    totalChecked: companies.filter(
-      (c) => c.company_name && String(c.company_name).trim() !== ""
-    ).length,
+    totalChecked: validCompanies.length,
     duplicateCount: duplicates.length,
     duplicates,
   };

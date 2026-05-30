@@ -1,6 +1,8 @@
 import React from 'react';
 import Table from '../../../components/ui/Table';
 import { Circle, FileText, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { openMailComposer } from '../../../utils/mailUtils';
+import { useAuth } from '../../../hooks/useAuth';
 
 const getLeadStatusIcon = (status) => {
   switch (status) {
@@ -24,7 +26,7 @@ const getLeadStatusLabel = (status) => {
   }
 };
 
-const columns = [
+const getColumns = (userEmail) => [
   {
     header: 'Company Name',
     accessor: 'company_name',
@@ -69,7 +71,7 @@ const columns = [
     header: 'Email',
     accessor: 'email',
     cell: (row) => row.email ? (
-      <a href={`mailto:${row.email}`} className="text-blue-600 hover:underline font-medium select-all">{row.email}</a>
+      <button type="button" onClick={() => openMailComposer(row.email, row.company_name, userEmail)} className="text-blue-600 hover:underline font-medium select-all text-left cursor-pointer bg-transparent border-none p-0">{row.email}</button>
     ) : '-'
   },
   {
@@ -121,6 +123,9 @@ const columns = [
 ];
 
 const FileCompaniesTable = ({ data, isLoading, emptyMessage }) => {
+  const { user } = useAuth();
+  const columns = getColumns(user?.email);
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <Table columns={columns} data={data} isLoading={isLoading} emptyMessage={emptyMessage} />

@@ -345,23 +345,22 @@ const uploadHandler = [
       // Parse File
       // =======================================
 
+      console.log(`[UPLOAD] Parsing file: ${req.file.originalname}`);
+      const parseStart = Date.now();
+
       const rows =
         await fileService.parseFile(
           req.file.path,
           req.file.mimetype
         );
 
-      // =======================================
-      // Debug Logs
-      // =======================================
-
-     
-      
+      console.log(`[UPLOAD] Parsed ${rows.length} total rows in ${Date.now() - parseStart}ms`);
 
       // =======================================
       // Map Companies
       // =======================================
 
+      const mapStart = Date.now();
       const companies = rows
         .map((row) =>
           mapRowToCompany(row)
@@ -371,6 +370,32 @@ const uploadHandler = [
             Object.keys(c).length > 1
         );
 
+      // =======================================
+      // In-Memory Deduplication (Across Sub-sheets)
+      // =======================================
+
+      const uniqueCompaniesMap = new Map();
+      
+      companies.forEach((c) => {
+        if (!c.company_name) return;
+        
+        // Use company_name as primary unique key within the file
+        // To be safe, we also append email and website if they exist
+        const key = (c.company_name || "").toLowerCase().trim() + "|" + 
+                    (c.email || "").toLowerCase().trim() + "|" + 
+                    (c.website || "").toLowerCase().trim();
+        
+        if (!uniqueCompaniesMap.has(key)) {
+          uniqueCompaniesMap.set(key, c);
+        }
+      });
+      
+      const uniqueCompanies = Array.from(uniqueCompaniesMap.values());
+      const inMemoryDuplicatesSkipped = companies.length - uniqueCompanies.length;
+
+      if (inMemoryDuplicatesSkipped > 0) {
+        console.log(`[UPLOAD] Skipped ${inMemoryDuplicatesSkipped} in-memory duplicates across sheets.`);
+      }
 
       // =======================================
       // Data-Level Duplicate Check
@@ -378,7 +403,7 @@ const uploadHandler = [
 
       const dupCheck =
         await companyService.checkDuplicateData(
-          companies
+          uniqueCompanies
         );
 
       // If ALL records are duplicates, reject the upload entirely
@@ -427,7 +452,7 @@ const uploadHandler = [
       }
 
       // If SOME records are duplicates, filter them out
-      let companiesToInsert = companies;
+      let companiesToInsert = uniqueCompanies;
       let skippedDuplicates = 0;
 
       if (dupCheck.duplicateCount > 0) {
@@ -448,7 +473,7 @@ const uploadHandler = [
           )
         );
 
-        companiesToInsert = companies.filter(
+        companiesToInsert = uniqueCompanies.filter(
           (c) => {
             const key =
               (c.company_name || "")
@@ -513,9 +538,9 @@ const uploadHandler = [
         success: true,
 
         message:
-          skippedDuplicates > 0
+          (skippedDuplicates + inMemoryDuplicatesSkipped) > 0
             ? "File uploaded with " +
-              skippedDuplicates +
+              (skippedDuplicates + inMemoryDuplicatesSkipped) +
               " duplicate records skipped"
             : "File uploaded successfully",
 

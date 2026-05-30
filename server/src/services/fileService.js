@@ -26,20 +26,29 @@ const parseCSV = (filePath) =>
 // =======================================
 
 const parseExcel = (filePath) => {
-  const workbook =
-    xlsx.readFile(filePath);
+  const workbook = xlsx.readFile(filePath);
+  let allData = [];
 
-  const firstSheet =
-    workbook.SheetNames[0];
+  console.log(`[PARSE] Excel file has ${workbook.SheetNames.length} sheet(s): ${workbook.SheetNames.join(", ")}`);
 
-  const data = xlsx.utils.sheet_to_json(
-    workbook.Sheets[firstSheet],
-    {
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) continue;
+
+    const data = xlsx.utils.sheet_to_json(sheet, {
       defval: "",
-    }
-  );
+      raw: false, // convert everything to strings for consistent mapping
+    });
 
-  return data;
+    console.log(`[PARSE] Sheet "${sheetName}": ${data.length} rows found`);
+
+    if (data.length > 0) {
+      allData = allData.concat(data);
+    }
+  }
+
+  console.log(`[PARSE] Total rows from all sheets: ${allData.length}`);
+  return allData;
 };
 
 // =======================================
