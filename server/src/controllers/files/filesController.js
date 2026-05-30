@@ -181,19 +181,15 @@ const filterAndExport = async (req, res, next) => {
       };
 
       addField("Company Name", c.company_name || "");
+      addField("Website", c.website || "");
+      addField("Email", c.email || "");
+      addField("Phone", c.phone || "");
       addField("City", c.city || "");
       addField("Country", c.country || "");
       addField("Industry", c.industry || "");
-      addField("Phone", c.phone || "");
-      addField("Website", c.website || "");
-      addField("Social Media", c.socialMedia || "");
-      addField("Company Owner", c.companyOwnerName || "");
-      addField("Turnover", c.turnover || "");
-      addField("Source", c.source || "");
       addField("Tags", c.tags ? c.tags.map(t => t.name).join(", ") : "");
-      addField("Employee Contacts", c.contacts && c.contacts.length > 0 
-        ? c.contacts.map(con => `${con.name || ""} (${con.position || ""} - ${con.contactNumber || ""}${con.email ? `, ${con.email}` : ""})`).join("; ")
-        : "");
+      addField("Description", c.description || "");
+      addField("Source", c.source || "");
 
       return row;
     });

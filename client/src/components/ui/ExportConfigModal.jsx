@@ -5,17 +5,15 @@ import Button from './Button';
 
 const ALL_COLUMNS = [
   { id: 'Company Name', label: 'Company Name', category: 'Company Profile' },
-  { id: 'Company Owner', label: 'Company Owner', category: 'Company Profile' },
+  { id: 'Website', label: 'Website', category: 'Company Profile' },
   { id: 'Industry', label: 'Industry', category: 'Company Profile' },
+  { id: 'Email', label: 'Email', category: 'Contact Details' },
+  { id: 'Phone', label: 'Phone', category: 'Contact Details' },
   { id: 'City', label: 'City', category: 'Location' },
   { id: 'Country', label: 'Country', category: 'Location' },
-  { id: 'Phone', label: 'Phone', category: 'Contact Details' },
-  { id: 'Website', label: 'Website', category: 'Contact Details' },
-  { id: 'Social Media', label: 'Social Media', category: 'Contact Details' },
-  { id: 'Turnover', label: 'Turnover', category: 'Financials' },
-  { id: 'Source', label: 'Source', category: 'Metadata' },
   { id: 'Tags', label: 'Tags', category: 'Metadata' },
-  { id: 'Employee Contacts', label: 'Employee Contacts', category: 'Contacts' },
+  { id: 'Description', label: 'Description', category: 'Metadata' },
+  { id: 'Source', label: 'Source', category: 'Metadata' },
 ];
 
 const ExportConfigModal = ({ isOpen, onClose, onConfirm, isExporting, defaultFormat = 'xlsx' }) => {
