@@ -311,39 +311,25 @@ const CompaniesPage = () => {
     },
 
     {
-      header: 'Tags',
-      accessor: 'tags',
-      cell: (row) => {
-        const tags = row.tags || [];
-        return (
-          <div className="flex items-center gap-2 min-w-[150px]">
-            {tags.length === 0 ? (
-              <span className="text-gray-400 text-xs italic">No tags</span>
-            ) : (
-              <div className="flex flex-wrap gap-1.5 py-1">
-                {tags.map((t) => (
-                  <span key={t._id} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    {t.name}
-                  </span>
-                ))}
-              </div>
-            )}
-            
-            {(role === 'admin' || role === 'sales') && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenTagAssignment([row._id], row.tags);
-                }}
-                className="p-1 hover:bg-indigo-50 rounded-full text-gray-400 hover:text-indigo-600 transition ml-auto shrink-0"
-                title="Manage tags for this company"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-        );
-      },
+      header: 'Website',
+      accessor: 'website',
+      cell: (row) =>
+        row.website ? (
+          <a
+            href={
+              row.website.startsWith('http')
+                ? row.website
+                : `https://${row.website}`
+            }
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+          >
+            Visit
+          </a>
+        ) : (
+          '-'
+        ),
     },
 
     {
@@ -384,6 +370,42 @@ const CompaniesPage = () => {
       header: 'Industry',
       accessor: 'industry',
       cell: (row) => row.industry || '-',
+    },
+
+    {
+      header: 'Tags',
+      accessor: 'tags',
+      cell: (row) => {
+        const tags = row.tags || [];
+        return (
+          <div className="flex items-center gap-2 min-w-[150px] max-w-[250px]">
+            {tags.length === 0 ? (
+              <span className="text-gray-400 text-xs italic">No tags</span>
+            ) : (
+              <div className="flex flex-nowrap gap-1.5 py-1 overflow-x-auto custom-scrollbar flex-1 pb-1">
+                {tags.map((t) => (
+                  <span key={t._id} className="inline-flex shrink-0 items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {t.name}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            {(role === 'admin' || role === 'sales') && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenTagAssignment([row._id], row.tags);
+                }}
+                className="p-1 hover:bg-indigo-50 rounded-full text-gray-400 hover:text-indigo-600 transition shrink-0"
+                title="Manage tags for this company"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        );
+      },
     },
 
     {

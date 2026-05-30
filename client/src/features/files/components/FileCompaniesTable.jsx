@@ -52,21 +52,18 @@ const columns = [
     }
   },
   {
-    header: 'Tags',
-    accessor: 'tags',
-    cell: (row) => {
-      const tags = row.tags || [];
-      if (tags.length === 0) return <span className="text-gray-400 text-xs">No tags</span>;
-      return (
-        <div className="flex flex-wrap gap-1.5 py-1 min-w-[120px]">
-          {tags.map((t) => (
-            <span key={t._id} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-              {t.name}
-            </span>
-          ))}
-        </div>
-      );
-    }
+    header: 'Website',
+    accessor: 'website',
+    cell: (row) => row.website ? (
+      <a
+        href={row.website.startsWith('http') ? row.website : `https://${row.website}`}
+        target="_blank"
+        rel="noreferrer"
+        className="text-blue-600 hover:underline font-medium"
+      >
+        Visit
+      </a>
+    ) : '-'
   },
   {
     header: 'Email',
@@ -83,6 +80,23 @@ const columns = [
   { header: 'City', accessor: 'city', cell: (row) => row.city || '-' },
   { header: 'Country', accessor: 'country', cell: (row) => row.country || '-' },
   { header: 'Industry', accessor: 'industry', cell: (row) => row.industry || '-' },
+  {
+    header: 'Tags',
+    accessor: 'tags',
+    cell: (row) => {
+      const tags = row.tags || [];
+      if (tags.length === 0) return <span className="text-gray-400 text-xs">No tags</span>;
+      return (
+        <div className="flex flex-nowrap gap-1.5 py-1 overflow-x-auto custom-scrollbar min-w-[120px] max-w-[200px] pb-1">
+          {tags.map((t) => (
+            <span key={t._id} className="inline-flex shrink-0 items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+              {t.name}
+            </span>
+          ))}
+        </div>
+      );
+    }
+  },
   {
     header: 'Description',
     accessor: 'description',
