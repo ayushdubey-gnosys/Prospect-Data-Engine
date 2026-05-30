@@ -115,6 +115,28 @@ const companySchema = new mongoose.Schema(
       ref: "UploadedFile",
       index: true,
     },
+
+    description: {
+      type: String,
+      default: null,
+    },
+
+    leadStatus: {
+      status: {
+        type: String,
+        enum: ["in_progress", "converted", "dead", "none"],
+        default: "none",
+      },
+      updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
   },
   {
     timestamps: true,

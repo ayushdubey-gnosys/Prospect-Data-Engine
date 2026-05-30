@@ -301,6 +301,8 @@ const getCompaniesByFile = async ({
   const [data, total] =
     await Promise.all([
       Company.find(query)
+        .populate("tags")
+        .populate("leadStatus.updatedBy", "name email")
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit))

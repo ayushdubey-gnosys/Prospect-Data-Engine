@@ -43,6 +43,10 @@ const getCompanies = async (req, res) => {
   try {
     const filters = {};
 
+    if (req.query.search) {
+      filters.company_name = { $regex: req.query.search, $options: "i" };
+    }
+
     if (req.query.city) {
       filters.city = { $regex: req.query.city, $options: "i" };
     }
@@ -124,6 +128,7 @@ const getCompanies = async (req, res) => {
 
     const companies = await Company.find(filters)
       .populate("tags")
+      .populate("leadStatus.updatedBy", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(isAll ? 0 : limit);
@@ -144,7 +149,9 @@ const getCompanies = async (req, res) => {
 
 const getCompany = async (req, res) => {
   try {
-    const company = await Company.findById(req.params.id).populate("tags");
+    const company = await Company.findById(req.params.id)
+      .populate("tags")
+      .populate("leadStatus.updatedBy", "name email");
 
     res.json(company);
   } catch (error) {
@@ -156,9 +163,24 @@ const getCompany = async (req, res) => {
 
 const updateCompany = async (req, res) => {
   try {
-    const company = await Company.findByIdAndUpdate(req.params.id, req.body, {
+    const updateData = { ...req.body };
+
+    // If lead status is updated, track who updated it and when
+    if (updateData.leadStatus && updateData.leadStatus.status) {
+      // Ensure we keep existing leadStatus properties if only status is sent
+      const existingCompany = await Company.findById(req.params.id);
+      
+      updateData.leadStatus = {
+        ...existingCompany.leadStatus,
+        status: updateData.leadStatus.status,
+        updatedBy: req.user ? req.user._id : null,
+        updatedAt: new Date()
+      };
+    }
+
+    const company = await Company.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
-    });
+    }).populate("tags").populate("leadStatus.updatedBy", "name email");
 
     res.json(company);
   } catch (error) {

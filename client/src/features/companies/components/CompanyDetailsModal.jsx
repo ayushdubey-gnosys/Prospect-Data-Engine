@@ -1,30 +1,71 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Building2, 
   Mail, 
   Phone, 
   Globe, 
-  FileText, 
-  DollarSign, 
   Calendar, 
   Tag as TagIcon, 
   Copy, 
   Check, 
   ExternalLink,
-  Edit2
+  Edit2,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Circle,
+  Save,
+  FileText
 } from "lucide-react";
 import { useCompany } from "../hooks/useCompany";
 import { useAuth } from "../../../hooks/useAuth";
 import Modal from "../../../components/ui/Modal";
 import Button from "../../../components/ui/Button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../../../api/axios";
+import { toast } from "react-toastify";
 
 const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
   const { data: company, isLoading, isError } = useCompany(companyId);
   const { user } = useAuth();
-  const [copiedField, setCopiedField] = React.useState(null);
-
+  const queryClient = useQueryClient();
+  const [copiedField, setCopiedField] = useState(null);
+  const [description, setDescription] = useState("");
+  
   const role = user?.role || "sales";
   const canEditTags = role === "admin" || role === "sales";
+  const canUpdateDetails = role === "admin" || role === "sales";
+
+  useEffect(() => {
+    if (company) {
+      setDescription(company.description || "");
+    }
+  }, [company]);
+
+  const updateCompanyMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await api.put(`/company/${companyId}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["company", companyId]);
+      queryClient.invalidateQueries(["companies"]);
+      toast.success("Company updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update company");
+    }
+  });
+
+  const handleUpdateLeadStatus = (status) => {
+    updateCompanyMutation.mutate({
+      leadStatus: { status }
+    });
+  };
+
+  const handleSaveDescription = () => {
+    updateCompanyMutation.mutate({ description });
+  };
 
   const handleCopy = (text, fieldName) => {
     if (!text) return;
@@ -96,24 +137,12 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
             </div>
           </div>
 
-          {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Primary Identifiers */}
+            {/* Meta & Lead Status */}
             <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Identifiers & Meta</h3>
               
-              {/* Company Owner */}
-              <div className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0">
-                <div>
-                  <span className="block text-xs text-gray-400 font-medium">Company Owner</span>
-                  <span className="font-semibold text-gray-700 text-sm">
-                    {company.companyOwnerName || "Not Available"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Created At */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 py-1 border-b border-gray-50 pb-3">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <div>
                   <span className="block text-xs text-gray-400">Imported / Created On</span>
@@ -122,26 +151,58 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                   </span>
                 </div>
               </div>
+
+              <div>
+                <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Lead Status</span>
+                {canUpdateDetails ? (
+                  <select
+                    className="w-full sm:w-auto bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 outline-none font-medium"
+                    value={company.leadStatus?.status || "none"}
+                    onChange={(e) => handleUpdateLeadStatus(e.target.value)}
+                    disabled={updateCompanyMutation.isLoading}
+                  >
+                    <option value="none">⚪ None</option>
+                    <option value="in_progress">🔵 In Progress</option>
+                    <option value="converted">🟢 Converted</option>
+                    <option value="dead">🔴 Dead</option>
+                  </select>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {company.leadStatus?.status === "in_progress" && <span className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full"><Clock className="w-4 h-4" /> In Progress</span>}
+                    {company.leadStatus?.status === "converted" && <span className="flex items-center gap-1.5 text-sm font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full"><CheckCircle2 className="w-4 h-4" /> Converted</span>}
+                    {company.leadStatus?.status === "dead" && <span className="flex items-center gap-1.5 text-sm font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-full"><XCircle className="w-4 h-4" /> Dead</span>}
+                    {(!company.leadStatus?.status || company.leadStatus?.status === "none") && <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full"><Circle className="w-4 h-4" /> None</span>}
+                  </div>
+                )}
+                {company.leadStatus?.updatedBy && (
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    Last updated by <span className="font-semibold text-gray-700">{company.leadStatus.updatedBy.name}</span> on {new Date(company.leadStatus.updatedAt).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Financial Card */}
-            <div className="bg-emerald-50/50 p-5 rounded-xl border border-emerald-100/60 shadow-sm flex flex-col justify-between">
-              <div>
-                <h3 className="text-xs font-bold text-emerald-700/70 uppercase tracking-wider">Financial Standing</h3>
-                <span className="block text-xs text-emerald-600/75 mt-2">Annual Turnover</span>
-              </div>
-              <div className="flex items-baseline gap-2 py-4">
-                <DollarSign className="w-6 h-6 text-emerald-600" />
-                <span className="text-3xl font-extrabold text-emerald-700">
-                  {company.turnover 
-                    ? `₹${Number(company.turnover).toLocaleString("en-IN")}`
-                    : "Not Disclosed"
-                  }
-                </span>
-              </div>
-              <div className="text-xs text-emerald-600/80 bg-emerald-100/50 px-2 py-1 rounded inline-flex items-center gap-1.5 self-start">
-                <FileText className="w-3.5 h-3.5" />
-                <span>Financial metrics based on imported source data</span>
+            {/* Description Section */}
+            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col h-full">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Company Description</h3>
+              <div className="flex-1 flex flex-col gap-3">
+                <textarea
+                  className="w-full flex-1 min-h-[100px] border border-gray-200 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-gray-50/50"
+                  placeholder="Add manual description or notes about this company..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={!canUpdateDetails || updateCompanyMutation.isLoading}
+                />
+                {canUpdateDetails && (
+                  <Button 
+                    onClick={handleSaveDescription} 
+                    disabled={updateCompanyMutation.isLoading || description === (company.description || "")}
+                    size="sm"
+                    className="self-end"
+                  >
+                    <Save className="w-4 h-4 mr-1.5" /> Save Description
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -206,10 +267,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                   </button>
                 )}
               </div>
-            </div>
 
-            {/* Website & Social Media */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Website */}
               {company.website ? (
                 <div className="flex items-center justify-between p-3 rounded-lg border border-indigo-50 bg-indigo-50/20">
@@ -244,41 +302,6 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                   </div>
                 </div>
               )}
-
-              {/* Social Media */}
-              {company.socialMedia ? (
-                <div className="flex items-center justify-between p-3 rounded-lg border border-indigo-50 bg-indigo-50/20">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Globe className="w-4 h-4 text-indigo-500 shrink-0" />
-                    <div className="min-w-0">
-                      <span className="block text-xs text-indigo-500/70">Social Media</span>
-                      <a 
-                        href={company.socialMedia.startsWith("http") ? company.socialMedia : `https://${company.socialMedia}`}
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="font-semibold text-indigo-700 hover:underline text-sm flex items-center gap-1.5 block truncate"
-                      >
-                        <span>{company.socialMedia}</span>
-                        <ExternalLink className="w-3.5 h-3.5 inline shrink-0" />
-                      </a>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleCopy(company.socialMedia, "socialMedia")}
-                    className="p-1 hover:bg-white rounded text-indigo-400 hover:text-indigo-600 transition"
-                  >
-                    {copiedField === "socialMedia" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/10">
-                  <Globe className="w-4 h-4 text-gray-300" />
-                  <div>
-                    <span className="block text-xs text-gray-400">Social Media</span>
-                    <span className="text-sm text-gray-400 font-medium">None</span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Location Cards */}
@@ -292,56 +315,6 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 <span className="text-sm font-semibold text-gray-700 capitalize">{company.country || "-"}</span>
               </div>
             </div>
-          </div>
-
-          {/* Employee Contacts Section */}
-          <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Employee Contacts</h3>
-            
-            {company.contacts && company.contacts.length > 0 ? (
-              <div className="overflow-x-auto rounded-lg border border-gray-100">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50/70">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Position</th>
-                      <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Contact Number</th>
-                      <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Email</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-100">
-                    {company.contacts.map((contact, index) => (
-                      <tr key={index} className="hover:bg-gray-50/50 transition">
-                        <td className="px-4 py-2.5 font-semibold text-gray-800">{contact.name || "-"}</td>
-                        <td className="px-4 py-2.5 text-gray-600">{contact.position || "-"}</td>
-                        <td className="px-4 py-2.5 text-gray-700">
-                          {contact.contactNumber ? (
-                            <a href={`tel:${contact.contactNumber}`} className="text-blue-600 hover:underline hover:text-blue-800 transition font-medium">
-                              {contact.contactNumber}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                        <td className="px-4 py-2.5 text-gray-700">
-                          {contact.email ? (
-                            <a href={`mailto:${contact.email}`} className="text-blue-600 hover:underline hover:text-blue-800 transition font-medium">
-                              {contact.email}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center p-6 border border-dashed border-gray-200 rounded-xl">
-                <p className="text-xs text-gray-400">No employee contacts listed for this company.</p>
-              </div>
-            )}
           </div>
 
           {/* Tags Section */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Download, Tag } from 'lucide-react';
+import { Plus, Search, Download, Tag, Circle, FileText, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import api from '../../../api/axios';
 import { useAuth } from '../../../hooks/useAuth';
 import Table from '../../../components/ui/Table';
@@ -18,6 +18,7 @@ const fetchCompanies = async (searchParams, page = 1, limit = 10) => {
   if (searchParams.industry) query.append('industry', searchParams.industry);
   if (searchParams.country) query.append('country', searchParams.country);
   if (searchParams.tag) query.append('tag', searchParams.tag);
+  if (searchParams.search) query.append('search', searchParams.search);
   query.append('page', page);
   query.append('limit', limit);
 
@@ -45,6 +46,7 @@ const CompaniesPage = () => {
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
 
   const [filters, setFilters] = useState({
+    search: '',
     city: '',
     industry: '',
     country: '',
@@ -187,6 +189,7 @@ const CompaniesPage = () => {
       if (filters.industry) query.append('industry', filters.industry);
       if (filters.country) query.append('country', filters.country);
       if (filters.tag) query.append('tag', filters.tag);
+      if (filters.search) query.append('search', filters.search);
       query.append('columns', selectedColumns.join(','));
       query.append('format', format);
 
@@ -219,6 +222,24 @@ const CompaniesPage = () => {
   // =========================
   // Table Columns
   // =========================
+  const getLeadStatusIcon = (status) => {
+    switch (status) {
+      case 'in_progress': return <Clock className="w-4 h-4 text-blue-500" />;
+      case 'converted': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+      case 'dead': return <XCircle className="w-4 h-4 text-red-500" />;
+      default: return <Circle className="w-4 h-4 text-gray-200" />;
+    }
+  };
+
+  const getLeadStatusLabel = (status) => {
+    switch (status) {
+      case 'in_progress': return 'In Progress';
+      case 'converted': return 'Converted';
+      case 'dead': return 'Dead';
+      default: return 'None';
+    }
+  };
+
   const columns = [
     ...(role === 'admin' || role === 'sales'
       ? [
@@ -260,20 +281,91 @@ const CompaniesPage = () => {
     {
       header: 'Company Name',
       accessor: 'company_name',
-      cell: (row) => (
-        <button
-          onClick={() => handleOpenDetails(row._id)}
-          className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-left focus:outline-none transition-colors"
-        >
-          {row.company_name}
-        </button>
-      ),
+      cell: (row) => {
+        const status = row.leadStatus?.status || 'none';
+        const updatedBy = row.leadStatus?.updatedBy?.name || 'Unknown';
+        
+        return (
+          <div className="flex items-center gap-2 group relative">
+            <div className="cursor-help flex items-center">
+              {getLeadStatusIcon(status)}
+              
+              {/* Status Tooltip */}
+              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50 w-48 bg-gray-900 text-white text-xs rounded p-2 shadow-lg">
+                <p className="font-semibold">{getLeadStatusLabel(status)}</p>
+                {status !== 'none' && (
+                  <p className="text-gray-300 mt-1">Updated by: {updatedBy}</p>
+                )}
+                <div className="absolute left-4 top-full w-2 h-2 bg-gray-900 transform rotate-45 -mt-1"></div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleOpenDetails(row._id)}
+              className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-left focus:outline-none transition-colors"
+            >
+              {row.company_name}
+            </button>
+          </div>
+        );
+      },
     },
 
     {
-      header: 'Owner',
-      accessor: 'companyOwnerName',
-      cell: (row) => row.companyOwnerName || '-',
+      header: 'Tags',
+      accessor: 'tags',
+      cell: (row) => {
+        const tags = row.tags || [];
+        return (
+          <div className="flex items-center gap-2 min-w-[150px]">
+            {tags.length === 0 ? (
+              <span className="text-gray-400 text-xs italic">No tags</span>
+            ) : (
+              <div className="flex flex-wrap gap-1.5 py-1">
+                {tags.map((t) => (
+                  <span key={t._id} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {t.name}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            {(role === 'admin' || role === 'sales') && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenTagAssignment([row._id], row.tags);
+                }}
+                className="p-1 hover:bg-indigo-50 rounded-full text-gray-400 hover:text-indigo-600 transition ml-auto shrink-0"
+                title="Manage tags for this company"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        );
+      },
+    },
+
+    {
+      header: 'Email',
+      accessor: 'email',
+      cell: (row) =>
+        row.email ? (
+          <a
+            href={`mailto:${row.email}`}
+            className="text-blue-600 hover:text-blue-800 hover:underline font-medium select-all"
+          >
+            {row.email}
+          </a>
+        ) : (
+          '-'
+        ),
+    },
+
+    {
+      header: 'Contact No',
+      accessor: 'phone',
+      cell: (row) => row.phone || '-',
     },
 
     {
@@ -295,172 +387,25 @@ const CompaniesPage = () => {
     },
 
     {
-      header: 'Phone',
-      accessor: 'phone',
-      cell: (row) => row.phone || '-',
-    },
-
-    {
-      header: 'Email',
-      accessor: 'email',
-      cell: (row) =>
-        row.email ? (
-          <a
-            href={`mailto:${row.email}`}
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium select-all"
-          >
-            {row.email}
-          </a>
-        ) : (
-          '-'
-        ),
-    },
-
-    {
-      header: 'Website',
-      accessor: 'website',
-      cell: (row) =>
-        row.website ? (
-          <a
-            href={
-              row.website.startsWith('http')
-                ? row.website
-                : `https://${row.website}`
-            }
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-          >
-            Visit
-          </a>
-        ) : (
-          '-'
-        ),
-    },
-
-    {
-      header: 'Social Media',
-      accessor: 'socialMedia',
-      cell: (row) =>
-        row.socialMedia ? (
-          <a
-            href={
-              row.socialMedia.startsWith('http')
-                ? row.socialMedia
-                : `https://${row.socialMedia}`
-            }
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-          >
-            Link
-          </a>
-        ) : (
-          '-'
-        ),
-    },
-
-    {
-      header: 'Employee Name',
-      accessor: 'contacts_name',
+      header: 'Description',
+      accessor: 'description',
       cell: (row) => {
-        const contacts = row.contacts || [];
-        if (contacts.length === 0) return '-';
+        if (!row.description) return <span className="text-gray-400 text-xs">-</span>;
         return (
-          <div className="flex flex-col gap-2 py-0.5">
-            {contacts.map((c, i) => (
-              <div key={i} className="h-7 flex items-center text-xs font-semibold text-gray-800 whitespace-nowrap">
-                {c.name || '-'}
-              </div>
-            ))}
+          <div className="relative group inline-block">
+            <button className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded transition">
+              <FileText className="w-3.5 h-3.5" /> Watch description
+            </button>
+            
+            <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-50 w-64 bg-white border border-gray-200 shadow-xl rounded-lg p-3">
+              <h4 className="text-xs font-bold text-gray-800 mb-1 border-b pb-1">Description</h4>
+              <p className="text-xs text-gray-600 whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">
+                {row.description}
+              </p>
+            </div>
           </div>
         );
       }
-    },
-
-    {
-      header: 'Employee Position',
-      accessor: 'contacts_position',
-      cell: (row) => {
-        const contacts = row.contacts || [];
-        if (contacts.length === 0) return '-';
-        return (
-          <div className="flex flex-col gap-2 py-0.5">
-            {contacts.map((c, i) => (
-              <div key={i} className="h-7 flex items-center text-xs text-gray-500 whitespace-nowrap">
-                {c.position ? (
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-medium border border-slate-200">
-                    {c.position}
-                  </span>
-                ) : (
-                  '-'
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      }
-    },
-
-    {
-      header: 'Contact No.',
-      accessor: 'contacts_phone',
-      cell: (row) => {
-        const contacts = row.contacts || [];
-        if (contacts.length === 0) return '-';
-        return (
-          <div className="flex flex-col gap-2 py-0.5">
-            {contacts.map((c, i) => (
-              <div key={i} className="h-7 flex items-center text-xs whitespace-nowrap">
-                {c.contactNumber ? (
-                  <a href={`tel:${c.contactNumber}`} className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-medium transition">
-                    <span className="text-[10px]">📞</span> <span className="select-all">{c.contactNumber}</span>
-                  </a>
-                ) : (
-                  '-'
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      }
-    },
-
-    {
-      header: 'Employee Email',
-      accessor: 'contacts_email',
-      cell: (row) => {
-        const contacts = row.contacts || [];
-        if (contacts.length === 0) return '-';
-        return (
-          <div className="flex flex-col gap-2 py-0.5">
-            {contacts.map((c, i) => (
-              <div key={i} className="h-7 flex items-center text-xs whitespace-nowrap">
-                {c.email ? (
-                  <a href={`mailto:${c.email}`} className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-medium transition">
-                    <span className="text-[10px]">✉️</span> <span className="select-all">{c.email}</span>
-                  </a>
-                ) : (
-                  '-'
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      }
-    },
-
-    {
-      header: 'Turnover',
-      accessor: 'turnover',
-      cell: (row) =>
-        row.turnover ? (
-          <span className="font-semibold text-green-600">
-            ₹{Number(row.turnover).toLocaleString('en-IN')}
-          </span>
-        ) : (
-          '-'
-        ),
     },
 
     {
@@ -471,35 +416,6 @@ const CompaniesPage = () => {
           {row.source?.replace('_', ' ') || '-'}
         </span>
       ),
-    },
-
-    {
-      header: 'Tags Count',
-      accessor: 'tags',
-      cell: (row) => {
-        const count = row.tags ? row.tags.length : 0;
-        return (
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-              count > 0 ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-gray-50 text-gray-400 border border-gray-100'
-            }`}>
-              {count} {count === 1 ? 'Tag' : 'Tags'}
-            </span>
-            {(role === 'admin' || role === 'sales') && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenTagAssignment([row._id], row.tags);
-                }}
-                className="p-1 hover:bg-indigo-50 rounded-full text-gray-400 hover:text-indigo-600 transition"
-                title="Manage tags for this company"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-        );
-      },
     },
   ];
 
@@ -541,122 +457,101 @@ const CompaniesPage = () => {
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div
-          className="flex flex-wrap gap-4 items-end"
-        >
-          {/* Industry */}
-          <div className="w-full sm:w-auto flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Industry
-            </label>
-
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
+        {/* Top Controls: Search and Limit */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <div className="relative flex-1 max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              placeholder="Search companies by name..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            />
+          </div>
+          
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-sm font-medium text-gray-700">Rows per page:</span>
             <select
-              className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500"
-              value={filters.industry}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  industry: e.target.value,
-                })
-              }
+              className="border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer"
+              value={limitPerPage}
+              onChange={(e) => {
+                setLimitPerPage(Number(e.target.value));
+                setPage(1);
+              }}
             >
-              <option value="">All Industries</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={150}>150</option>
+            </select>
+          </div>
+        </div>
 
-              {industriesList.map((industry) => (
-                <option key={industry} value={industry}>
-                  {industry}
-                </option>
-              ))}
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4 items-end">
+          {/* Tag */}
+          <div className="w-full sm:w-auto flex-1 min-w-[150px]">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tag</label>
+            <select
+              className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+              value={filters.tag}
+              onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
+            >
+              <option value="">All Tags</option>
+              {tagsList.map((t) => <option key={t._id} value={t.name}>{t.name}</option>)}
             </select>
           </div>
 
           {/* Country */}
-          <div className="w-full sm:w-auto flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Country
-            </label>
-
+          <div className="w-full sm:w-auto flex-1 min-w-[150px]">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
             <select
-              className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
               value={filters.country}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  country: e.target.value,
-                  city: '',
-                  industry: '',
-                })
-              }
+              onChange={(e) => setFilters({ ...filters, country: e.target.value, city: '', industry: '' })}
             >
               <option value="">All Countries</option>
-
-              {countriesList.map((country) => (
-                <option key={country} value={country}>
-                  {country}
-                </option>
-              ))}
+              {countriesList.map((country) => <option key={country} value={country}>{country}</option>)}
             </select>
           </div>
 
           {/* City */}
-          <div className="w-full sm:w-auto flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              City
-            </label>
-
+          <div className="w-full sm:w-auto flex-1 min-w-[150px]">
+            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
             <select
-              className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
               value={filters.city}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  city: e.target.value,
-                })
-              }
+              onChange={(e) => setFilters({ ...filters, city: e.target.value })}
             >
               <option value="">All Cities</option>
-
-              {citiesList.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
+              {citiesList.map((city) => <option key={city} value={city}>{city}</option>)}
             </select>
           </div>
 
-          {/* Tag */}
-          <div className="w-full sm:w-auto flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tag
-            </label>
-
+          {/* Industry */}
+          <div className="w-full sm:w-auto flex-1 min-w-[150px]">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
             <select
-              className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500"
-              value={filters.tag}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  tag: e.target.value,
-                })
-              }
+              className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+              value={filters.industry}
+              onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
             >
-              <option value="">All Tags</option>
-
-              {tagsList.map((t) => (
-                <option key={t._id} value={t.name}>
-                  {t.name}
-                </option>
-              ))}
+              <option value="">All Industries</option>
+              {industriesList.map((industry) => <option key={industry} value={industry}>{industry}</option>)}
             </select>
           </div>
 
           {/* Reset Button */}
           <Button
             type="button"
-            onClick={() => setFilters({ city: '', industry: '', country: '', tag: '' })}
+            onClick={() => setFilters({ search: '', city: '', industry: '', country: '', tag: '' })}
             variant="secondary"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto shrink-0"
           >
             Reset
           </Button>
@@ -710,23 +605,6 @@ const CompaniesPage = () => {
                 Showing <span className="font-semibold text-gray-700">{limit === 'all' ? 1 : Math.min((page - 1) * limit + 1, total)}</span> to{" "}
                 <span className="font-semibold text-gray-700">{limit === 'all' ? total : Math.min(page * limit, total)}</span> of{" "}
                 <span className="font-semibold text-gray-700">{total}</span> companies
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm text-gray-500 font-medium">Rows per page:</span>
-                <select
-                  className="border border-gray-300 rounded-md p-1 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer"
-                  value={limitPerPage}
-                  onChange={(e) => {
-                    const val = e.target.value === 'all' ? 'all' : Number(e.target.value);
-                    setLimitPerPage(val);
-                    setPage(1);
-                  }}
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value="all">View All</option>
-                </select>
               </div>
             </div>
 
