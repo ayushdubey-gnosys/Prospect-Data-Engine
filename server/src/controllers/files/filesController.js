@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const UploadedFile = require("../../models/uploadedFile.model");
 const companyService = require("../../services/companyService");
 const exportService = require("../../services/exportService");
@@ -222,6 +224,52 @@ const filterAndExport = async (req, res, next) => {
   }
 };
 
+// =======================================
+// Delete File + All Related DB Data
+// =======================================
+
+const deleteFile = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Find the file record
+    const fileDoc = await UploadedFile.findById(id);
+    if (!fileDoc) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    // 2. Delete all Company records linked to this file
+    const deleteResult = await Company.deleteMany({ fileId: id });
+    console.log(`[DELETE] Removed ${deleteResult.deletedCount} company records for fileId: ${id}`);
+
+    // 3. Delete the physical file from disk (if it exists)
+    if (fileDoc.uploadPath) {
+      const absolutePath = path.isAbsolute(fileDoc.uploadPath)
+        ? fileDoc.uploadPath
+        : path.join(__dirname, "../../../", fileDoc.uploadPath);
+
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+        console.log(`[DELETE] Physical file removed: ${absolutePath}`);
+      } else {
+        console.log(`[DELETE] Physical file not found at: ${absolutePath}`);
+      }
+    }
+
+    // 4. Delete the UploadedFile record from DB
+    await UploadedFile.findByIdAndDelete(id);
+    console.log(`[DELETE] UploadedFile record deleted: ${id}`);
+
+    res.json({
+      success: true,
+      message: "File and all related data deleted successfully",
+      deletedCompanies: deleteResult.deletedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllFiles,
   getFileCompanies,
@@ -230,4 +278,5 @@ module.exports = {
   getFileCountries,
   getFileTags,
   filterAndExport,
+  deleteFile,
 };

@@ -18,4 +18,6 @@ router.get("/:id/tags", protect, filesController.getFileTags);
 
 router.get("/:id/export", protect, authorize("admin", "marketing"), filesController.filterAndExport);
 
+router.delete("/:id", protect, authorize("admin", "superadmin"), filesController.deleteFile);
+
 module.exports = router;

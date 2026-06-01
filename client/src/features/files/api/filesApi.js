@@ -37,3 +37,8 @@ export const exportFile = async (fileId, params = {}) => {
   const res = await api.get(url, { responseType: 'blob' });
   return res;
 };
+
+export const deleteFile = async (fileId) => {
+  const res = await api.delete(`/files/${fileId}`);
+  return res.data;
+};

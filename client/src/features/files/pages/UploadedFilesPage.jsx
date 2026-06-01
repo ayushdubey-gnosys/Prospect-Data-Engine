@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../api/axios';
 import { useFiles } from '../hooks/useFiles';
+import { useAuth } from '../../../hooks/useAuth';
+import { useDeleteFile } from '../hooks/useDeleteFile';
 import { FileText, Calendar, Database, Eye, ServerCrash, User } from 'lucide-react';
 
 const UploadedFilesPage = () => {
@@ -10,6 +12,8 @@ const UploadedFilesPage = () => {
   const [limitPerPage, setLimitPerPage] = useState(12);
 
   const { data: filesResponse, isLoading } = useFiles({ page, limit: limitPerPage });
+  const { user } = useAuth();
+  const deleteFileMutation = useDeleteFile();
   
   const files = filesResponse?.data || [];
   const total = filesResponse?.total || 0;
@@ -123,6 +127,27 @@ const UploadedFilesPage = () => {
                       <Eye className="w-3.5 h-3.5 transition-colors group-hover:text-indigo-600" />
                       Inspect
                     </button>
+                    {user && (user.role === 'admin' || user.role === 'superadmin') && (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const ok = window.confirm(`Delete file "${file.originalName || file.fileName}" and all its imported records?`);
+                          if (!ok) return;
+                          try {
+                            await deleteFileMutation.mutateAsync(file._id);
+                            alert('File and related data deleted successfully');
+                          } catch (err) {
+                            console.error(err);
+                            alert(err?.response?.data?.message || 'Failed to delete file');
+                          }
+                        }}
+                        disabled={deleteFileMutation.isLoading}
+                        className={`ml-2 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white ${deleteFileMutation.isLoading ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'} border border-red-600 rounded-lg shadow-sm transition-all duration-150`}
+                      >
+                        <ServerCrash className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               );
