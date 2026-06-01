@@ -48,9 +48,15 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
       const response = await api.put(`/company/${companyId}`, data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
       queryClient.invalidateQueries(["company", companyId]);
       queryClient.invalidateQueries(["companies"]);
+      // If the company belongs to a file, refresh that file's companies listing
+      const fileId = updated?.fileId || company?.fileId;
+      if (fileId) {
+        queryClient.invalidateQueries({ queryKey: ["file", fileId, "companies"] });
+        queryClient.invalidateQueries({ queryKey: ["fileTags", fileId] });
+      }
       toast.success("Company updated successfully");
     },
     onError: () => {

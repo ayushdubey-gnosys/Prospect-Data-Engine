@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Table from '../../../components/ui/Table';
 import { Circle, FileText, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { openMailComposer } from '../../../utils/mailUtils';
 import { useAuth } from '../../../hooks/useAuth';
+import CompanyDetailsModal from '../../companies/components/CompanyDetailsModal';
 
 const getLeadStatusIcon = (status) => {
   switch (status) {
@@ -26,7 +27,7 @@ const getLeadStatusLabel = (status) => {
   }
 };
 
-const getColumns = (userEmail) => [
+const getColumns = (userEmail, onOpenCompany) => [
   {
     header: 'Company Name',
     accessor: 'company_name',
@@ -48,7 +49,12 @@ const getColumns = (userEmail) => [
               <div className="absolute left-4 top-full w-2 h-2 bg-gray-900 transform rotate-45 -mt-1"></div>
             </div>
           </div>
-          <span className="font-medium text-gray-900">{row.company_name}</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); onOpenCompany(row._id); }}
+            className="font-medium text-gray-900 text-left hover:text-indigo-600"
+          >
+            {row.company_name}
+          </button>
         </div>
       );
     }
@@ -124,11 +130,30 @@ const getColumns = (userEmail) => [
 
 const FileCompaniesTable = ({ data, isLoading, emptyMessage }) => {
   const { user } = useAuth();
-  const columns = getColumns(user?.email);
+  const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenCompany = (companyId) => {
+    setSelectedCompanyId(companyId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCompanyId(null);
+  };
+
+  const columns = getColumns(user?.email, handleOpenCompany);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <Table columns={columns} data={data} isLoading={isLoading} emptyMessage={emptyMessage} />
+        <CompanyDetailsModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          companyId={selectedCompanyId}
+          onEditTags={() => {}}
+        />
     </div>
   );
 };
