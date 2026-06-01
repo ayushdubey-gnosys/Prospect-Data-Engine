@@ -72,76 +72,24 @@ const bulkInsertCompanies = async (
         // attach file id
         cleanedDoc.fileId = fileId;
 
-        // Deduplication Filter
-        let filter = {};
-
-        if (cleanedDoc.company_name && cleanedDoc.city) {
-          filter = {
-            company_name: {
-              $regex: new RegExp(
-                "^" +
-                  cleanedDoc.company_name
-                    .trim()
-                    .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-                  "$",
-                "i"
-              ),
-            },
-            city: {
-              $regex: new RegExp(
-                "^" +
-                  cleanedDoc.city
-                    .trim()
-                    .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-                  "$",
-                "i"
-              ),
-            },
-          };
-        } else if (cleanedDoc.company_name && cleanedDoc.website) {
-          filter = {
-            company_name: {
-              $regex: new RegExp(
-                "^" +
-                  cleanedDoc.company_name
-                    .trim()
-                    .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-                  "$",
-                "i"
-              ),
-            },
-            website: {
-              $regex: new RegExp(
-                "^" +
-                  cleanedDoc.website
-                    .trim()
-                    .replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") +
-                  "$",
-                "i"
-              ),
-            },
-          };
-        } else {
-          filter = {
-            _id: new mongoose.Types.ObjectId(),
-          };
+        // For import we will not upsert by company_name (company_name is not unique).
+        // Instead, bulk insertion will be handled after duplicates (city+email) are filtered
+        // by the worker. Here we prepare cleaned documents for insertion.
+        return cleanedDoc;
+      });
+      // Insert chunk documents directly
+      if (ops.length > 0) {
+        try {
+          const insertResult = await Company.insertMany(ops, { ordered: false });
+          totalInserted += insertResult.length || 0;
+        } catch (err) {
+          // insertMany may throw for some duplicates or constraints; log and continue
+          console.error('insertMany error (continuing):', err.message || err);
+          if (err.result && err.result.nInserted) {
+            totalInserted += err.result.nInserted;
+          }
         }
-
-        return {
-          updateOne: {
-            filter,
-            update: { $set: cleanedDoc },
-            upsert: true,
-          },
-        };
-      });
-
-      const result = await Company.bulkWrite(ops, {
-        ordered: false,
-      });
-
-      totalInserted += result.upsertedCount || 0;
-      totalUpdated += result.modifiedCount || 0;
+      }
     }
 
     return {
@@ -430,100 +378,41 @@ const checkDuplicateData = async (companies) => {
   for (let i = 0; i < validCompanies.length; i += CHUNK_SIZE) {
     const chunk = validCompanies.slice(i, i + CHUNK_SIZE);
 
-    // Collect all unique company names, emails, and websites from this chunk
-    const companyNames = [];
-    const emails = [];
-    const websites = [];
+    // Collect all unique city+email pairs from this chunk
+    const pairs = [];
 
     for (const c of chunk) {
-      if (c.company_name) companyNames.push(c.company_name.trim().toLowerCase());
-      if (c.email && String(c.email).trim()) emails.push(c.email.trim().toLowerCase());
-      if (c.website && String(c.website).trim()) websites.push(c.website.trim().toLowerCase());
+      const city = c.city && String(c.city).trim();
+      const email = c.email && String(c.email).trim().toLowerCase();
+      if (city && email) {
+        pairs.push({ city: city, email });
+      }
     }
 
-    // Build a single query to find any existing records matching names/emails/websites
-    const orConditions = [];
+    // Build an $or query using exact (anchored) regex for city+email pairs
+    if (pairs.length === 0) continue;
 
-    if (companyNames.length > 0) {
-      orConditions.push({
-        company_name: {
-          $in: companyNames.map(
-            (n) => new RegExp("^" + n.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i")
-          ),
-        },
-      });
-    }
+    const orConditions = pairs.map((p) => ({
+      city: new RegExp("^" + p.city.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i"),
+      email: new RegExp("^" + p.email.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i"),
+    }));
 
-    if (emails.length > 0) {
-      orConditions.push({
-        email: {
-          $in: emails.map(
-            (e) => new RegExp("^" + e.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i")
-          ),
-        },
-      });
-    }
+    const existingRecords = await Company.find({ $or: orConditions }, { city: 1, email: 1 }).lean();
 
-    if (websites.length > 0) {
-      orConditions.push({
-        website: {
-          $in: websites.map(
-            (w) => new RegExp("^" + w.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i")
-          ),
-        },
-      });
-    }
-
-    if (orConditions.length === 0) continue;
-
-    // Single batch query for this chunk
-    const existingRecords = await Company.find(
-      { $or: orConditions },
-      { company_name: 1, email: 1, website: 1 }
-    ).lean();
-
-    // Build lookup sets from existing records for fast matching
-    const existingNameSet = new Set(
-      existingRecords.map((r) => (r.company_name || "").toLowerCase().trim())
-    );
-    const existingEmailSet = new Set(
-      existingRecords.filter((r) => r.email).map((r) => r.email.toLowerCase().trim())
-    );
-    const existingWebsiteSet = new Set(
-      existingRecords.filter((r) => r.website).map((r) => r.website.toLowerCase().trim())
+    const existingPairSet = new Set(
+      existingRecords
+        .filter((r) => r.city && r.email)
+        .map((r) => `${String(r.city).toLowerCase().trim()}|${String(r.email).toLowerCase().trim()}`)
     );
 
-    // Check each company in this chunk against existing records
     for (const c of chunk) {
-      const name = (c.company_name || "").toLowerCase().trim();
-      const email = (c.email || "").toLowerCase().trim();
-      const website = (c.website || "").toLowerCase().trim();
-
-      let isDuplicate = false;
-
-      // Match by company_name + email
-      if (name && email && existingNameSet.has(name) && existingEmailSet.has(email)) {
-        isDuplicate = true;
-      }
-      // Match by company_name + website
-      else if (name && website && existingNameSet.has(name) && existingWebsiteSet.has(website)) {
-        isDuplicate = true;
-      }
-      // Match by email alone
-      else if (email && existingEmailSet.has(email)) {
-        isDuplicate = true;
-      }
-      // Match by website alone
-      else if (website && existingWebsiteSet.has(website)) {
-        isDuplicate = true;
-      }
-
-      if (isDuplicate) {
-        duplicates.push({
-          company_name: c.company_name,
-          email: c.email || null,
-          website: c.website || null,
-        });
+      const city = c.city && String(c.city).toLowerCase().trim();
+      const email = c.email && String(c.email).toLowerCase().trim();
+      if (city && email) {
+        const key = `${city}|${email}`;
+        if (existingPairSet.has(key)) {
+          duplicates.push({ company_name: c.company_name, city: c.city, email: c.email });
+        }
       }
     }
   }

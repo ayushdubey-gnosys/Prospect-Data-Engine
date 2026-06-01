@@ -22,14 +22,24 @@ const ImportPage = () => {
     queryFn: () => api.get('/users/filter-list?targetRole=sales').then((res) => res.data.data || []),
   });
 
+  const [hasActiveImports, setHasActiveImports] = useState(false);
+
   const { data: historyResponse, isLoading: isHistoryLoading } = useQuery({
     queryKey: ['importHistory', historyPage, historyLimit, historyUser],
     queryFn: () => api.get(`/import/history?page=${historyPage}&limit=${historyLimit}${historyUser ? `&userId=${historyUser}` : ''}`).then((res) => res.data),
+    refetchInterval: hasActiveImports ? 2000 : false,
   });
 
   const history = historyResponse?.history || [];
   const historyTotal = historyResponse?.total || 0;
   const historyTotalPages = historyResponse?.totalPages || 1;
+
+  React.useEffect(() => {
+    const active = history.some((row) => row.status === 'pending' || row.status === 'processing');
+    if (active !== hasActiveImports) {
+      setHasActiveImports(active);
+    }
+  }, [history, hasActiveImports]);
 
   const uploadMutation = useMutation({
     mutationFn: (formData) =>
@@ -38,14 +48,8 @@ const ImportPage = () => {
       }),
     onSuccess: (res) => {
       const data = res.data;
-      if (data?.skippedDuplicates > 0) {
-        toast.warning(
-          `${data.message}. ${data.inserted} new records added, ${data.skippedDuplicates} duplicates skipped.`,
-          { autoClose: 6000 }
-        );
-      } else {
-        toast.success(data?.message || 'File imported successfully');
-      }
+      // Show a concise success message (skip duplicate counts from UI)
+      toast.success(`${data.message}. ${data.inserted} new records added.`, { autoClose: 6000 });
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       queryClient.invalidateQueries({ queryKey: ['importHistory'] });
@@ -125,15 +129,52 @@ const ImportPage = () => {
     {
       header: 'Records Added',
       accessor: 'totalRecords',
-      cell: (row) => row.totalRecords || row.recordsAdded || 0,
+      cell: (row) => {
+        if (row.status === 'pending') return <span className="text-amber-600 font-medium text-xs animate-pulse">Pending...</span>;
+        if (row.status === 'processing') return <span className="text-blue-600 font-medium text-xs animate-pulse">Importing ({row.progress || 0}%)</span>;
+        
+        const total = row.totalRecords || 0;
+        const imported = total; // show total imported as the visible count
+
+        return (
+          <div className="flex flex-col text-xs">
+            <span className="font-semibold text-gray-800">Imported: {imported}</span>
+            <span className="text-gray-500">Total in File: {total}</span>
+          </div>
+        );
+      },
     },
     {
       header: 'Status',
-      cell: () => (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">
-          <CheckCircle className="w-3 h-3 text-green-500 mr-1" /> Success
-        </span>
-      ),
+      cell: (row) => {
+        if (row.status === 'pending') {
+          return (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
+              <AlertCircle className="w-3 h-3 mr-1" /> Pending
+            </span>
+          );
+        }
+        if (row.status === 'processing') {
+          return (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+              <div className="animate-spin h-3 w-3 border-2 border-blue-500 border-t-transparent rounded-full mr-1"></div>
+              Processing
+            </span>
+          );
+        }
+        if (row.status === 'failed') {
+          return (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700" title={row.errorMessage}>
+              <AlertCircle className="w-3 h-3 mr-1" /> Failed
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">
+            <CheckCircle className="w-3 h-3 text-green-500 mr-1" /> Success
+          </span>
+        );
+      },
     },
     {
       header: 'Action',

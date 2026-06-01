@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+const { Worker } = require("worker_threads");
 
 const fileService = require("../../services/fileService");
 const companyService = require("../../services/companyService");
@@ -342,219 +343,69 @@ const uploadHandler = [
       }
 
       // =======================================
-      // Parse File
-      // =======================================
-
-      console.log(`[UPLOAD] Parsing file: ${req.file.originalname}`);
-      const parseStart = Date.now();
-
-      const rows =
-        await fileService.parseFile(
-          req.file.path,
-          req.file.mimetype
-        );
-
-      console.log(`[UPLOAD] Parsed ${rows.length} total rows in ${Date.now() - parseStart}ms`);
-
-      // =======================================
-      // Map Companies
-      // =======================================
-
-      const mapStart = Date.now();
-      const companies = rows
-        .map((row) =>
-          mapRowToCompany(row)
-        )
-        .filter(
-          (c) =>
-            Object.keys(c).length > 1
-        );
-
-      // =======================================
-      // In-Memory Deduplication (Across Sub-sheets)
-      // =======================================
-
-      const uniqueCompaniesMap = new Map();
-      
-      companies.forEach((c) => {
-        if (!c.company_name) return;
-        
-        // Use company_name as primary unique key within the file
-        // To be safe, we also append email and website if they exist
-        const key = (c.company_name || "").toLowerCase().trim() + "|" + 
-                    (c.email || "").toLowerCase().trim() + "|" + 
-                    (c.website || "").toLowerCase().trim();
-        
-        if (!uniqueCompaniesMap.has(key)) {
-          uniqueCompaniesMap.set(key, c);
-        }
-      });
-      
-      const uniqueCompanies = Array.from(uniqueCompaniesMap.values());
-      const inMemoryDuplicatesSkipped = companies.length - uniqueCompanies.length;
-
-      if (inMemoryDuplicatesSkipped > 0) {
-        console.log(`[UPLOAD] Skipped ${inMemoryDuplicatesSkipped} in-memory duplicates across sheets.`);
-      }
-
-      // =======================================
-      // Data-Level Duplicate Check
-      // =======================================
-
-      const dupCheck =
-        await companyService.checkDuplicateData(
-          uniqueCompanies
-        );
-
-      // If ALL records are duplicates, reject the upload entirely
-      if (
-        dupCheck.duplicateCount > 0 &&
-        dupCheck.duplicateCount >=
-          dupCheck.totalChecked
-      ) {
-        // Clean up the uploaded file
-        if (
-          req.file.path &&
-          fs.existsSync(req.file.path)
-        ) {
-          fs.unlinkSync(req.file.path);
-        }
-
-        // Build duplicate details for error response
-        const duplicateDetails =
-          dupCheck.duplicates
-            .slice(0, 10)
-            .map((d) => ({
-              company_name: d.company_name,
-              email: d.email,
-              website: d.website,
-            }));
-
-        return res.status(409).json({
-          success: false,
-
-          message:
-            "This data already exists in the database. All " +
-            dupCheck.duplicateCount +
-            " records from this file are duplicates.",
-
-          error:
-            "Data already exists! Even after renaming the file, the data inside matches existing records.",
-
-          duplicateCount:
-            dupCheck.duplicateCount,
-
-          totalRecords:
-            dupCheck.totalChecked,
-
-          duplicateDetails,
-        });
-      }
-
-      // If SOME records are duplicates, filter them out
-      let companiesToInsert = uniqueCompanies;
-      let skippedDuplicates = 0;
-
-      if (dupCheck.duplicateCount > 0) {
-        const dupSet = new Set(
-          dupCheck.duplicates.map(
-            (d) =>
-              (d.company_name || "")
-                .toLowerCase()
-                .trim() +
-              "|" +
-              (d.email || "")
-                .toLowerCase()
-                .trim() +
-              "|" +
-              (d.website || "")
-                .toLowerCase()
-                .trim()
-          )
-        );
-
-        companiesToInsert = uniqueCompanies.filter(
-          (c) => {
-            const key =
-              (c.company_name || "")
-                .toLowerCase()
-                .trim() +
-              "|" +
-              (c.email || "")
-                .toLowerCase()
-                .trim() +
-              "|" +
-              (c.website || "")
-                .toLowerCase()
-                .trim();
-
-            return !dupSet.has(key);
-          }
-        );
-
-        skippedDuplicates =
-          dupCheck.duplicateCount;
-      }
-
-      // =======================================
-      // Save Upload History
+      // Create Initial Upload History record (Pending)
       // =======================================
 
       const uploadedDoc =
         await fileService.saveUploadedFile({
           fileName: req.file.filename,
-
-          originalName:
-            req.file.originalname,
-
+          originalName: req.file.originalname,
           sourceType: path
             .extname(req.file.originalname)
             .replace(".", ""),
-
-          totalRecords: rows.length,
-
-          uploadedBy: req.user
-            ? req.user._id
-            : null,
-
+          totalRecords: 0, // Will be updated by worker thread once parsed
+          uploadedBy: req.user ? req.user._id : null,
           uploadPath: req.file.path,
         });
 
-      // =======================================
-      // Insert Companies (non-duplicates only)
-      // =======================================
-
-      const result =
-        await companyService.bulkInsertCompanies(
-          companiesToInsert,
-          uploadedDoc._id
-        );
+      // Update file status to pending explicitly
+      uploadedDoc.status = "pending";
+      uploadedDoc.progress = 0;
+      await uploadedDoc.save();
 
       // =======================================
-      // Response
+      // Spawn Worker Thread for Processing
+      // =======================================
+
+      const workerPath = path.resolve(__dirname, "../../workers/importWorker.js");
+      console.log(`[MAIN THREAD] Spawning worker thread for file upload pipeline: ${req.file.originalname}`);
+
+      const worker = new Worker(workerPath, {
+        workerData: {
+          filePath: req.file.path,
+          fileId: uploadedDoc._id.toString(),
+          MONGO_URI: process.env.MONGO_URI,
+          mimetype: req.file.mimetype,
+        },
+      });
+
+      // Main Thread listeners (Fail-safe logging and backup error recovery)
+      worker.on("message", (msg) => {
+        console.log(`[MAIN THREAD] Worker message from file ${uploadedDoc.originalName}:`, msg);
+      });
+
+      worker.on("error", (err) => {
+        console.error(`[MAIN THREAD] Worker thread crashed for file ${uploadedDoc.originalName}:`, err);
+        UploadedFile.findByIdAndUpdate(uploadedDoc._id, {
+          status: "failed",
+          errorMessage: err.message || "Background worker encountered an unexpected execution error.",
+          progress: 100,
+        }).catch((dbErr) => {
+          console.error(`[MAIN THREAD] Failed to log worker error to database:`, dbErr);
+        });
+      });
+
+      worker.on("exit", (code) => {
+        console.log(`[MAIN THREAD] Worker thread for file ${uploadedDoc.originalName} finished with exit code ${code}`);
+      });
+
+      // =======================================
+      // Return Success Response Instantly
       // =======================================
 
       return res.status(201).json({
         success: true,
-
-        message:
-          (skippedDuplicates + inMemoryDuplicatesSkipped) > 0
-            ? "File uploaded with " +
-              (skippedDuplicates + inMemoryDuplicatesSkipped) +
-              " duplicate records skipped"
-            : "File uploaded successfully",
-
-        totalRows: rows.length,
-
-        processedRows:
-          companiesToInsert.length,
-
-        inserted: result.inserted,
-
-        updated: result.updated,
-
-        skippedDuplicates,
-
+        message: "File uploaded successfully. Import process started.",
         file: uploadedDoc,
       });
     } catch (error) {
