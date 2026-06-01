@@ -140,7 +140,21 @@ const FileDetailsPage = () => {
         />
       </div>
 
-      <div className="w-full">
+      <div className="w-full relative">
+        <div className="  flex items-center justify-end mb-3">
+          <label className="text-sm text-gray-600 mr-2">Rows per page:</label>
+          <select
+            value={filters.limit}
+            onChange={(e) => setFilters({ ...filters, limit: Number(e.target.value), page: 1 })}
+            className="border border-gray-200 rounded px-2 py-1 text-sm bg-white"
+          >
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={200}>200</option>
+          </select>
+        </div>
+
         <FileCompaniesTable data={data?.data || []} isLoading={isLoading} emptyMessage="No companies found for this file." />
 
         <div className="flex items-center justify-between mt-4 px-2">
