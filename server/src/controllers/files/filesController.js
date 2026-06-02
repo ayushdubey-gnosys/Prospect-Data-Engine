@@ -238,7 +238,7 @@ const deleteFile = async (req, res, next) => {
       return res.status(404).json({ message: "File not found" });
     }
 
-    if (fileDoc.status === "uploading" || fileDoc.status === "processing") {
+    if (fileDoc.status === "pending" || fileDoc.status === "processing") {
       return res.status(400).json({
         message: "Cannot delete a file while import is in progress.",
       });
