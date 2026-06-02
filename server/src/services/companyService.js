@@ -372,37 +372,35 @@ const checkDuplicateData = async (companies) => {
   // Process in chunks to avoid too-large queries
   // ==============================
 
-  const CHUNK_SIZE = 500;
+  const CHUNK_SIZE = 5000;
   const duplicates = [];
 
   for (let i = 0; i < validCompanies.length; i += CHUNK_SIZE) {
     const chunk = validCompanies.slice(i, i + CHUNK_SIZE);
 
-    // Collect all unique city+email pairs from this chunk
-    const pairs = [];
+    // Collect all duplicateKeys from this chunk
+    const duplicateKeys = [];
 
     for (const c of chunk) {
-      const city = c.city && String(c.city).trim();
+      const city = c.city && String(c.city).trim().toLowerCase();
       const email = c.email && String(c.email).trim().toLowerCase();
       if (city && email) {
-        pairs.push({ city: city, email });
+        duplicateKeys.push(city + "|" + email);
       }
     }
 
-    // Build an $or query using exact (anchored) regex for city+email pairs
-    if (pairs.length === 0) continue;
+    if (duplicateKeys.length === 0) continue;
 
-    const orConditions = pairs.map((p) => ({
-      city: new RegExp("^" + p.city.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i"),
-      email: new RegExp("^" + p.email.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$", "i"),
-    }));
-
-    const existingRecords = await Company.find({ $or: orConditions }, { city: 1, email: 1 }).lean();
+    // Use $in query to find existing duplicates fast using the duplicateKey index
+    const existingRecords = await Company.find(
+      { duplicateKey: { $in: duplicateKeys } }, 
+      { duplicateKey: 1, company_name: 1, city: 1, email: 1 }
+    ).lean();
 
     const existingPairSet = new Set(
       existingRecords
-        .filter((r) => r.city && r.email)
-        .map((r) => `${String(r.city).toLowerCase().trim()}|${String(r.email).toLowerCase().trim()}`)
+        .filter((r) => r.duplicateKey)
+        .map((r) => r.duplicateKey)
     );
 
     for (const c of chunk) {

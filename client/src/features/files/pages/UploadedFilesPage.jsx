@@ -190,17 +190,19 @@ const UploadedFilesPage = () => {
                         Inspect
                       </button>
                     {user && (user.role === 'admin' || user.role === 'superadmin') && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFileToDelete(file);
-                        }}
-                        disabled={deleteFileMutation.isLoading}
-                        className={`ml-2 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white ${deleteFileMutation.isLoading ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'} border border-red-600 rounded-lg shadow-sm transition-all duration-150`}
-                      >
-                        <ServerCrash className="w-3.5 h-3.5" />
-                        Delete
-                      </button>
+                      <div className="ml-2 inline-block" title={file.status === 'uploading' || file.status === 'processing' ? 'Cannot delete file while upload/import is in progress.' : ''}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFileToDelete(file);
+                          }}
+                          disabled={deleteFileMutation.isLoading || file.status === 'uploading' || file.status === 'processing'}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white ${(deleteFileMutation.isLoading || file.status === 'uploading' || file.status === 'processing') ? 'bg-red-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} border border-red-600 rounded-lg shadow-sm transition-all duration-150`}
+                        >
+                          <ServerCrash className="w-3.5 h-3.5" />
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

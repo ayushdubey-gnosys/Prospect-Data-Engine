@@ -238,6 +238,12 @@ const deleteFile = async (req, res, next) => {
       return res.status(404).json({ message: "File not found" });
     }
 
+    if (fileDoc.status === "uploading" || fileDoc.status === "processing") {
+      return res.status(400).json({
+        message: "Cannot delete a file while import is in progress.",
+      });
+    }
+
     // 2. Delete all Company records linked to this file
     const deleteResult = await Company.deleteMany({ fileId: id });
     console.log(`[DELETE] Removed ${deleteResult.deletedCount} company records for fileId: ${id}`);

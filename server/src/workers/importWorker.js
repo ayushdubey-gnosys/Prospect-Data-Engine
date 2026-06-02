@@ -241,6 +241,15 @@ const mapRowToCompany = (row) => {
     }
   });
 
+  const c_city = (company.city || "").toLowerCase().trim();
+  const c_email = (company.email || "").toLowerCase().trim();
+  
+  if (c_city || c_email) {
+    company.cityNormalized = c_city || null;
+    company.emailNormalized = c_email || null;
+    company.duplicateKey = c_city + "|" + c_email;
+  }
+
   return company;
 };
 
@@ -268,7 +277,9 @@ const run = async () => {
     }
 
     console.log(`[WORKER] Parsing file at path: ${filePath}`);
+    console.time("parseFile");
     const rows = await fileService.parseFile(filePath, mimetype);
+    console.timeEnd("parseFile");
     console.log(`[WORKER] Parsed ${rows.length} total rows from file.`);
 
     // 3. Map Companies and Filter out invalid/empty ones
@@ -322,7 +333,7 @@ const run = async () => {
     }
 
     // 5. Chunked Processing & DB insertions
-    const CHUNK_SIZE = 2000;
+    const CHUNK_SIZE = 5000;
     let totalInserted = 0;
     let totalUpdated = 0;
     let totalSkippedDuplicates = inMemoryDuplicatesSkipped;
@@ -332,7 +343,9 @@ const run = async () => {
       const chunk = uniqueCompanies.slice(i, i + CHUNK_SIZE);
 
       // Check duplicates for this chunk based on city+email
+      console.time("duplicateCheck");
       const dupCheck = await companyService.checkDuplicateData(chunk);
+      console.timeEnd("duplicateCheck");
 
       // Filter out duplicate records (existing city+email pairs)
       let chunkToInsert = chunk;
@@ -357,10 +370,12 @@ const run = async () => {
 
       // Bulk insert non-duplicate records for this chunk
       if (chunkToInsert.length > 0) {
+        console.time("bulkInsert");
         const result = await companyService.bulkInsertCompanies(
           chunkToInsert,
           fileId
         );
+        console.timeEnd("bulkInsert");
         totalInserted += result.inserted || 0;
         totalUpdated += result.updated || 0;
       }
@@ -374,11 +389,16 @@ const run = async () => {
         10 + Math.round((processedSoFar / uniqueCompanies.length) * 85)
       );
 
-      await UploadedFile.findByIdAndUpdate(fileId, {
-        processedRecords: processedSoFar,
-        skippedDuplicates: totalSkippedDuplicates,
-        progress: progressPercent,
-      });
+      // Reduce UploadedFile progress updates: Update every 5 chunks or every 10% increment
+      // For simplicity, update on every 5th chunk or if progress reaches 95
+      const chunkIndex = i / CHUNK_SIZE;
+      if (chunkIndex % 5 === 0 || progressPercent === 95 || processedSoFar === uniqueCompanies.length) {
+        await UploadedFile.findByIdAndUpdate(fileId, {
+          processedRecords: processedSoFar,
+          skippedDuplicates: totalSkippedDuplicates,
+          progress: progressPercent,
+        });
+      }
 
       console.log(
         `[WORKER] Chunk parsed: ${processedSoFar}/${uniqueCompanies.length} (${progressPercent}%) - Inserted: ${totalInserted}, Updated: ${totalUpdated}`

@@ -52,7 +52,9 @@ const ImportPage = () => {
       toast.success(`${data.message}. ${data.inserted} new records added.`, { autoClose: 6000 });
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      // Refresh import history and uploaded files list so UI updates without manual refresh
       queryClient.invalidateQueries({ queryKey: ['importHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['files'] });
     },
     onError: (error) => {
       const data = error.response?.data;
