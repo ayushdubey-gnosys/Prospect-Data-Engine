@@ -1,21 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { 
-  Building2, 
-  Mail, 
-  Phone, 
-  Globe, 
-  Calendar, 
-  Tag as TagIcon, 
-  Copy, 
-  Check, 
-  ExternalLink,
-  Edit2,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Circle,
-  Save,
-  FileText
+  Building2, Mail, Phone, Globe, Calendar, Tag as TagIcon, 
+  Copy, Check, ExternalLink, Edit2, Clock, CheckCircle2, 
+  XCircle, Circle, Save, FileText, Plus, Trash2, X
 } from "lucide-react";
 import { useCompany } from "../hooks/useCompany";
 import { useAuth } from "../../../hooks/useAuth";
@@ -31,17 +18,35 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [copiedField, setCopiedField] = useState(null);
-  const [description, setDescription] = useState("");
   
   const role = user?.role || "sales";
   const canEditTags = role === "admin" || role === "sales";
   const canUpdateDetails = role === "admin" || role === "sales";
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
+
   useEffect(() => {
     if (company) {
-      setDescription(company.description || "");
+      setFormData({
+        company_name: company.company_name || "",
+        website: company.website || "",
+        email: company.email || "",
+        phone: company.phone || "",
+        city: company.city || "",
+        country: company.country || "",
+        industry: company.industry || "",
+        description: company.description || "",
+        socialMedia: {
+          facebook: company.socialMedia?.facebook || "",
+          youtube: company.socialMedia?.youtube || "",
+          instagram: company.socialMedia?.instagram || "",
+          x: company.socialMedia?.x || "",
+        },
+        contacts: company.contacts ? JSON.parse(JSON.stringify(company.contacts)) : []
+      });
     }
-  }, [company]);
+  }, [company, isEditing]);
 
   const updateCompanyMutation = useMutation({
     mutationFn: async (data) => {
@@ -51,27 +56,25 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
     onSuccess: (updated) => {
       queryClient.invalidateQueries(["company", companyId]);
       queryClient.invalidateQueries(["companies"]);
-      // If the company belongs to a file, refresh that file's companies listing
       const fileId = updated?.fileId || company?.fileId;
       if (fileId) {
         queryClient.invalidateQueries({ queryKey: ["file", fileId, "companies"] });
         queryClient.invalidateQueries({ queryKey: ["fileTags", fileId] });
       }
       toast.success("Company updated successfully");
+      setIsEditing(false);
     },
-    onError: () => {
-      toast.error("Failed to update company");
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to update company");
     }
   });
 
   const handleUpdateLeadStatus = (status) => {
-    updateCompanyMutation.mutate({
-      leadStatus: { status }
-    });
+    updateCompanyMutation.mutate({ leadStatus: { status } });
   };
 
-  const handleSaveDescription = () => {
-    updateCompanyMutation.mutate({ description });
+  const handleSave = () => {
+    updateCompanyMutation.mutate(formData);
   };
 
   const handleCopy = (text, fieldName) => {
@@ -81,15 +84,47 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
+  const handleAddContact = () => {
+    if (formData.contacts.length >= 5) {
+      toast.warning("Maximum 5 contacts allowed");
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      contacts: [...prev.contacts, { name: "", position: "", email: "", contactNumber: "" }]
+    }));
+  };
+
+  const handleRemoveContact = (index) => {
+    setFormData(prev => {
+      const newContacts = [...prev.contacts];
+      newContacts.splice(index, 1);
+      return { ...prev, contacts: newContacts };
+    });
+  };
+
+  const handleContactChange = (index, field, value) => {
+    setFormData(prev => {
+      const newContacts = [...prev.contacts];
+      newContacts[index][field] = value;
+      return { ...prev, contacts: newContacts };
+    });
+  };
+
+  const handleSocialChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      socialMedia: {
+        ...prev.socialMedia,
+        [field]: value
+      }
+    }));
+  };
+
   if (!isOpen) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Company Details"
-      className="max-w-5xl"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Company Details" className="max-w-5xl">
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-12 space-y-4">
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -109,21 +144,41 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
             </div>
 
             <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-4 flex-1">
                 <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/10 shrink-0">
                   <Building2 className="w-8 h-8 text-indigo-300" />
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold tracking-tight">{company.company_name}</h2>
+                <div className="flex-1 max-w-lg">
+                  {isEditing ? (
+                    <input 
+                      type="text" 
+                      value={formData.company_name} 
+                      onChange={e => setFormData({...formData, company_name: e.target.value})}
+                      className="text-xl font-bold bg-white/20 border border-white/30 rounded px-2 py-1 w-full text-white outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  ) : (
+                    <h2 className="text-2xl font-bold tracking-tight">{company.company_name}</h2>
+                  )}
+                  
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {company.industry ? (
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/10 capitalize">
-                        {company.industry}
-                      </span>
+                    {isEditing ? (
+                      <input 
+                        type="text" 
+                        value={formData.industry} 
+                        onChange={e => setFormData({...formData, industry: e.target.value})}
+                        placeholder="Industry"
+                        className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 outline-none w-32"
+                      />
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-white/60">
-                        Unknown Industry
-                      </span>
+                      company.industry ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/10 capitalize">
+                          {company.industry}
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-white/60">
+                          Unknown Industry
+                        </span>
+                      )
                     )}
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/30 text-indigo-200 border border-indigo-500/20 capitalize">
                       Source: {company.source?.replace("_", " ") || "manual"}
@@ -132,15 +187,27 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 </div>
               </div>
 
-              {canEditTags && (
-                <Button
-                  onClick={() => onEditTags(company)}
-                  variant="ghost"
-                  className="bg-white/10 hover:bg-white/20 border border-white/10 text-white hover:text-white shrink-0"
-                >
-                  <Edit2 className="w-4 h-4 mr-2" /> Edit Tags
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {canUpdateDetails && (
+                  <Button
+                    onClick={() => setIsEditing(!isEditing)}
+                    variant={isEditing ? "default" : "ghost"}
+                    className={!isEditing ? "bg-white/10 hover:bg-white/20 border border-white/10 text-white hover:text-white" : "bg-white text-indigo-900 hover:bg-gray-100"}
+                  >
+                    {isEditing ? <X className="w-4 h-4 mr-2" /> : <Edit2 className="w-4 h-4 mr-2" />}
+                    {isEditing ? "Cancel Edit" : "Edit Details"}
+                  </Button>
+                )}
+                {canEditTags && !isEditing && (
+                  <Button
+                    onClick={() => onEditTags(company)}
+                    variant="ghost"
+                    className="bg-white/10 hover:bg-white/20 border border-white/10 text-white hover:text-white shrink-0"
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" /> Edit Tags
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -161,7 +228,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
 
               <div>
                 <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Lead Status</span>
-                {canUpdateDetails ? (
+                {canUpdateDetails && !isEditing ? (
                   <select
                     className="w-full sm:w-auto bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 outline-none font-medium"
                     value={company.leadStatus?.status || "none"}
@@ -181,11 +248,6 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                     {(!company.leadStatus?.status || company.leadStatus?.status === "none") && <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full"><Circle className="w-4 h-4" /> None</span>}
                   </div>
                 )}
-                {company.leadStatus?.updatedBy && (
-                  <p className="text-xs text-gray-500 mt-2 italic">
-                    Last updated by <span className="font-semibold text-gray-700">{company.leadStatus.updatedBy.name}</span> on {new Date(company.leadStatus.updatedAt).toLocaleDateString()}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -193,22 +255,20 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
             <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col h-full">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Company Description</h3>
               <div className="flex-1 flex flex-col gap-3">
-                <textarea
-                  className="w-full flex-1 min-h-[100px] border border-gray-200 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-gray-50/50"
-                  placeholder="Add manual description or notes about this company..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  disabled={!canUpdateDetails || updateCompanyMutation.isLoading}
-                />
-                {canUpdateDetails && (
-                  <Button 
-                    onClick={handleSaveDescription} 
-                    disabled={updateCompanyMutation.isLoading || description === (company.description || "")}
-                    size="sm"
-                    className="self-end"
-                  >
-                    <Save className="w-4 h-4 mr-1.5" /> Save Description
-                  </Button>
+                {isEditing ? (
+                  <textarea
+                    className="w-full flex-1 min-h-[100px] border border-gray-300 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    placeholder="Company description..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  />
+                ) : (
+                  <textarea
+                    className="w-full flex-1 min-h-[100px] border border-gray-200 rounded-lg p-3 text-sm text-gray-700 focus:outline-none resize-none bg-gray-50/50"
+                    placeholder="Add manual description or notes about this company..."
+                    value={company.description || ""}
+                    disabled
+                  />
                 )}
               </div>
             </div>
@@ -218,169 +278,202 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
           <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contact Channels</h3>
-              <Button 
-                onClick={() => openMailComposer(company.email, company.company_name, user?.email)} 
-                variant="outline" 
-                size="sm"
-              >
-                <Mail className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
-                Send Email
-              </Button>
+              {!isEditing && (
+                <Button onClick={() => openMailComposer(company.email, company.company_name, user?.email)} variant="outline" size="sm">
+                  <Mail className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> Send Email
+                </Button>
+              )}
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Email */}
-              <div className="flex items-center justify-between p-3 rounded-lg border border-gray-50 bg-gray-50/30">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Mail className="w-4 h-4 text-blue-500 shrink-0" />
-                  <div className="min-w-0">
-                    <span className="block text-xs text-gray-400">Email Address</span>
-                    {company.email ? (
-                      <button 
-                        type="button"
-                        onClick={() => openMailComposer(company.email, company.company_name, user?.email)}
-                        className="font-semibold text-blue-600 hover:underline text-sm block truncate text-left cursor-pointer bg-transparent border-none p-0"
-                      >
-                        {company.email}
-                      </button>
-                    ) : (
-                      <span className="text-sm text-gray-400 font-medium">None</span>
+              <div className="flex flex-col p-3 rounded-lg border border-gray-50 bg-gray-50/30">
+                <span className="block text-xs text-gray-400 mb-1">Email Address</span>
+                {isEditing ? (
+                  <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-blue-600 text-sm truncate">{company.email || "None"}</span>
+                    {company.email && (
+                      <button onClick={() => handleCopy(company.email, "email")} className="p-1 text-gray-400 hover:text-blue-500"><Copy className="w-3.5 h-3.5" /></button>
                     )}
                   </div>
-                </div>
-                {company.email && (
-                  <button
-                    onClick={() => handleCopy(company.email, "email")}
-                    className="p-1 hover:bg-white rounded text-gray-400 hover:text-blue-500 transition"
-                  >
-                    {copiedField === "email" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
                 )}
               </div>
 
               {/* Phone */}
-              <div className="flex items-center justify-between p-3 rounded-lg border border-gray-50 bg-gray-50/30">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Phone className="w-4 h-4 text-blue-500 shrink-0" />
-                  <div className="min-w-0">
-                    <span className="block text-xs text-gray-400">Phone Connection</span>
-                    {company.phone ? (
-                      <a 
-                        href={`tel:${company.phone}`}
-                        className="font-semibold text-gray-700 hover:text-blue-600 hover:underline text-sm block truncate"
-                      >
-                        {company.phone}
+              <div className="flex flex-col p-3 rounded-lg border border-gray-50 bg-gray-50/30">
+                <span className="block text-xs text-gray-400 mb-1">Phone Connection</span>
+                {isEditing ? (
+                  <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                ) : (
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-gray-700 text-sm truncate">{company.phone || "None"}</span>
+                    {company.phone && (
+                      <button onClick={() => handleCopy(company.phone, "phone")} className="p-1 text-gray-400 hover:text-blue-500"><Copy className="w-3.5 h-3.5" /></button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Website */}
+              <div className="flex flex-col p-3 rounded-lg border border-indigo-50 bg-indigo-50/20 sm:col-span-2">
+                <span className="block text-xs text-indigo-500/70 mb-1">Official Website</span>
+                {isEditing ? (
+                  <input type="text" value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                ) : (
+                  <div className="flex justify-between items-center">
+                    {company.website ? (
+                      <a href={company.website.startsWith("http") ? company.website : `https://${company.website}`} target="_blank" rel="noreferrer" className="font-semibold text-indigo-700 hover:underline text-sm truncate">
+                        {company.website}
                       </a>
                     ) : (
                       <span className="text-sm text-gray-400 font-medium">None</span>
                     )}
                   </div>
-                </div>
-                {company.phone && (
-                  <button
-                    onClick={() => handleCopy(company.phone, "phone")}
-                    className="p-1 hover:bg-white rounded text-gray-400 hover:text-blue-500 transition"
-                  >
-                    {copiedField === "phone" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
                 )}
               </div>
-
-              {/* Website */}
-              {company.website ? (
-                <div className="flex items-center justify-between p-3 rounded-lg border border-indigo-50 bg-indigo-50/20">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Globe className="w-4 h-4 text-indigo-500 shrink-0" />
-                    <div className="min-w-0">
-                      <span className="block text-xs text-indigo-500/70">Official Website</span>
-                      <a 
-                        href={company.website.startsWith("http") ? company.website : `https://${company.website}`}
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="font-semibold text-indigo-700 hover:underline text-sm flex items-center gap-1.5 block truncate"
-                      >
-                        <span>{company.website}</span>
-                        <ExternalLink className="w-3.5 h-3.5 inline shrink-0" />
-                      </a>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleCopy(company.website, "website")}
-                    className="p-1 hover:bg-white rounded text-indigo-400 hover:text-indigo-600 transition"
-                  >
-                    {copiedField === "website" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/10">
-                  <Globe className="w-4 h-4 text-gray-300" />
-                  <div>
-                    <span className="block text-xs text-gray-400">Official Website</span>
-                    <span className="text-sm text-gray-400 font-medium">None</span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Location Cards */}
             <div className="grid grid-cols-2 gap-4 pt-1">
               <div className="p-3 bg-gray-50/40 rounded-lg border border-gray-50">
-                <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider">City</span>
-                <span className="text-sm font-semibold text-gray-700 capitalize">{company.city || "-"}</span>
+                <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">City</span>
+                {isEditing ? (
+                  <input type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                ) : (
+                  <span className="text-sm font-semibold text-gray-700 capitalize">{company.city || "-"}</span>
+                )}
               </div>
               <div className="p-3 bg-gray-50/40 rounded-lg border border-gray-50">
-                <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider">Country</span>
-                <span className="text-sm font-semibold text-gray-700 capitalize">{company.country || "-"}</span>
+                <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">Country</span>
+                {isEditing ? (
+                  <input type="text" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                ) : (
+                  <span className="text-sm font-semibold text-gray-700 capitalize">{company.country || "-"}</span>
+                )}
               </div>
             </div>
           </div>
-
-          {/* Tags Section */}
+          
+          {/* Employee Contacts Section */}
           <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Associated Tags</h3>
-              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-bold border border-indigo-100">
-                {company.tags?.length || 0} {company.tags?.length === 1 ? "Tag" : "Tags"}
-              </span>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Employee Contacts</h3>
+              {isEditing && formData.contacts.length < 5 && (
+                <Button type="button" onClick={handleAddContact} size="sm" variant="secondary"><Plus className="w-3.5 h-3.5 mr-1"/> Add Contact</Button>
+              )}
             </div>
-
-            {company.tags && company.tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2 p-3 bg-gray-50/40 border border-gray-50 rounded-xl">
-                {company.tags.map((tag) => (
-                  <span
-                    key={tag._id}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 text-gray-800 rounded-full text-xs font-semibold shadow-sm"
-                    style={{
-                      borderLeft: `3px solid ${tag.color || "#6366f1"}`
-                    }}
-                  >
-                    <TagIcon className="w-3 h-3 text-indigo-500 shrink-0" />
-                    <span>{tag.name}</span>
-                  </span>
+            
+            {isEditing ? (
+              <div className="space-y-3">
+                {formData.contacts.map((contact, i) => (
+                  <div key={i} className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border relative">
+                    <input type="text" placeholder="Name" value={contact.name} onChange={e => handleContactChange(i, 'name', e.target.value)} className="border rounded p-1.5 text-sm flex-1 min-w-[120px] outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder="Position" value={contact.position} onChange={e => handleContactChange(i, 'position', e.target.value)} className="border rounded p-1.5 text-sm flex-1 min-w-[120px] outline-none focus:border-indigo-500" />
+                    <input type="email" placeholder="Email" value={contact.email} onChange={e => handleContactChange(i, 'email', e.target.value)} className="border rounded p-1.5 text-sm flex-1 min-w-[120px] outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder="Phone" value={contact.contactNumber} onChange={e => handleContactChange(i, 'contactNumber', e.target.value)} className="border rounded p-1.5 text-sm flex-1 min-w-[120px] outline-none focus:border-indigo-500" />
+                    <button type="button" onClick={() => handleRemoveContact(i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4"/></button>
+                  </div>
                 ))}
+                {formData.contacts.length === 0 && <p className="text-xs text-gray-400">No contacts added.</p>}
               </div>
             ) : (
-              <div className="text-center p-6 border border-dashed border-gray-200 rounded-xl space-y-3">
-                <TagIcon className="w-8 h-8 text-gray-300 mx-auto" />
-                <p className="text-xs text-gray-400">No tags have been assigned to this company yet.</p>
-                {canEditTags && (
-                  <Button 
-                    onClick={() => onEditTags(company)}
-                    variant="outline" 
-                    size="sm"
-                  >
-                    + Add First Tag
-                  </Button>
+              <div className="space-y-2">
+                {company.contacts && company.contacts.length > 0 ? company.contacts.map((contact, i) => (
+                  <div key={i} className="flex flex-col sm:flex-row justify-between sm:items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div>
+                      <p className="font-semibold text-sm text-gray-800">{contact.name || "Unknown"}</p>
+                      <p className="text-xs text-gray-500">{contact.position || "No position"}</p>
+                    </div>
+                    <div className="text-right mt-2 sm:mt-0">
+                      <p className="text-xs text-blue-600">{contact.email}</p>
+                      <p className="text-xs text-gray-600">{contact.contactNumber}</p>
+                    </div>
+                  </div>
+                )) : <p className="text-xs text-gray-400">No contacts available.</p>}
+              </div>
+            )}
+          </div>
+          
+          {/* Social Media Links Section */}
+          <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Social Media</h3>
+            {isEditing ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="text" placeholder="Facebook URL" value={formData.socialMedia.facebook} onChange={e => handleSocialChange('facebook', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
+                <input type="text" placeholder="YouTube URL" value={formData.socialMedia.youtube} onChange={e => handleSocialChange('youtube', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
+                <input type="text" placeholder="Instagram URL" value={formData.socialMedia.instagram} onChange={e => handleSocialChange('instagram', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
+                <input type="text" placeholder="X (Twitter) URL" value={formData.socialMedia.x} onChange={e => handleSocialChange('x', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-4">
+                {company.socialMedia?.facebook && <a href={company.socialMedia.facebook} target="_blank" rel="noreferrer" className="text-sm font-semibold text-blue-600 hover:underline">Facebook</a>}
+                {company.socialMedia?.youtube && <a href={company.socialMedia.youtube} target="_blank" rel="noreferrer" className="text-sm font-semibold text-red-600 hover:underline">YouTube</a>}
+                {company.socialMedia?.instagram && <a href={company.socialMedia.instagram} target="_blank" rel="noreferrer" className="text-sm font-semibold text-pink-600 hover:underline">Instagram</a>}
+                {company.socialMedia?.x && <a href={company.socialMedia.x} target="_blank" rel="noreferrer" className="text-sm font-semibold text-gray-800 hover:underline">X (Twitter)</a>}
+                {(!company.socialMedia || (!company.socialMedia.facebook && !company.socialMedia.youtube && !company.socialMedia.instagram && !company.socialMedia.x)) && (
+                  <p className="text-xs text-gray-400">No social media links available.</p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Close Action */}
-          <div className="flex justify-end pt-3 border-t shrink-0">
-            <Button onClick={onClose} variant="secondary">
-              Close Detail
-            </Button>
+          {/* Tags Section */}
+          {!isEditing && (
+            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Associated Tags</h3>
+                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-bold border border-indigo-100">
+                  {company.tags?.length || 0} {company.tags?.length === 1 ? "Tag" : "Tags"}
+                </span>
+              </div>
+
+              {company.tags && company.tags.length > 0 ? (
+                <div className="flex flex-wrap gap-2 p-3 bg-gray-50/40 border border-gray-50 rounded-xl">
+                  {company.tags.map((tag) => (
+                    <span
+                      key={tag._id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 text-gray-800 rounded-full text-xs font-semibold shadow-sm"
+                      style={{
+                        borderLeft: `3px solid ${tag.color || "#6366f1"}`
+                      }}
+                    >
+                      <TagIcon className="w-3 h-3 text-indigo-500 shrink-0" />
+                      <span>{tag.name}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-6 border border-dashed border-gray-200 rounded-xl space-y-3">
+                  <TagIcon className="w-8 h-8 text-gray-300 mx-auto" />
+                  <p className="text-xs text-gray-400">No tags have been assigned to this company yet.</p>
+                  {canEditTags && (
+                    <Button 
+                      onClick={() => onEditTags(company)}
+                      variant="outline" 
+                      size="sm"
+                    >
+                      + Add First Tag
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Close / Save Action */}
+          <div className="flex justify-end gap-3 pt-3 border-t shrink-0">
+            {isEditing ? (
+              <>
+                <Button onClick={() => setIsEditing(false)} variant="secondary">Cancel</Button>
+                <Button onClick={handleSave} disabled={updateCompanyMutation.isLoading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                  {updateCompanyMutation.isLoading ? "Saving..." : "Save Changes"}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={onClose} variant="secondary">Close Detail</Button>
+            )}
           </div>
         </div>
       )}

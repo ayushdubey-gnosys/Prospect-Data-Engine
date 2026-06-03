@@ -7,6 +7,18 @@ const createCompany = async (req, res) => {
   try {
     const companyData = { ...req.body };
 
+    if (companyData.contacts && companyData.contacts.length > 5) {
+      return res.status(400).json({ message: "A company can have a maximum of 5 employee contacts." });
+    }
+
+    if (companyData.phone && companyData.contacts && companyData.contacts.length > 0) {
+      for (const contact of companyData.contacts) {
+        if (contact.contactNumber && contact.contactNumber === companyData.phone) {
+          return res.status(400).json({ message: "Employee contact number cannot be the same as the company contact number." });
+        }
+      }
+    }
+
     // Auto-create and assign industry tag if industry is present
     if (companyData.industry && companyData.industry.trim()) {
       const trimmed = companyData.industry.trim();
@@ -164,11 +176,30 @@ const getCompany = async (req, res) => {
 const updateCompany = async (req, res) => {
   try {
     const updateData = { ...req.body };
+    const existingCompany = await Company.findById(req.params.id);
+
+    if (!existingCompany) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    const newPhone = updateData.phone !== undefined ? updateData.phone : existingCompany.phone;
+    const newContacts = updateData.contacts !== undefined ? updateData.contacts : existingCompany.contacts;
+
+    if (newContacts && newContacts.length > 5) {
+      return res.status(400).json({ message: "A company can have a maximum of 5 employee contacts." });
+    }
+
+    if (newPhone && newContacts && newContacts.length > 0) {
+      for (const contact of newContacts) {
+        if (contact.contactNumber && contact.contactNumber === newPhone) {
+          return res.status(400).json({ message: "Employee contact number cannot be the same as the company contact number." });
+        }
+      }
+    }
 
     // If lead status is updated, track who updated it and when
     if (updateData.leadStatus && updateData.leadStatus.status) {
       // Ensure we keep existing leadStatus properties if only status is sent
-      const existingCompany = await Company.findById(req.params.id);
       
       updateData.leadStatus = {
         ...existingCompany.leadStatus,

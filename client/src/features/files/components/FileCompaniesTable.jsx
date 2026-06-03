@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Table from '../../../components/ui/Table';
-import { Circle, FileText, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Circle, FileText, CheckCircle2, XCircle, Clock, Users, Link as LinkIcon } from 'lucide-react';
 import { openMailComposer } from '../../../utils/mailUtils';
 import { useAuth } from '../../../hooks/useAuth';
 import CompanyDetailsModal from '../../companies/components/CompanyDetailsModal';
@@ -85,6 +85,84 @@ const getColumns = (userEmail, onOpenCompany) => [
     accessor: 'phone',
     cell: (row) => row.phone || '-'
   },
+  {
+    header: 'Contact Employees',
+    accessor: 'contacts',
+    cell: (row, rowIndex, totalRows) => {
+      const contacts = row.contacts || [];
+      if (contacts.length === 0) return <span className="text-gray-400 text-xs">-</span>;
+      
+      const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
+      const popupPositionClasses = isBottom ? "bottom-full mb-2" : "top-full mt-2";
+      const pointerClasses = isBottom 
+        ? "bottom-0 w-3 h-3 bg-white border-b border-r border-gray-100 transform -translate-x-1/2 translate-y-1/2 rotate-45"
+        : "top-0 w-3 h-3 bg-white border-t border-l border-gray-100 transform -translate-x-1/2 -translate-y-1/2 rotate-45";
+
+      return (
+        <div className="relative group inline-block">
+          <button className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
+            <Users className="w-3.5 h-3.5" /> View {contacts.length} Contacts
+          </button>
+          <div className={`absolute left-1/2 -translate-x-1/2 ${popupPositionClasses} hidden group-hover:block z-[70] w-[26rem] bg-white border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] rounded-xl p-4 ring-1 ring-black/5`}>
+            <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Employee Contacts</h4>
+            <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+              {contacts.map((contact, i) => (
+                <div key={i} className="flex justify-between items-start text-xs p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors shadow-sm">
+                  <div className="flex flex-col gap-1 max-w-[50%]">
+                    <span className="font-bold text-gray-900 text-sm truncate" title={contact.name}>{contact.name || "Unknown Name"}</span>
+                    <span className="text-gray-500 font-medium truncate" title={contact.position}>{contact.position || "No position"}</span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 text-right max-w-[50%]">
+                    {contact.email ? <a href={`mailto:${contact.email}`} className="text-blue-600 font-medium hover:underline truncate w-full" title={contact.email}>{contact.email}</a> : <span className="text-gray-400">No Email</span>}
+                    {contact.contactNumber ? <span className="text-gray-700 font-medium truncate w-full" title={contact.contactNumber}>{contact.contactNumber}</span> : <span className="text-gray-400">No Phone</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={`absolute left-1/2 ${pointerClasses}`}></div>
+          </div>
+        </div>
+      );
+    }
+  },
+  {
+    header: 'Social Media Links',
+    accessor: 'socialMedia',
+    cell: (row, rowIndex, totalRows) => {
+      const social = row.socialMedia;
+      const hasLinks = social && (social.facebook || social.youtube || social.instagram || social.x);
+      
+      const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
+      const popupPositionClasses = isBottom ? "bottom-full mb-2" : "top-full mt-2";
+      const pointerClasses = isBottom 
+        ? "bottom-0 w-3 h-3 bg-white border-b border-r border-gray-100 transform -translate-x-1/2 translate-y-1/2 rotate-45"
+        : "top-0 w-3 h-3 bg-white border-t border-l border-gray-100 transform -translate-x-1/2 -translate-y-1/2 rotate-45";
+      
+      return (
+        <div className="relative group inline-block">
+          <button className="flex items-center gap-1.5 text-xs font-medium text-pink-600 hover:text-pink-800 bg-pink-50 hover:bg-pink-100 px-2 py-1 rounded transition">
+            <LinkIcon className="w-3.5 h-3.5" /> Connect on Social
+          </button>
+          <div className={`absolute left-1/2 -translate-x-1/2 ${popupPositionClasses} hidden group-hover:block z-[70] w-[26rem] bg-white border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] rounded-xl p-4 ring-1 ring-black/5`}>
+            <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Social Media Links</h4>
+            {!hasLinks ? (
+              <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="text-sm text-gray-500 font-medium">No links available</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">Facebook</span><span className="text-xs text-blue-500 break-all">{social.facebook}</span></a>}
+                {social.youtube && <a href={social.youtube} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-red-100 hover:bg-red-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-red-700">YouTube</span><span className="text-xs text-red-500 break-all">{social.youtube}</span></a>}
+                {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-pink-100 hover:bg-pink-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-pink-700">Instagram</span><span className="text-xs text-pink-500 break-all">{social.instagram}</span></a>}
+                {social.x && <a href={social.x} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-gray-900">X (Twitter)</span><span className="text-xs text-gray-600 break-all">{social.x}</span></a>}
+              </div>
+            )}
+            <div className={`absolute left-1/2 ${pointerClasses}`}></div>
+          </div>
+        </div>
+      );
+    }
+  },
   { header: 'City', accessor: 'city', cell: (row) => row.city || '-' },
   { header: 'Country', accessor: 'country', cell: (row) => row.country || '-' },
   { header: 'Industry', accessor: 'industry', cell: (row) => row.industry || '-' },
@@ -146,7 +224,7 @@ const FileCompaniesTable = ({ data, isLoading, emptyMessage }) => {
   const columns = getColumns(user?.email, handleOpenCompany);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
       <Table columns={columns} data={data} isLoading={isLoading} emptyMessage={emptyMessage} />
         <CompanyDetailsModal
           isOpen={isModalOpen}

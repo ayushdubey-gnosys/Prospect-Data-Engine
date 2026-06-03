@@ -76,9 +76,10 @@ const companySchema = new mongoose.Schema(
     },
 
     socialMedia: {
-      type: String,
-      trim: true,
-      default: null,
+      facebook: { type: String, trim: true, default: null },
+      youtube: { type: String, trim: true, default: null },
+      instagram: { type: String, trim: true, default: null },
+      x: { type: String, trim: true, default: null },
     },
 
     companyOwnerName: {

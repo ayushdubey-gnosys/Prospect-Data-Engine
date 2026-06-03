@@ -29,7 +29,7 @@ const Table = ({ columns, data, isLoading, emptyMessage = 'No data available' })
               <tr key={rowIndex} className="hover:bg-gray-50">
                 {columns.map((col, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {col.cell ? col.cell(row) : row[col.accessor]}
+                    {col.cell ? col.cell(row, rowIndex, data.length) : row[col.accessor]}
                   </td>
                 ))}
               </tr>

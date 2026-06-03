@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Download, Tag, Circle, FileText, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Plus, Search, Download, Tag, Circle, FileText, CheckCircle2, XCircle, Clock, Users, Link as LinkIcon } from 'lucide-react';
 import api from '../../../api/axios';
 import { useAuth } from '../../../hooks/useAuth';
 import Table from '../../../components/ui/Table';
+import HoverCard from '../../../components/ui/HoverCard';
 import Button from '../../../components/ui/Button';
 import CreateCompanyModal from '../components/CreateCompanyModal';
 import TagAssignmentModal from '../components/TagAssignmentModal';
@@ -33,7 +34,7 @@ const CompaniesPage = () => {
   const role = user?.role || 'sales';
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   // Selection state
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -244,39 +245,39 @@ const CompaniesPage = () => {
   const columns = [
     ...(role === 'admin' || role === 'sales'
       ? [
-          {
-            header: (
-              <input
-                type="checkbox"
-                checked={companies.length > 0 && selectedIds.length === companies.length}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedIds(companies.map((c) => c._id));
-                  } else {
-                    setSelectedIds([]);
-                  }
-                }}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-              />
-            ),
-            accessor: 'selection',
-            cell: (row) => (
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(row._id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedIds([...selectedIds, row._id]);
-                  } else {
-                    setSelectedIds(selectedIds.filter((id) => id !== row._id));
-                  }
-                }}
-                onClick={(e) => e.stopPropagation()}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-              />
-            ),
-          },
-        ]
+        {
+          header: (
+            <input
+              type="checkbox"
+              checked={companies.length > 0 && selectedIds.length === companies.length}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedIds(companies.map((c) => c._id));
+                } else {
+                  setSelectedIds([]);
+                }
+              }}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+          ),
+          accessor: 'selection',
+          cell: (row) => (
+            <input
+              type="checkbox"
+              checked={selectedIds.includes(row._id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedIds([...selectedIds, row._id]);
+                } else {
+                  setSelectedIds(selectedIds.filter((id) => id !== row._id));
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+          ),
+        },
+      ]
       : []),
 
     {
@@ -285,12 +286,12 @@ const CompaniesPage = () => {
       cell: (row) => {
         const status = row.leadStatus?.status || 'none';
         const updatedBy = row.leadStatus?.updatedBy?.name || 'Unknown';
-        
+
         return (
           <div className="flex items-center gap-2 group relative">
             <div className="cursor-help flex items-center">
               {getLeadStatusIcon(status)}
-              
+
               {/* Status Tooltip */}
               <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50 w-48 bg-gray-900 text-white text-xs rounded p-2 shadow-lg">
                 <p className="font-semibold">{getLeadStatusLabel(status)}</p>
@@ -357,6 +358,82 @@ const CompaniesPage = () => {
     },
 
     {
+      header: 'Contact Employees',
+      accessor: 'contacts',
+      cell: (row, rowIndex, totalRows) => {
+        const contacts = row.contacts || [];
+        if (contacts.length === 0) return <span className="text-gray-400 text-xs">-</span>;
+
+        const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
+
+        return (
+          <HoverCard
+            preferTop={isBottom}
+            width="w-[26rem]"
+            trigger={
+              <button className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
+                <Users className="w-3.5 h-3.5" /> View {contacts.length} Contacts
+              </button>
+            }
+          >
+            <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Employee Contacts</h4>
+            <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+              {contacts.map((contact, i) => (
+                <div key={i} className="flex justify-between items-start text-xs p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors shadow-sm">
+                  <div className="flex flex-col gap-1 max-w-[50%]">
+                    <span className="font-bold text-gray-900 text-sm truncate" title={contact.name}>{contact.name || "Unknown Name"}</span>
+                    <span className="text-gray-500 font-medium truncate" title={contact.position}>{contact.position || "No position"}</span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 text-right max-w-[50%]">
+                    {contact.email ? <a href={`mailto:${contact.email}`} className="text-blue-600 font-medium hover:underline truncate w-full" title={contact.email}>{contact.email}</a> : <span className="text-gray-400">No Email</span>}
+                    {contact.contactNumber ? <span className="text-gray-700 font-medium truncate w-full" title={contact.contactNumber}>{contact.contactNumber}</span> : <span className="text-gray-400">No Phone</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </HoverCard>
+        );
+      }
+    },
+
+    {
+      header: 'Social Media Links',
+      accessor: 'socialMedia',
+      cell: (row, rowIndex, totalRows) => {
+        const social = row.socialMedia;
+        const hasLinks = social && (social.facebook || social.youtube || social.instagram || social.x);
+
+        const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
+
+        return (
+          <HoverCard
+            preferTop={isBottom}
+            width="w-[26rem]"
+            trigger={
+              <button className="flex items-center gap-1.5 text-xs font-medium text-pink-600 hover:text-pink-800 bg-pink-50 hover:bg-pink-100 px-2 py-1 rounded transition">
+                <LinkIcon className="w-3.5 h-3.5" /> Connect on Social
+              </button>
+            }
+          >
+            <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Social Media Links</h4>
+            {!hasLinks ? (
+              <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="text-sm text-gray-500 font-medium">No links available</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">Facebook</span><span className="text-xs text-blue-500 break-all">{social.facebook}</span></a>}
+                {social.youtube && <a href={social.youtube} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-red-100 hover:bg-red-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-red-700">YouTube</span><span className="text-xs text-red-500 break-all">{social.youtube}</span></a>}
+                {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-pink-100 hover:bg-pink-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-pink-700">Instagram</span><span className="text-xs text-pink-500 break-all">{social.instagram}</span></a>}
+                {social.x && <a href={social.x} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-gray-900">X (Twitter)</span><span className="text-xs text-gray-600 break-all">{social.x}</span></a>}
+              </div>
+            )}
+          </HoverCard>
+        );
+      }
+    },
+
+    {
       header: 'City',
       accessor: 'city',
       cell: (row) => row.city || '-',
@@ -392,7 +469,7 @@ const CompaniesPage = () => {
                 ))}
               </div>
             )}
-            
+
             {(role === 'admin' || role === 'sales') && (
               <button
                 onClick={(e) => {
@@ -420,7 +497,7 @@ const CompaniesPage = () => {
             <button className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded transition">
               <FileText className="w-3.5 h-3.5" /> Watch description
             </button>
-            
+
             <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-50 w-64 bg-white border border-gray-200 shadow-xl rounded-lg p-3">
               <h4 className="text-xs font-bold text-gray-800 mb-1 border-b pb-1">Description</h4>
               <p className="text-xs text-gray-600 whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">
@@ -496,7 +573,7 @@ const CompaniesPage = () => {
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             />
           </div>
-          
+
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-sm font-medium text-gray-700">Rows per page:</span>
             <select
@@ -613,7 +690,7 @@ const CompaniesPage = () => {
       {/* =========================
           Companies Table
       ========================== */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <Table
           columns={columns}
           data={companies}
@@ -637,11 +714,10 @@ const CompaniesPage = () => {
                 type="button"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className={`px-3 py-1.5 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold transition ${
-                  page === 1
+                className={`px-3 py-1.5 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold transition ${page === 1
                     ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
                     : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
-                }`}
+                  }`}
               >
                 Previous
               </button>
@@ -664,11 +740,10 @@ const CompaniesPage = () => {
                     key={p}
                     type="button"
                     onClick={() => setPage(p)}
-                    className={`min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 rounded-lg text-xs sm:text-sm font-semibold transition border ${
-                      page === p
+                    className={`min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 rounded-lg text-xs sm:text-sm font-semibold transition border ${page === p
                         ? "bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-100"
                         : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>
@@ -679,11 +754,10 @@ const CompaniesPage = () => {
                 type="button"
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className={`px-3 py-1.5 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold transition ${
-                  page === totalPages
+                className={`px-3 py-1.5 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold transition ${page === totalPages
                     ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
                     : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
-                }`}
+                  }`}
               >
                 Next
               </button>
