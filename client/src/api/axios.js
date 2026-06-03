@@ -18,7 +18,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url !== '/auth/refresh-token'
+    ) {
       originalRequest._retry = true;
       try {
         // Use the same `api` instance so the request goes through the dev proxy
@@ -26,7 +31,7 @@ api.interceptors.response.use(
         await api.post('/auth/refresh-token', {}, { withCredentials: true });
         return api(originalRequest);
       } catch (refreshError) {
-        window.location.href = '/login';
+        // Let the application handle the auth failure (e.g., via ProtectedRoute redirect)
         return Promise.reject(refreshError);
       }
     }
