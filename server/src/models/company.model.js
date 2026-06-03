@@ -80,6 +80,7 @@ const companySchema = new mongoose.Schema(
       youtube: { type: String, trim: true, default: null },
       instagram: { type: String, trim: true, default: null },
       x: { type: String, trim: true, default: null },
+      linkedin: { type: String, trim: true, default: null },
     },
 
     companyOwnerName: {

@@ -42,6 +42,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
           youtube: company.socialMedia?.youtube || "",
           instagram: company.socialMedia?.instagram || "",
           x: company.socialMedia?.x || "",
+          linkedin: company.socialMedia?.linkedin || "",
         },
         contacts: company.contacts ? JSON.parse(JSON.stringify(company.contacts)) : []
       });
@@ -405,6 +406,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 <input type="text" placeholder="YouTube URL" value={formData.socialMedia.youtube} onChange={e => handleSocialChange('youtube', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
                 <input type="text" placeholder="Instagram URL" value={formData.socialMedia.instagram} onChange={e => handleSocialChange('instagram', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
                 <input type="text" placeholder="X (Twitter) URL" value={formData.socialMedia.x} onChange={e => handleSocialChange('x', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
+                <input type="text" placeholder="LinkedIn URL" value={formData.socialMedia.linkedin || ''} onChange={e => handleSocialChange('linkedin', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
               </div>
             ) : (
               <div className="flex flex-wrap gap-4">
@@ -412,7 +414,8 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 {company.socialMedia?.youtube && <a href={company.socialMedia.youtube} target="_blank" rel="noreferrer" className="text-sm font-semibold text-red-600 hover:underline">YouTube</a>}
                 {company.socialMedia?.instagram && <a href={company.socialMedia.instagram} target="_blank" rel="noreferrer" className="text-sm font-semibold text-pink-600 hover:underline">Instagram</a>}
                 {company.socialMedia?.x && <a href={company.socialMedia.x} target="_blank" rel="noreferrer" className="text-sm font-semibold text-gray-800 hover:underline">X (Twitter)</a>}
-                {(!company.socialMedia || (!company.socialMedia.facebook && !company.socialMedia.youtube && !company.socialMedia.instagram && !company.socialMedia.x)) && (
+                {company.socialMedia?.linkedin && <a href={company.socialMedia.linkedin} target="_blank" rel="noreferrer" className="text-sm font-semibold text-blue-700 hover:underline">LinkedIn</a>}
+                {(!company.socialMedia || (!company.socialMedia.facebook && !company.socialMedia.youtube && !company.socialMedia.instagram && !company.socialMedia.x && !company.socialMedia.linkedin)) && (
                   <p className="text-xs text-gray-400">No social media links available.</p>
                 )}
               </div>

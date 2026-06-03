@@ -143,36 +143,35 @@ const getColumns = (userEmail, onOpenCompany) => [
     accessor: 'socialMedia',
     cell: (row, rowIndex, totalRows) => {
       const social = row.socialMedia;
-      const hasLinks = social && (social.facebook || social.youtube || social.instagram || social.x);
+      const hasLinks = social && (social.facebook || social.youtube || social.instagram || social.x || social.linkedin);
       
       const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
-      const popupPositionClasses = isBottom ? "bottom-full mb-2" : "top-full mt-2";
-      const pointerClasses = isBottom 
-        ? "bottom-0 w-3 h-3 bg-white border-b border-r border-gray-100 transform -translate-x-1/2 translate-y-1/2 rotate-45"
-        : "top-0 w-3 h-3 bg-white border-t border-l border-gray-100 transform -translate-x-1/2 -translate-y-1/2 rotate-45";
       
       return (
-        <div className="relative group inline-block">
-          <button className="flex items-center gap-1.5 text-xs font-medium text-pink-600 hover:text-pink-800 bg-pink-50 hover:bg-pink-100 px-2 py-1 rounded transition">
-            <LinkIcon className="w-3.5 h-3.5" /> Connect on Social
-          </button>
-          <div className={`absolute left-1/2 -translate-x-1/2 ${popupPositionClasses} hidden group-hover:block z-[70] w-[26rem] bg-white border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] rounded-xl p-4 ring-1 ring-black/5`}>
-            <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Social Media Links</h4>
-            {!hasLinks ? (
-              <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-100">
-                <span className="text-sm text-gray-500 font-medium">No links available</span>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">Facebook</span><span className="text-xs text-blue-500 break-all">{social.facebook}</span></a>}
-                {social.youtube && <a href={social.youtube} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-red-100 hover:bg-red-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-red-700">YouTube</span><span className="text-xs text-red-500 break-all">{social.youtube}</span></a>}
-                {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-pink-100 hover:bg-pink-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-pink-700">Instagram</span><span className="text-xs text-pink-500 break-all">{social.instagram}</span></a>}
-                {social.x && <a href={social.x} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-gray-900">X (Twitter)</span><span className="text-xs text-gray-600 break-all">{social.x}</span></a>}
-              </div>
-            )}
-            <div className={`absolute left-1/2 ${pointerClasses}`}></div>
-          </div>
-        </div>
+        <HoverCard
+          preferTop={isBottom}
+          width="w-[26rem]"
+          trigger={
+            <button className="flex items-center gap-1.5 text-xs font-medium text-pink-600 hover:text-pink-800 bg-pink-50 hover:bg-pink-100 px-2 py-1 rounded transition">
+              <LinkIcon className="w-3.5 h-3.5" /> Connect on Social
+            </button>
+          }
+        >
+          <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Social Media Links</h4>
+          {!hasLinks ? (
+            <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-100">
+              <span className="text-sm text-gray-500 font-medium">No links available</span>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">Facebook</span><span className="text-xs text-blue-500 break-all">{social.facebook}</span></a>}
+              {social.youtube && <a href={social.youtube} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-red-100 hover:bg-red-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-red-700">YouTube</span><span className="text-xs text-red-500 break-all">{social.youtube}</span></a>}
+              {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-pink-100 hover:bg-pink-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-pink-700">Instagram</span><span className="text-xs text-pink-500 break-all">{social.instagram}</span></a>}
+              {social.x && <a href={social.x} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-gray-900">X (Twitter)</span><span className="text-xs text-gray-600 break-all">{social.x}</span></a>}
+              {social.linkedin && <a href={social.linkedin} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">LinkedIn</span><span className="text-xs text-blue-600 break-all">{social.linkedin}</span></a>}
+            </div>
+          )}
+        </HoverCard>
       );
     }
   },
