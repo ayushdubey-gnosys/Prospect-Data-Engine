@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Table from '../../../components/ui/Table';
+import HoverCard from '../../../components/ui/HoverCard';
 import { Circle, FileText, CheckCircle2, XCircle, Clock, Users, Link as LinkIcon } from 'lucide-react';
 import { openMailComposer } from '../../../utils/mailUtils';
 import { useAuth } from '../../../hooks/useAuth';
@@ -89,22 +90,35 @@ const getColumns = (userEmail, onOpenCompany) => [
     header: 'Contact Employees',
     accessor: 'contacts',
     cell: (row, rowIndex, totalRows) => {
-      const contacts = row.contacts || [];
-      if (contacts.length === 0) return <span className="text-gray-400 text-xs">-</span>;
+      const rawContacts = row.contacts || [];
+      // Filter out contacts that are actually the company's own data
+      const contacts = rawContacts.filter(c => {
+        const nameMatch = c.name && row.company_name && c.name.trim().toLowerCase() === row.company_name.trim().toLowerCase();
+        const phoneMatch = c.contactNumber && row.phone && c.contactNumber.trim() === row.phone.trim();
+        if (nameMatch && !c.email && (!c.position || c.position === '')) return false;
+        if (phoneMatch && !c.name) return false;
+        if (nameMatch && phoneMatch) return false;
+        return true;
+      });
       
       const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
-      const popupPositionClasses = isBottom ? "bottom-full mb-2" : "top-full mt-2";
-      const pointerClasses = isBottom 
-        ? "bottom-0 w-3 h-3 bg-white border-b border-r border-gray-100 transform -translate-x-1/2 translate-y-1/2 rotate-45"
-        : "top-0 w-3 h-3 bg-white border-t border-l border-gray-100 transform -translate-x-1/2 -translate-y-1/2 rotate-45";
 
       return (
-        <div className="relative group inline-block">
-          <button className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
-            <Users className="w-3.5 h-3.5" /> View {contacts.length} Contacts
-          </button>
-          <div className={`absolute left-1/2 -translate-x-1/2 ${popupPositionClasses} hidden group-hover:block z-[70] w-[26rem] bg-white border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] rounded-xl p-4 ring-1 ring-black/5`}>
-            <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Employee Contacts</h4>
+        <HoverCard
+          preferTop={isBottom}
+          width="w-[26rem]"
+          trigger={
+            <button className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
+              <Users className="w-3.5 h-3.5" /> {contacts.length > 0 ? `View ${contacts.length} Contacts` : 'Contact Employees'}
+            </button>
+          }
+        >
+          <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Employee Contacts</h4>
+          {contacts.length === 0 ? (
+            <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-100">
+              <span className="text-sm text-gray-500 font-medium">No employee contacts available</span>
+            </div>
+          ) : (
             <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
               {contacts.map((contact, i) => (
                 <div key={i} className="flex justify-between items-start text-xs p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors shadow-sm">
@@ -119,9 +133,8 @@ const getColumns = (userEmail, onOpenCompany) => [
                 </div>
               ))}
             </div>
-            <div className={`absolute left-1/2 ${pointerClasses}`}></div>
-          </div>
-        </div>
+          )}
+        </HoverCard>
       );
     }
   },

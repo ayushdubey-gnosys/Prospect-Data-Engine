@@ -361,8 +361,17 @@ const CompaniesPage = () => {
       header: 'Contact Employees',
       accessor: 'contacts',
       cell: (row, rowIndex, totalRows) => {
-        const contacts = row.contacts || [];
-        if (contacts.length === 0) return <span className="text-gray-400 text-xs">-</span>;
+        const rawContacts = row.contacts || [];
+        // Filter out contacts that are actually the company's own data
+        const contacts = rawContacts.filter(c => {
+          const nameMatch = c.name && row.company_name && c.name.trim().toLowerCase() === row.company_name.trim().toLowerCase();
+          const phoneMatch = c.contactNumber && row.phone && c.contactNumber.trim() === row.phone.trim();
+          // Exclude if name matches company name OR phone matches company phone (and no other unique info)
+          if (nameMatch && !c.email && (!c.position || c.position === '')) return false;
+          if (phoneMatch && !c.name) return false;
+          if (nameMatch && phoneMatch) return false;
+          return true;
+        });
 
         const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
 
@@ -372,25 +381,31 @@ const CompaniesPage = () => {
             width="w-[26rem]"
             trigger={
               <button className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
-                <Users className="w-3.5 h-3.5" /> View {contacts.length} Contacts
+                <Users className="w-3.5 h-3.5" /> {contacts.length > 0 ? `View ${contacts.length} Contacts` : 'Contact Employees'}
               </button>
             }
           >
             <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Employee Contacts</h4>
-            <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
-              {contacts.map((contact, i) => (
-                <div key={i} className="flex justify-between items-start text-xs p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors shadow-sm">
-                  <div className="flex flex-col gap-1 max-w-[50%]">
-                    <span className="font-bold text-gray-900 text-sm truncate" title={contact.name}>{contact.name || "Unknown Name"}</span>
-                    <span className="text-gray-500 font-medium truncate" title={contact.position}>{contact.position || "No position"}</span>
+            {contacts.length === 0 ? (
+              <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="text-sm text-gray-500 font-medium">No employee contacts available</span>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+                {contacts.map((contact, i) => (
+                  <div key={i} className="flex justify-between items-start text-xs p-3 bg-white hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors shadow-sm">
+                    <div className="flex flex-col gap-1 max-w-[50%]">
+                      <span className="font-bold text-gray-900 text-sm truncate" title={contact.name}>{contact.name || "Unknown Name"}</span>
+                      <span className="text-gray-500 font-medium truncate" title={contact.position}>{contact.position || "No position"}</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 text-right max-w-[50%]">
+                      {contact.email ? <a href={`mailto:${contact.email}`} className="text-blue-600 font-medium hover:underline truncate w-full" title={contact.email}>{contact.email}</a> : <span className="text-gray-400">No Email</span>}
+                      {contact.contactNumber ? <span className="text-gray-700 font-medium truncate w-full" title={contact.contactNumber}>{contact.contactNumber}</span> : <span className="text-gray-400">No Phone</span>}
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 text-right max-w-[50%]">
-                    {contact.email ? <a href={`mailto:${contact.email}`} className="text-blue-600 font-medium hover:underline truncate w-full" title={contact.email}>{contact.email}</a> : <span className="text-gray-400">No Email</span>}
-                    {contact.contactNumber ? <span className="text-gray-700 font-medium truncate w-full" title={contact.contactNumber}>{contact.contactNumber}</span> : <span className="text-gray-400">No Phone</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </HoverCard>
         );
       }
