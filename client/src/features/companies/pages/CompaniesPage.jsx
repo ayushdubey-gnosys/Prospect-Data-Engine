@@ -417,9 +417,9 @@ const CompaniesPage = () => {
       cell: (row, rowIndex, totalRows) => {
         const social = row.socialMedia;
         const hasLinks = social && (social.facebook || social.youtube || social.instagram || social.x || social.linkedin);
-        
+
         const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
-        
+
         return (
           <HoverCard
             preferTop={isBottom}
@@ -731,8 +731,8 @@ const CompaniesPage = () => {
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
                 className={`px-3 py-1.5 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold transition ${page === 1
-                    ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                    : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                  ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
                   }`}
               >
                 Previous
@@ -757,8 +757,8 @@ const CompaniesPage = () => {
                     type="button"
                     onClick={() => setPage(p)}
                     className={`min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 rounded-lg text-xs sm:text-sm font-semibold transition border ${page === p
-                        ? "bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-100"
-                        : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-100"
+                      : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                       }`}
                   >
                     {p}
@@ -771,8 +771,8 @@ const CompaniesPage = () => {
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
                 className={`px-3 py-1.5 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold transition ${page === totalPages
-                    ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                    : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                  ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
                   }`}
               >
                 Next

@@ -28,7 +28,12 @@ const TagsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['tags'] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || 'Failed to create tag');
+      const message = error.response?.data?.message || error.response?.data?.error;
+      if (error.response?.status === 400) {
+        toast.warning(message || 'This tag already exists');
+      } else {
+        toast.error(message || 'Failed to create tag');
+      }
     },
   });
 

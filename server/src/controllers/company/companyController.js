@@ -30,6 +30,9 @@ const createCompany = async (req, res) => {
         tag = await Tag.create({ name: trimmed });
       }
 
+      // Sync industry case with the tag name to avoid duplicates
+      companyData.industry = tag.name;
+
       if (!companyData.tags) {
         companyData.tags = [];
       }
@@ -207,6 +210,34 @@ const updateCompany = async (req, res) => {
         updatedBy: req.user ? req.user._id : null,
         updatedAt: new Date()
       };
+    }
+
+    // Auto-create and assign industry tag if industry is updated/present
+    if (updateData.industry && updateData.industry.trim()) {
+      const trimmed = updateData.industry.trim();
+      const esc = trimmed.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+      let tag = await Tag.findOne({
+        name: { $regex: new RegExp("^" + esc + "$", "i") },
+      });
+      if (!tag) {
+        tag = await Tag.create({ name: trimmed });
+      }
+
+      // Sync industry case with the tag name to avoid duplicates
+      updateData.industry = tag.name;
+
+      // Handle tags array if it exists or not
+      if (!updateData.tags) {
+        updateData.tags = existingCompany.tags || [];
+      }
+      
+      // Ensure the tag string is converted to string for comparison or handled properly
+      const tagIdStr = tag._id.toString();
+      const hasTag = updateData.tags.some(t => t.toString() === tagIdStr);
+      
+      if (!hasTag) {
+        updateData.tags.push(tag._id);
+      }
     }
 
     const company = await Company.findByIdAndUpdate(req.params.id, updateData, {

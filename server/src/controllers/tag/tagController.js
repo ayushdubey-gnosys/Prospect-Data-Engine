@@ -3,8 +3,24 @@ const Tag = require("../../models/tag.model");
 
 const createTag = async (req, res) => {
   try {
-    const tag = await Tag.create(req.body);
+    const { name } = req.body;
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ message: "Tag name is required" });
+    }
 
+    const trimmed = name.trim();
+    const esc = trimmed.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    
+    // Check if tag already exists (case-insensitive)
+    const existingTag = await Tag.findOne({
+      name: { $regex: new RegExp("^" + esc + "$", "i") },
+    });
+
+    if (existingTag) {
+      return res.status(400).json({ message: "Tag with this name already exists" });
+    }
+
+    const tag = await Tag.create({ name: trimmed });
     res.json(tag);
   } catch (error) {
     res.status(500).json({
