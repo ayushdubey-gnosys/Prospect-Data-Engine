@@ -135,17 +135,14 @@ const mapRowToCompany = (row) => {
       "nation",
     ]),
 
-    socialMedia: get([
-      "social media",
-      "social",
-      "linkedin",
-      "facebook",
-      "instagram",
-      "twitter",
-      "x",
-      "social link",
-      "social profile",
-    ]),
+    // Social Media will be handled below via full row scan
+    socialMedia: {
+        facebook: [],
+        youtube: [],
+        instagram: [],
+        x: [],
+        linkedin: []
+    },
 
     companyOwnerName: get([
       "owner",
@@ -240,6 +237,36 @@ const mapRowToCompany = (row) => {
       delete company[key];
     }
   });
+
+  // =======================================
+  // Extract Social Media Links
+  // =======================================
+  
+  // Create a concatenated string of all values in the row to scan for URLs
+  const rowString = Object.values(row)
+    .filter(val => val !== null && val !== undefined)
+    .join(" ");
+
+  const extractLinks = (regex) => {
+    const matches = [...rowString.matchAll(regex)];
+    const uniqueUrls = [...new Set(matches.map(m => m[0].trim()))].slice(0, 3);
+    return uniqueUrls.map(url => ({ url, username: "" }));
+  };
+
+  // Regular expressions to match platforms (case insensitive)
+  const fbRegex = /https?:\/\/(www\.)?(facebook\.com|fb\.com)\/[a-zA-Z0-9.-]+/gi;
+  const ytRegex = /https?:\/\/(www\.)?youtube\.com\/(channel\/|user\/|c\/|@)?[a-zA-Z0-9_-]+/gi;
+  const igRegex = /https?:\/\/(www\.)?instagram\.com\/[a-zA-Z0-9._-]+/gi;
+  const xRegex = /https?:\/\/(www\.)?(twitter\.com|x\.com)\/[a-zA-Z0-9_]+/gi;
+  const liRegex = /https?:\/\/(www\.)?linkedin\.com\/(in|company)\/[a-zA-Z0-9-]+/gi;
+
+  if (company.socialMedia) {
+    company.socialMedia.facebook = extractLinks(fbRegex);
+    company.socialMedia.youtube = extractLinks(ytRegex);
+    company.socialMedia.instagram = extractLinks(igRegex);
+    company.socialMedia.x = extractLinks(xRegex);
+    company.socialMedia.linkedin = extractLinks(liRegex);
+  }
 
   const c_city = (company.city || "").toLowerCase().trim();
   const c_email = (company.email || "").toLowerCase().trim();

@@ -45,7 +45,7 @@ const companySchema = z.object({
     .optional()
     .or(z.literal("")),
 
-  socialMedia: z.string().optional().or(z.literal("")),
+
 
   companyOwnerName: z.string().optional().or(z.literal("")),
 
@@ -202,15 +202,8 @@ const CreateCompanyModal = ({
           />
         </div>
 
-        {/* Social Media + Owner */}
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Social Media Link"
-            placeholder="LinkedIn, Twitter, etc."
-            {...register("socialMedia")}
-            error={errors.socialMedia?.message}
-          />
-
+        {/* Owner */}
+        <div className="grid grid-cols-1 gap-4">
           <Input
             label="Company Owner Name"
             placeholder="Enter owner/founder name"

@@ -415,10 +415,32 @@ const CompaniesPage = () => {
       header: 'Social Media Links',
       accessor: 'socialMedia',
       cell: (row, rowIndex, totalRows) => {
-        const social = row.socialMedia;
-        const hasLinks = social && (social.facebook || social.youtube || social.instagram || social.x || social.linkedin);
+        const social = row.socialMedia || {};
+        
+        // Helper to check if any links exist in array
+        const hasPlatformLinks = (platform) => Array.isArray(social[platform]) && social[platform].length > 0;
+        const hasLinks = ['facebook', 'youtube', 'instagram', 'x', 'linkedin'].some(hasPlatformLinks);
 
         const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
+
+        const renderLinks = (platform, label, urlPrefix, colorClass, hoverClass, borderClass, textClass) => {
+          if (!hasPlatformLinks(platform)) return null;
+          return social[platform].map((link, idx) => {
+            const urlRaw = typeof link === 'string' ? link : (link && (link.url || link.link || ''));
+            if (!urlRaw) return null;
+            const url = (typeof urlRaw === 'string' && urlRaw.startsWith('http')) ? urlRaw : `https://${urlRaw}`;
+            const username = typeof link === 'string' ? label : (link.username || label);
+
+            return (
+              <a key={`${platform}-${idx}`} href={url} target="_blank" rel="noreferrer" className={`flex flex-col p-2.5 rounded-lg border border-transparent ${hoverClass} transition-all group/link`}>
+                <span className={`font-semibold text-gray-700 group-hover/link:${textClass}`}>
+                  {username}
+                </span>
+                <span className={`text-xs ${colorClass} break-all`}>{urlRaw}</span>
+              </a>
+            );
+          });
+        };
 
         return (
           <HoverCard
@@ -436,12 +458,12 @@ const CompaniesPage = () => {
                 <span className="text-sm text-gray-500 font-medium">No links available</span>
               </div>
             ) : (
-              <div className="space-y-2">
-                {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">Facebook</span><span className="text-xs text-blue-500 break-all">{social.facebook}</span></a>}
-                {social.youtube && <a href={social.youtube} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-red-100 hover:bg-red-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-red-700">YouTube</span><span className="text-xs text-red-500 break-all">{social.youtube}</span></a>}
-                {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-pink-100 hover:bg-pink-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-pink-700">Instagram</span><span className="text-xs text-pink-500 break-all">{social.instagram}</span></a>}
-                {social.x && <a href={social.x} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-gray-900">X (Twitter)</span><span className="text-xs text-gray-600 break-all">{social.x}</span></a>}
-                {social.linkedin && <a href={social.linkedin} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">LinkedIn</span><span className="text-xs text-blue-600 break-all">{social.linkedin}</span></a>}
+              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                {renderLinks('facebook', 'Facebook', '', 'text-blue-500', 'hover:border-blue-100 hover:bg-blue-50/50', '', 'text-blue-700')}
+                {renderLinks('youtube', 'YouTube', '', 'text-red-500', 'hover:border-red-100 hover:bg-red-50/50', '', 'text-red-700')}
+                {renderLinks('instagram', 'Instagram', '', 'text-pink-500', 'hover:border-pink-100 hover:bg-pink-50/50', '', 'text-pink-700')}
+                {renderLinks('x', 'X (Twitter)', '', 'text-gray-600', 'hover:border-gray-200 hover:bg-gray-50', '', 'text-gray-900')}
+                {renderLinks('linkedin', 'LinkedIn', '', 'text-blue-600', 'hover:border-blue-100 hover:bg-blue-50/50', '', 'text-blue-700')}
               </div>
             )}
           </HoverCard>

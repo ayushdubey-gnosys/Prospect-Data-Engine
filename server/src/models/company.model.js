@@ -76,12 +76,13 @@ const companySchema = new mongoose.Schema(
     },
 
     socialMedia: {
-      facebook: { type: String, trim: true, default: null },
-      youtube: { type: String, trim: true, default: null },
-      instagram: { type: String, trim: true, default: null },
-      x: { type: String, trim: true, default: null },
-      linkedin: { type: String, trim: true, default: null },
+      facebook: { type: [{ url: { type: String, trim: true }, username: { type: String, trim: true, default: "" } }], default: [] },
+      youtube: { type: [{ url: { type: String, trim: true }, username: { type: String, trim: true, default: "" } }], default: [] },
+      instagram: { type: [{ url: { type: String, trim: true }, username: { type: String, trim: true, default: "" } }], default: [] },
+      x: { type: [{ url: { type: String, trim: true }, username: { type: String, trim: true, default: "" } }], default: [] },
+      linkedin: { type: [{ url: { type: String, trim: true }, username: { type: String, trim: true, default: "" } }], default: [] },
     },
+
 
     companyOwnerName: {
       type: String,

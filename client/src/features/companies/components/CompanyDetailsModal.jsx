@@ -38,11 +38,11 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
         industry: company.industry || "",
         description: company.description || "",
         socialMedia: {
-          facebook: company.socialMedia?.facebook || "",
-          youtube: company.socialMedia?.youtube || "",
-          instagram: company.socialMedia?.instagram || "",
-          x: company.socialMedia?.x || "",
-          linkedin: company.socialMedia?.linkedin || "",
+          facebook: Array.isArray(company.socialMedia?.facebook) ? company.socialMedia.facebook : [],
+          youtube: Array.isArray(company.socialMedia?.youtube) ? company.socialMedia.youtube : [],
+          instagram: Array.isArray(company.socialMedia?.instagram) ? company.socialMedia.instagram : [],
+          x: Array.isArray(company.socialMedia?.x) ? company.socialMedia.x : [],
+          linkedin: Array.isArray(company.socialMedia?.linkedin) ? company.socialMedia.linkedin : [],
         },
         contacts: company.contacts ? JSON.parse(JSON.stringify(company.contacts)) : []
       });
@@ -112,14 +112,49 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
     });
   };
 
-  const handleSocialChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      socialMedia: {
-        ...prev.socialMedia,
-        [field]: value
+  const handleSocialAdd = (platform) => {
+    setFormData(prev => {
+      const currentLinks = prev.socialMedia[platform] || [];
+      if (currentLinks.length >= 3) {
+        toast.warning(`Maximum 3 ${platform} links allowed`);
+        return prev;
       }
-    }));
+      return {
+        ...prev,
+        socialMedia: {
+          ...prev.socialMedia,
+          [platform]: [...currentLinks, { url: "", username: "" }]
+        }
+      };
+    });
+  };
+
+  const handleSocialRemove = (platform, index) => {
+    setFormData(prev => {
+      const currentLinks = [...(prev.socialMedia[platform] || [])];
+      currentLinks.splice(index, 1);
+      return {
+        ...prev,
+        socialMedia: {
+          ...prev.socialMedia,
+          [platform]: currentLinks
+        }
+      };
+    });
+  };
+
+  const handleSocialChange = (platform, index, field, value) => {
+    setFormData(prev => {
+      const currentLinks = [...(prev.socialMedia[platform] || [])];
+      currentLinks[index] = { ...currentLinks[index], [field]: value };
+      return {
+        ...prev,
+        socialMedia: {
+          ...prev.socialMedia,
+          [platform]: currentLinks
+        }
+      };
+    });
   };
 
   if (!isOpen) return null;
@@ -401,21 +436,43 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
           <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Social Media</h3>
             {isEditing ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input type="text" placeholder="Facebook URL" value={formData.socialMedia.facebook} onChange={e => handleSocialChange('facebook', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
-                <input type="text" placeholder="YouTube URL" value={formData.socialMedia.youtube} onChange={e => handleSocialChange('youtube', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
-                <input type="text" placeholder="Instagram URL" value={formData.socialMedia.instagram} onChange={e => handleSocialChange('instagram', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
-                <input type="text" placeholder="X (Twitter) URL" value={formData.socialMedia.x} onChange={e => handleSocialChange('x', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
-                <input type="text" placeholder="LinkedIn URL" value={formData.socialMedia.linkedin || ''} onChange={e => handleSocialChange('linkedin', e.target.value)} className="border rounded p-2 text-sm w-full outline-none focus:border-indigo-500" />
+              <div className="space-y-4">
+                {['facebook', 'youtube', 'instagram', 'x', 'linkedin'].map((platform) => (
+                  <div key={platform} className="p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex justify-between items-center mb-2">
+                       <span className="text-sm font-semibold text-gray-700 capitalize">{platform === 'x' ? 'X (Twitter)' : platform}</span>
+                       {(formData.socialMedia[platform] || []).length < 3 && (
+                         <Button type="button" onClick={() => handleSocialAdd(platform)} size="sm" variant="secondary"><Plus className="w-3 h-3 mr-1"/> Add Link</Button>
+                       )}
+                    </div>
+                    <div className="space-y-2">
+                      {(formData.socialMedia[platform] || []).map((link, i) => (
+                        <div key={i} className="flex gap-2">
+                           <input type="text" placeholder="URL" value={link.url} onChange={e => handleSocialChange(platform, i, 'url', e.target.value)} className="border rounded p-1.5 text-sm flex-1 outline-none focus:border-indigo-500" />
+                           <input type="text" placeholder="Username (Optional)" value={link.username} onChange={e => handleSocialChange(platform, i, 'username', e.target.value)} className="border rounded p-1.5 text-sm w-1/3 outline-none focus:border-indigo-500" />
+                           <button type="button" onClick={() => handleSocialRemove(platform, i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4"/></button>
+                        </div>
+                      ))}
+                      {(!formData.socialMedia[platform] || formData.socialMedia[platform].length === 0) && (
+                         <p className="text-xs text-gray-400">No {platform} links added.</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="flex flex-wrap gap-4">
-                {company.socialMedia?.facebook && <a href={company.socialMedia.facebook} target="_blank" rel="noreferrer" className="text-sm font-semibold text-blue-600 hover:underline">Facebook</a>}
-                {company.socialMedia?.youtube && <a href={company.socialMedia.youtube} target="_blank" rel="noreferrer" className="text-sm font-semibold text-red-600 hover:underline">YouTube</a>}
-                {company.socialMedia?.instagram && <a href={company.socialMedia.instagram} target="_blank" rel="noreferrer" className="text-sm font-semibold text-pink-600 hover:underline">Instagram</a>}
-                {company.socialMedia?.x && <a href={company.socialMedia.x} target="_blank" rel="noreferrer" className="text-sm font-semibold text-gray-800 hover:underline">X (Twitter)</a>}
-                {company.socialMedia?.linkedin && <a href={company.socialMedia.linkedin} target="_blank" rel="noreferrer" className="text-sm font-semibold text-blue-700 hover:underline">LinkedIn</a>}
-                {(!company.socialMedia || (!company.socialMedia.facebook && !company.socialMedia.youtube && !company.socialMedia.instagram && !company.socialMedia.x && !company.socialMedia.linkedin)) && (
+                {['facebook', 'youtube', 'instagram', 'x', 'linkedin'].map(platform => {
+                  const links = Array.isArray(company.socialMedia?.[platform]) ? company.socialMedia[platform] : [];
+                  return links.map((link, idx) => (
+                    link.url && (
+                      <a key={`${platform}-${idx}`} href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noreferrer" className={`text-sm font-semibold hover:underline ${platform === 'facebook' ? 'text-blue-600' : platform === 'youtube' ? 'text-red-600' : platform === 'instagram' ? 'text-pink-600' : platform === 'x' ? 'text-gray-800' : 'text-blue-700'}`}>
+                        {link.username || (platform === 'x' ? 'X (Twitter)' : platform.charAt(0).toUpperCase() + platform.slice(1))}
+                      </a>
+                    )
+                  ));
+                })}
+                {(!company.socialMedia || Object.values(company.socialMedia).every(val => !Array.isArray(val) || val.length === 0)) && (
                   <p className="text-xs text-gray-400">No social media links available.</p>
                 )}
               </div>
