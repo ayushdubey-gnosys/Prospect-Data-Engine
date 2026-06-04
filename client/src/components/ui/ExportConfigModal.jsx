@@ -13,6 +13,8 @@ const ALL_COLUMNS = [
   { id: 'Country', label: 'Country', category: 'Location' },
   { id: 'Tags', label: 'Tags', category: 'Metadata' },
   { id: 'Description', label: 'Description', category: 'Metadata' },
+  { id: 'Employee Contacts', label: 'Employee Contacts', category: 'Contact Details' },
+  { id: 'Social Media Links', label: 'Social Media Links', category: 'Metadata' },
   { id: 'Source', label: 'Source', category: 'Metadata' },
 ];
 

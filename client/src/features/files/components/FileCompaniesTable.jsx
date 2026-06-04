@@ -138,15 +138,50 @@ const getColumns = (userEmail, onOpenCompany) => [
       );
     }
   },
-  {
+    {
     header: 'Social Media Links',
     accessor: 'socialMedia',
     cell: (row, rowIndex, totalRows) => {
-      const social = row.socialMedia;
-      const hasLinks = social && (social.facebook || social.youtube || social.instagram || social.x || social.linkedin);
-      
+      const social = row.socialMedia || {};
+
+      const hasPlatformLinks = (platform) => Array.isArray(social[platform]) ? social[platform].length > 0 : Boolean(social[platform]);
+      const hasLinks = ['facebook', 'youtube', 'instagram', 'x', 'linkedin'].some(hasPlatformLinks);
+
       const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
-      
+
+      const renderPlatform = (platform, label, colorClass, hoverClass, textClass) => {
+        const value = social[platform];
+        if (!value) return null;
+
+        if (Array.isArray(value)) {
+          return value.map((link, idx) => {
+            const urlRaw = typeof link === 'string' ? link : (link && typeof link.url === 'string' ? link.url : '');
+            if (!urlRaw) return null;
+            const url = urlRaw.startsWith('http') ? urlRaw : `https://${urlRaw}`;
+            const username = typeof link === 'string' ? label : (typeof link.username === 'string' && link.username.trim() ? link.username : label);
+            return (
+              <a key={`${platform}-${idx}`} href={url} target="_blank" rel="noreferrer" className={`flex flex-col p-2.5 rounded-lg border border-transparent ${hoverClass} transition-all group/link`}>
+                <span className={`font-semibold text-gray-700 group-hover/link:${textClass}`}>{String(username)}</span>
+                <span className={`text-xs ${colorClass} break-all`}>{String(urlRaw)}</span>
+              </a>
+            );
+          });
+        }
+
+        if (typeof value === 'string') {
+          const urlRaw = value;
+          const url = urlRaw.startsWith('http') ? urlRaw : `https://${urlRaw}`;
+          return (
+            <a key={`${platform}-single`} href={url} target="_blank" rel="noreferrer" className={`flex flex-col p-2.5 rounded-lg border border-transparent ${hoverClass} transition-all group/link`}>
+              <span className={`font-semibold text-gray-700 group-hover/link:${textClass}`}>{label}</span>
+              <span className={`text-xs ${colorClass} break-all`}>{urlRaw}</span>
+            </a>
+          );
+        }
+
+        return null;
+      };
+
       return (
         <HoverCard
           preferTop={isBottom}
@@ -164,11 +199,11 @@ const getColumns = (userEmail, onOpenCompany) => [
             </div>
           ) : (
             <div className="space-y-2">
-              {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">Facebook</span><span className="text-xs text-blue-500 break-all">{social.facebook}</span></a>}
-              {social.youtube && <a href={social.youtube} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-red-100 hover:bg-red-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-red-700">YouTube</span><span className="text-xs text-red-500 break-all">{social.youtube}</span></a>}
-              {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-pink-100 hover:bg-pink-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-pink-700">Instagram</span><span className="text-xs text-pink-500 break-all">{social.instagram}</span></a>}
-              {social.x && <a href={social.x} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-gray-900">X (Twitter)</span><span className="text-xs text-gray-600 break-all">{social.x}</span></a>}
-              {social.linkedin && <a href={social.linkedin} target="_blank" rel="noreferrer" className="flex flex-col p-2.5 rounded-lg border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all group/link"><span className="font-semibold text-gray-700 group-hover/link:text-blue-700">LinkedIn</span><span className="text-xs text-blue-600 break-all">{social.linkedin}</span></a>}
+              {renderPlatform('facebook', 'Facebook', 'text-blue-500', 'hover:border-blue-100 hover:bg-blue-50/50', 'text-blue-700')}
+              {renderPlatform('youtube', 'YouTube', 'text-red-500', 'hover:border-red-100 hover:bg-red-50/50', 'text-red-700')}
+              {renderPlatform('instagram', 'Instagram', 'text-pink-500', 'hover:border-pink-100 hover:bg-pink-50/50', 'text-pink-700')}
+              {renderPlatform('x', 'X (Twitter)', 'text-gray-600', 'hover:border-gray-200 hover:bg-gray-50', 'text-gray-900')}
+              {renderPlatform('linkedin', 'LinkedIn', 'text-blue-600', 'hover:border-blue-100 hover:bg-blue-50/50', 'text-blue-700')}
             </div>
           )}
         </HoverCard>

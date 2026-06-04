@@ -171,7 +171,7 @@ const filterAndExport = async (req, res, next) => {
 
     let selectedColumns = null;
     if (columns) {
-      selectedColumns = columns.split(",");
+      selectedColumns = columns.split(",").map(c => c.trim());
     }
 
     const rows = companies.map(c => {
@@ -191,6 +191,29 @@ const filterAndExport = async (req, res, next) => {
       addField("Industry", c.industry || "");
       addField("Tags", c.tags ? c.tags.map(t => t.name).join(", ") : "");
       addField("Description", c.description || "");
+
+      // Employee Contacts: format as "Name <email> (phone) | Name2 <email> (phone)"
+      const contactsFormatted = Array.isArray(c.contacts) && c.contacts.length > 0
+        ? c.contacts.map(ct => `${ct.name || ''}${ct.email ? ` <${ct.email}>` : ''}${ct.contactNumber ? ` (${ct.contactNumber})` : ''}`.trim()).filter(Boolean).join(' | ')
+        : "";
+      addField("Employee Contacts", contactsFormatted);
+
+      // Social Media Links: format per platform
+      const social = c.socialMedia || {};
+      const socialParts = [];
+      Object.keys(social).forEach(platform => {
+        const arr = social[platform] || [];
+        if (Array.isArray(arr) && arr.length > 0) {
+          const items = arr.map(it => {
+            const u = it && (it.url || it.link) ? it.url || it.link : (typeof it === 'string' ? it : '');
+            const name = it && it.username ? it.username : '';
+            return name ? `${name} (${u})` : `${u}`;
+          }).filter(Boolean).join('; ');
+          if (items) socialParts.push(`${platform}: ${items}`);
+        }
+      });
+      addField("Social Media Links", socialParts.join(' | '));
+
       addField("Source", c.source || "");
 
       return row;

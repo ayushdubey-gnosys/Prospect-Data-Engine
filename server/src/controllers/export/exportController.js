@@ -37,7 +37,7 @@ const exportCompanies = async (req, res) => {
 
     let selectedColumns = null;
     if (req.query.columns) {
-      selectedColumns = req.query.columns.split(",");
+      selectedColumns = req.query.columns.split(",").map(c => c.trim());
     }
 
     // Map companies to a flat structure for Excel/CSV
@@ -58,19 +58,44 @@ const exportCompanies = async (req, res) => {
       addField("Industry", c.industry || "");
       addField("Tags", c.tags ? c.tags.map(t => t.name).join(", ") : "");
       addField("Description", c.description || "");
+      // Employee Contacts: format as "Name <email> (phone) | Name2 <email> (phone)"
+      const contactsFormatted = Array.isArray(c.contacts) && c.contacts.length > 0
+        ? c.contacts.map(ct => `${ct.name || ''}${ct.email ? ` <${ct.email}>` : ''}${ct.contactNumber ? ` (${ct.contactNumber})` : ''}`.trim()).filter(Boolean).join(' | ')
+        : "";
+      addField("Employee Contacts", contactsFormatted);
+
+      // Social Media Links: format per platform
+      const social = c.socialMedia || {};
+      const socialParts = [];
+      Object.keys(social).forEach(platform => {
+        const arr = social[platform] || [];
+        if (Array.isArray(arr) && arr.length > 0) {
+          const items = arr.map(it => {
+            const u = it && (it.url || it.link) ? it.url || it.link : (typeof it === 'string' ? it : '');
+            const name = it && it.username ? it.username : '';
+            return name ? `${name} (${u})` : `${u}`;
+          }).filter(Boolean).join('; ');
+          if (items) socialParts.push(`${platform}: ${items}`);
+        }
+      });
+      addField("Social Media Links", socialParts.join(' | '));
       addField("Source", c.source || "");
 
       return row;
     });
 
+
     const format = req.query.format || "xlsx";
     const fileName = `companies_export_${Date.now()}.${format}`;
     let outPath;
     
+    // Determine headers array: if selectedColumns is null, use the keys of the first row
+    const headers = selectedColumns || (rows.length > 0 ? Object.keys(rows[0]) : null);
+
     if (format === "csv") {
-      outPath = exportService.exportToCSV(rows, fileName);
+      outPath = exportService.exportToCSV(rows, fileName, headers);
     } else {
-      outPath = exportService.exportToExcel(rows, fileName);
+      outPath = exportService.exportToExcel(rows, fileName, headers);
     }
     
     // Create export history
@@ -182,7 +207,7 @@ const regenerateExport = async (req, res) => {
 
     let selectedColumns = null;
     if (savedFilters.columns) {
-      selectedColumns = savedFilters.columns.split(",");
+      selectedColumns = savedFilters.columns.split(",").map(c => c.trim());
     }
 
     // Map companies to a flat structure for Excel/CSV
@@ -203,6 +228,27 @@ const regenerateExport = async (req, res) => {
       addField("Industry", c.industry || "");
       addField("Tags", c.tags ? c.tags.map(t => t.name).join(", ") : "");
       addField("Description", c.description || "");
+      // Employee Contacts for regeneration
+      const contactsFormatted2 = Array.isArray(c.contacts) && c.contacts.length > 0
+        ? c.contacts.map(ct => `${ct.name || ''}${ct.email ? ` <${ct.email}>` : ''}${ct.contactNumber ? ` (${ct.contactNumber})` : ''}`.trim()).filter(Boolean).join(' | ')
+        : "";
+      addField("Employee Contacts", contactsFormatted2);
+
+      // Social Media Links for regeneration
+      const social2 = c.socialMedia || {};
+      const socialParts2 = [];
+      Object.keys(social2).forEach(platform => {
+        const arr = social2[platform] || [];
+        if (Array.isArray(arr) && arr.length > 0) {
+          const items = arr.map(it => {
+            const u = it && (it.url || it.link) ? it.url || it.link : (typeof it === 'string' ? it : '');
+            const name = it && it.username ? it.username : '';
+            return name ? `${name} (${u})` : `${u}`;
+          }).filter(Boolean).join('; ');
+          if (items) socialParts2.push(`${platform}: ${items}`);
+        }
+      });
+      addField("Social Media Links", socialParts2.join(' | '));
       addField("Source", c.source || "");
 
       return row;
@@ -212,11 +258,14 @@ const regenerateExport = async (req, res) => {
     const timestamp = Date.now();
     const fileName = `regen_${exportId}_${timestamp}.${format}`;
     
+    // Determine headers array: if selectedColumns is null, use the keys of the first row
+    const headers = selectedColumns || (rows.length > 0 ? Object.keys(rows[0]) : null);
+
     let filePath;
     if (format === "csv") {
-      filePath = exportService.exportToCSV(rows, fileName);
+      filePath = exportService.exportToCSV(rows, fileName, headers);
     } else {
-      filePath = exportService.exportToExcel(rows, fileName);
+      filePath = exportService.exportToExcel(rows, fileName, headers);
     }
 
     // Save regeneration history

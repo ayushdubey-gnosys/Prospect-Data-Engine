@@ -464,13 +464,17 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
               <div className="flex flex-wrap gap-4">
                 {['facebook', 'youtube', 'instagram', 'x', 'linkedin'].map(platform => {
                   const links = Array.isArray(company.socialMedia?.[platform]) ? company.socialMedia[platform] : [];
-                  return links.map((link, idx) => (
-                    link.url && (
-                      <a key={`${platform}-${idx}`} href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noreferrer" className={`text-sm font-semibold hover:underline ${platform === 'facebook' ? 'text-blue-600' : platform === 'youtube' ? 'text-red-600' : platform === 'instagram' ? 'text-pink-600' : platform === 'x' ? 'text-gray-800' : 'text-blue-700'}`}>
-                        {link.username || (platform === 'x' ? 'X (Twitter)' : platform.charAt(0).toUpperCase() + platform.slice(1))}
+                  return links.map((link, idx) => {
+                    const url = link && typeof link.url === 'string' && link.url.trim() ? (link.url.startsWith('http') ? link.url : `https://${link.url}`) : null;
+                    if (!url) return null;
+                    const username = typeof link.username === 'string' && link.username.trim() ? link.username : (platform === 'x' ? 'X (Twitter)' : platform.charAt(0).toUpperCase() + platform.slice(1));
+
+                    return (
+                      <a key={`${platform}-${idx}`} href={url} target="_blank" rel="noreferrer" className={`text-sm font-semibold hover:underline ${platform === 'facebook' ? 'text-blue-600' : platform === 'youtube' ? 'text-red-600' : platform === 'instagram' ? 'text-pink-600' : platform === 'x' ? 'text-gray-800' : 'text-blue-700'}`}>
+                        {String(username)}
                       </a>
-                    )
-                  ));
+                    );
+                  });
                 })}
                 {(!company.socialMedia || Object.values(company.socialMedia).every(val => !Array.isArray(val) || val.length === 0)) && (
                   <p className="text-xs text-gray-400">No social media links available.</p>

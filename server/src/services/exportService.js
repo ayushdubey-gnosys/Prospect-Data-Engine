@@ -6,9 +6,10 @@ const ensureDir = (dir) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 };
 
-const exportToExcel = (rows, filename = "export.xlsx") => {
+const exportToExcel = (rows, filename = "export.xlsx", headers = null) => {
   const wb = xlsx.utils.book_new();
-  const ws = xlsx.utils.json_to_sheet(rows);
+  const options = headers ? { header: headers } : {};
+  const ws = xlsx.utils.json_to_sheet(rows, options);
   xlsx.utils.book_append_sheet(wb, ws, "Sheet1");
   const outDir = path.join(process.cwd(), "exports");
   ensureDir(outDir);
@@ -17,8 +18,9 @@ const exportToExcel = (rows, filename = "export.xlsx") => {
   return outPath;
 };
 
-const exportToCSV = (rows, filename = "export.csv") => {
-  const ws = xlsx.utils.json_to_sheet(rows);
+const exportToCSV = (rows, filename = "export.csv", headers = null) => {
+  const options = headers ? { header: headers } : {};
+  const ws = xlsx.utils.json_to_sheet(rows, options);
   const csv = xlsx.utils.sheet_to_csv(ws);
   const outDir = path.join(process.cwd(), "exports");
   ensureDir(outDir);

@@ -194,6 +194,7 @@ const CompaniesPage = () => {
       if (filters.search) query.append('search', filters.search);
       query.append('columns', selectedColumns.join(','));
       query.append('format', format);
+      query.append('_t', Date.now().toString());
 
       const response = await api.get(`/export/companies?${query.toString()}`, {
         responseType: 'blob',
@@ -426,17 +427,19 @@ const CompaniesPage = () => {
         const renderLinks = (platform, label, urlPrefix, colorClass, hoverClass, borderClass, textClass) => {
           if (!hasPlatformLinks(platform)) return null;
           return social[platform].map((link, idx) => {
-            const urlRaw = typeof link === 'string' ? link : (link && (link.url || link.link || ''));
-            if (!urlRaw) return null;
-            const url = (typeof urlRaw === 'string' && urlRaw.startsWith('http')) ? urlRaw : `https://${urlRaw}`;
-            const username = typeof link === 'string' ? label : (link.username || label);
+            const urlRaw = typeof link === 'string'
+              ? link
+              : (link && (typeof link.url === 'string' ? link.url : (typeof link.link === 'string' ? link.link : '')));
+            if (!urlRaw || typeof urlRaw !== 'string') return null;
+            const url = urlRaw.startsWith('http') ? urlRaw : `https://${urlRaw}`;
+            const username = typeof link === 'string' ? label : (typeof link.username === 'string' && link.username.trim() ? link.username : label);
 
             return (
               <a key={`${platform}-${idx}`} href={url} target="_blank" rel="noreferrer" className={`flex flex-col p-2.5 rounded-lg border border-transparent ${hoverClass} transition-all group/link`}>
                 <span className={`font-semibold text-gray-700 group-hover/link:${textClass}`}>
-                  {username}
+                  {String(username)}
                 </span>
-                <span className={`text-xs ${colorClass} break-all`}>{urlRaw}</span>
+                <span className={`text-xs ${colorClass} break-all`}>{String(urlRaw)}</span>
               </a>
             );
           });

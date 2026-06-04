@@ -144,6 +144,7 @@ const ExportPage = () => {
       if (filters.tag) queryParams.append('tag', filters.tag);
       queryParams.append('columns', selectedColumns.join(','));
       queryParams.append('format', format);
+      queryParams.append('_t', Date.now().toString());
 
       const response = await api.get(`/export/companies?${queryParams.toString()}`, {
         responseType: 'blob',
