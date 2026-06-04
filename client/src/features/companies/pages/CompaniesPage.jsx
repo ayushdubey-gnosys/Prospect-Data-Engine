@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Download, Tag, Circle, FileText, CheckCircle2, XCircle, Clock, Users, Link as LinkIcon } from 'lucide-react';
+import { Plus, Search, Download, Tag, Circle, FileText, CheckCircle2, XCircle, Clock, Users, Link as LinkIcon, Target } from 'lucide-react';
 import api from '../../../api/axios';
 import { useAuth } from '../../../hooks/useAuth';
 import Table from '../../../components/ui/Table';
@@ -10,6 +10,7 @@ import CreateCompanyModal from '../components/CreateCompanyModal';
 import TagAssignmentModal from '../components/TagAssignmentModal';
 import CompanyDetailsModal from '../components/CompanyDetailsModal';
 import ExportConfigModal from '../../../components/ui/ExportConfigModal';
+import CreateTargetListModal from '../../targetLists/components/CreateTargetListModal';
 import { toast } from 'react-toastify';
 import { openMailComposer } from '../../../utils/mailUtils';
 
@@ -57,6 +58,8 @@ const CompaniesPage = () => {
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  const [isTargetListModalOpen, setIsTargetListModalOpen] = useState(false);
 
   const handleOpenDetails = (id) => {
     setSelectedCompanyId(id);
@@ -590,6 +593,16 @@ const CompaniesPage = () => {
 
           {role === 'admin' && (
             <Button
+              onClick={() => setIsTargetListModalOpen(true)}
+              variant="secondary"
+            >
+              <Target className="w-4 h-4 mr-2" />
+              Target List
+            </Button>
+          )}
+
+          {role === 'admin' && (
+            <Button
               onClick={() => setIsModalOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -853,6 +866,13 @@ const CompaniesPage = () => {
         onConfirm={handleConfirmExport}
         isExporting={isExporting}
         defaultFormat="xlsx"
+      />
+
+      <CreateTargetListModal
+        isOpen={isTargetListModalOpen}
+        onClose={() => setIsTargetListModalOpen(false)}
+        filters={filters}
+        onSuccess={() => toast.success('Target list created successfully')}
       />
     </div>
   );

@@ -16,6 +16,8 @@ import TagsPage from '../features/tags/pages/TagsPage';
 import UsersPage from '../features/dashboard/pages/UsersPage';
 import ProfilePage from '../features/profile/pages/ProfilePage';
 import AboutPage from '../features/dashboard/pages/AboutPage';
+import TargetListsPage from '../features/targetLists/pages/TargetListsPage';
+import TargetListDetailsPage from '../features/targetLists/pages/TargetListDetailsPage';
 
 const AppRoutes = () => {
   return (
@@ -73,6 +75,22 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <UsersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="target-lists"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <TargetListsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="target-lists/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <TargetListDetailsPage />
             </ProtectedRoute>
           }
         />

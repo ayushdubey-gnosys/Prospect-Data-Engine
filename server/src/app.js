@@ -12,6 +12,7 @@ const tagRoutes = require("./routes/tag/tagRoutes");
 const filesRoutes = require("./routes/files/filesRoutes");
 const filtersRoutes = require("./routes/filters/filtersRoutes");
 const userRoutes = require("./routes/user/userRoutes");
+const targetListRoutes = require("./routes/targetList/targetListRoutes");
 
 const errorMiddleware = require("./middleware/errorMiddleware");
 
@@ -93,6 +94,7 @@ app.use("/api/tag", tagRoutes);
 app.use("/api/files", filesRoutes);
 app.use("/api/filters", filtersRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/target-lists", targetListRoutes);
 
 
 // ======================
