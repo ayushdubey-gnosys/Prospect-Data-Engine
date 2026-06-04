@@ -23,15 +23,56 @@ const normalize = (str) =>
 // Row Mapping
 // =======================================
 const mapRowToCompany = (row) => {
-  const get = (keys) => {
-    const normalizedRowKeys = Object.keys(row);
+  const normalizedRowKeys = Object.keys(row);
+  const consumedColumns = new Set(); // Track which columns are used for company fields
 
+  // get(): finds first matching column and marks it as consumed
+  const get = (keys, trackConsumed = true) => {
     for (const key of keys) {
       const normalizedKey = normalize(key);
 
       const foundKey = normalizedRowKeys.find((rk) => {
         const normalizedRowKey = normalize(rk);
+        return (
+          normalizedRowKey === normalizedKey ||
+          normalizedRowKey.includes(normalizedKey) ||
+          normalizedKey.includes(normalizedRowKey)
+        );
+      });
 
+      if (
+        foundKey &&
+        row[foundKey] !== null &&
+        row[foundKey] !== undefined
+      ) {
+        const value = String(row[foundKey]).trim();
+
+        if (
+          value !== "" &&
+          value !== "-" &&
+          value !== "--" &&
+          value.toLowerCase() !== "nan" &&
+          value.toLowerCase() !== "null" &&
+          value.toLowerCase() !== "undefined" &&
+          value.toLowerCase() !== "n/a"
+        ) {
+          if (trackConsumed) consumedColumns.add(foundKey);
+          return value;
+        }
+      }
+    }
+
+    return undefined;
+  };
+
+  // getExcluding(): finds matching column but SKIPS columns already consumed by company fields
+  const getExcluding = (keys) => {
+    for (const key of keys) {
+      const normalizedKey = normalize(key);
+
+      const foundKey = normalizedRowKeys.find((rk) => {
+        if (consumedColumns.has(rk)) return false; // Skip consumed columns
+        const normalizedRowKey = normalize(rk);
         return (
           normalizedRowKey === normalizedKey ||
           normalizedRowKey.includes(normalizedKey) ||
@@ -63,6 +104,9 @@ const mapRowToCompany = (row) => {
     return undefined;
   };
 
+  // =======================================
+  // 1. Extract Company Fields (these consume columns)
+  // =======================================
   const company = {
     company_name: get([
       "company_name",
@@ -168,7 +212,10 @@ const mapRowToCompany = (row) => {
     source: "excel",
   };
 
-  const employeeName = get([
+  // =======================================
+  // 2. Extract Employee Contact Fields (skip columns consumed by company)
+  // =======================================
+  const employeeName = getExcluding([
     "employee name",
     "employee",
     "staff name",
@@ -177,9 +224,11 @@ const mapRowToCompany = (row) => {
     "representative",
     "employee fullname",
     "contact name",
+    "name",
+    "person",
   ]);
 
-  const employeePosition = get([
+  const employeePosition = getExcluding([
     "employee position",
     "designation",
     "position",
@@ -188,7 +237,7 @@ const mapRowToCompany = (row) => {
     "employee role",
   ]);
 
-  const employeePhone = get([
+  const employeePhone = getExcluding([
     "employee contact",
     "employee phone",
     "employee mobile",
@@ -202,28 +251,37 @@ const mapRowToCompany = (row) => {
     "mobile number",
     "phone number",
     "employee telephone",
+    "phone",
+    "mobile",
   ]);
 
-  const employeeEmail = get([
+  const employeeEmail = getExcluding([
     "employee email",
     "employee mail",
     "contact email",
     "person email",
     "staff email",
+    "email",
+    "mail",
   ]);
 
+  // Only create employee contact if at least one field has a DIFFERENT value than company fields
+  const hasDifferentName = employeeName && employeeName !== company.company_name;
+  const hasDifferentEmail = employeeEmail && employeeEmail !== company.email;
+  const hasDifferentPhone = employeePhone && employeePhone !== company.phone;
+
   if (
-    employeeName ||
-    employeePosition ||
-    employeePhone ||
-    employeeEmail
+    hasDifferentName ||
+    hasDifferentEmail ||
+    hasDifferentPhone ||
+    employeePosition
   ) {
     company.contacts = [
       {
         name: employeeName || null,
         position: employeePosition || null,
-        contactNumber: employeePhone || null,
-        email: employeeEmail || null,
+        contactNumber: (hasDifferentPhone ? employeePhone : null),
+        email: (hasDifferentEmail ? employeeEmail : null),
       },
     ];
   }
@@ -239,7 +297,7 @@ const mapRowToCompany = (row) => {
   });
 
   // =======================================
-  // Extract Social Media Links
+  // 3. Extract Social Media Links
   // =======================================
   
   // Create a concatenated string of all values in the row to scan for URLs
@@ -268,6 +326,9 @@ const mapRowToCompany = (row) => {
     company.socialMedia.linkedin = extractLinks(liRegex);
   }
 
+  // =======================================
+  // 4. Duplicate Key
+  // =======================================
   const c_city = (company.city || "").toLowerCase().trim();
   const c_email = (company.email || "").toLowerCase().trim();
   
