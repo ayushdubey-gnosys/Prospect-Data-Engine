@@ -9,7 +9,7 @@ import Button from '../../../components/ui/Button';
 import CreateCompanyModal from '../components/CreateCompanyModal';
 import TagAssignmentModal from '../components/TagAssignmentModal';
 import CompanyDetailsModal from '../components/CompanyDetailsModal';
-import CompanyHoverCardContent from '../components/CompanyHoverCardContent';
+import CompanyNameHoverCards from '../components/CompanyNameHoverCards';
 import ExportConfigModal from '../../../components/ui/ExportConfigModal';
 import CreateTargetListModal from '../../targetLists/components/CreateTargetListModal';
 import { toast } from 'react-toastify';
@@ -283,15 +283,14 @@ const CompaniesPage = () => {
     {
       header: 'Company Name',
       accessor: 'company_name',
-      cell: (row, rowIndex, totalRows) => {
+      cell: (row) => {
         const status = row.leadStatus?.status || 'none';
         const updatedBy = row.leadStatus?.updatedBy?.name || 'Unknown';
-        const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
-
         return (
-          <HoverCard
-            width="w-[28rem]"
-            preferTop={isBottom}
+          <CompanyNameHoverCards
+            status={status}
+            updatedBy={updatedBy}
+            contactPages={row.contactPages}
             trigger={
               <div className="flex items-center gap-2 group">
                 <div className="cursor-help flex items-center">
@@ -305,13 +304,7 @@ const CompaniesPage = () => {
                 </button>
               </div>
             }
-          >
-            <CompanyHoverCardContent
-              status={status}
-              updatedBy={updatedBy}
-              contactPages={row.contactPages}
-            />
-          </HoverCard>
+          />
         );
       },
     },
