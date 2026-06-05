@@ -83,7 +83,7 @@ const HoverCard = ({ trigger, children, width = 'w-[26rem]', preferTop = false }
             ref={cardRef}
             onMouseEnter={handleCardEnter}
             onMouseLeave={handleCardLeave}
-            className={`fixed z-[9999] ${width} bg-white border border-gray-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] rounded-xl p-4 ring-1 ring-black/5`}
+            className={`fixed z-[9999] ${width} bg-white border border-slate-200/80 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.18)] rounded-2xl p-5 ring-1 ring-slate-900/[0.04]`}
             style={{
               top: coords.direction === 'bottom' ? `${coords.top}px` : undefined,
               bottom: coords.direction === 'top' ? `${window.innerHeight - coords.top}px` : undefined,

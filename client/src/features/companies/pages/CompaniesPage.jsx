@@ -9,6 +9,7 @@ import Button from '../../../components/ui/Button';
 import CreateCompanyModal from '../components/CreateCompanyModal';
 import TagAssignmentModal from '../components/TagAssignmentModal';
 import CompanyDetailsModal from '../components/CompanyDetailsModal';
+import CompanyHoverCardContent from '../components/CompanyHoverCardContent';
 import ExportConfigModal from '../../../components/ui/ExportConfigModal';
 import CreateTargetListModal from '../../targetLists/components/CreateTargetListModal';
 import { toast } from 'react-toastify';
@@ -241,15 +242,6 @@ const CompaniesPage = () => {
     }
   };
 
-  const getLeadStatusLabel = (status) => {
-    switch (status) {
-      case 'in_progress': return 'In Progress';
-      case 'converted': return 'Converted';
-      case 'dead': return 'Dead';
-      default: return 'None';
-    }
-  };
-
   const columns = [
     ...(role === 'admin' || role === 'sales'
       ? [
@@ -314,45 +306,11 @@ const CompaniesPage = () => {
               </div>
             }
           >
-            <div className="flex flex-col gap-3 text-left">
-              {/* Lead Status Section */}
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Lead Status</h4>
-                <p className="font-semibold text-gray-900">{getLeadStatusLabel(status)}</p>
-                {status !== 'none' && (
-                  <p className="text-gray-500 text-xs mt-1">Updated by: {updatedBy}</p>
-                )}
-              </div>
-
-              {/* Contact Pages Section */}
-              <div className="bg-white rounded-lg p-3 border border-gray-100">
-                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2">Contact Pages</h4>
-                {Array.isArray(row.contactPages) && row.contactPages.length > 0 ? (
-                  <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-                    {row.contactPages.map((p, idx) => {
-                      const urlRaw = typeof p === 'string' ? p : (p && (p.url || p.link) ? (p.url || p.link) : null);
-                      if (!urlRaw) return null;
-                      const pageName = typeof p === 'string' ? null : (p.name && p.name.trim() ? p.name : null);
-                      const href = urlRaw.startsWith('http') ? urlRaw : `https://${urlRaw}`;
-                      return (
-                        <a key={idx} href={href} target="_blank" rel="noreferrer" className="block p-2 rounded-lg border border-gray-100 hover:border-blue-300 hover:bg-blue-50 transition-colors group/link">
-                          {pageName ? (
-                            <>
-                              <div className="font-semibold text-gray-900 group-hover/link:text-blue-700 truncate max-w-full text-sm">{pageName}</div>
-                              <div className="text-xs text-gray-400 truncate mt-1">{urlRaw}</div>
-                            </>
-                          ) : (
-                            <div className="font-semibold text-gray-700 group-hover/link:text-blue-700 truncate max-w-full text-sm">{urlRaw}</div>
-                          )}
-                        </a>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-gray-500 text-xs">No contact links available for this company</div>
-                )}
-              </div>
-            </div>
+            <CompanyHoverCardContent
+              status={status}
+              updatedBy={updatedBy}
+              contactPages={row.contactPages}
+            />
           </HoverCard>
         );
       },
