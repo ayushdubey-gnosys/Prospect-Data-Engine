@@ -12,6 +12,9 @@ const ImportPage = () => {
   const [file, setFile] = useState(null);
   const queryClient = useQueryClient();
 
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [pendingFileInfo, setPendingFileInfo] = useState(null);
+
   const [historyPage, setHistoryPage] = useState(1);
   const [historyLimit, setHistoryLimit] = useState(10);
   const [historyUser, setHistoryUser] = useState('');
@@ -41,6 +44,36 @@ const ImportPage = () => {
     }
   }, [history, hasActiveImports]);
 
+  const confirmMutation = useMutation({
+    mutationFn: (fileId) => api.post(`/import/confirm/${fileId}`),
+    onSuccess: () => {
+      toast.success("Import confirmed and started.", { autoClose: 6000 });
+      setWarningModalOpen(false);
+      setPendingFileInfo(null);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      queryClient.invalidateQueries({ queryKey: ['importHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to confirm import");
+    }
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: (fileId) => api.post(`/import/cancel/${fileId}`),
+    onSuccess: () => {
+      toast.info("Import cancelled.");
+      setWarningModalOpen(false);
+      setPendingFileInfo(null);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to cancel import");
+    }
+  });
+
   const uploadMutation = useMutation({
     mutationFn: (formData) =>
       api.post('/import/upload', formData, {
@@ -48,31 +81,17 @@ const ImportPage = () => {
       }),
     onSuccess: (res) => {
       const data = res.data;
-      // Show a concise success message (skip duplicate counts from UI)
-      toast.success(`${data.message}. ${data.inserted} new records added.`, { autoClose: 6000 });
-      setFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      // Refresh import history and uploaded files list so UI updates without manual refresh
-      queryClient.invalidateQueries({ queryKey: ['importHistory'] });
-      queryClient.invalidateQueries({ queryKey: ['files'] });
+      if (data.duplicateCount > 0) {
+        setPendingFileInfo(data);
+        setWarningModalOpen(true);
+      } else {
+        // No duplicates, auto confirm
+        confirmMutation.mutate(data.fileId);
+      }
     },
     onError: (error) => {
       const data = error.response?.data;
-      const errorMsg = data?.message || data?.error || 'Failed to import file';
-      
-      // Show duplicate details if available
-      if (data?.duplicateCount && data?.duplicateDetails?.length > 0) {
-        const details = data.duplicateDetails
-          .slice(0, 3)
-          .map((d) => d.company_name)
-          .join(', ');
-        toast.error(
-          `${errorMsg}\n\nDuplicate records: ${details}${data.duplicateCount > 3 ? ` and ${data.duplicateCount - 3} more...` : ''}`,
-          { autoClose: 8000 }
-        );
-      } else {
-        toast.error(errorMsg);
-      }
+      toast.error(data?.message || data?.error || 'Failed to upload file');
     },
   });
 
@@ -361,6 +380,33 @@ const ImportPage = () => {
           </div>
         )}
       </div>
+
+      {warningModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-4">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Duplicate Records Detected</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                This file contains <span className="font-bold text-amber-600">{pendingFileInfo?.duplicateCount}</span> duplicate records (matching company name).
+              </p>
+              <p className="text-sm text-gray-600">
+                These duplicates will be automatically skipped during import. Only the remaining <span className="font-bold text-green-600">{pendingFileInfo?.totalRecords - pendingFileInfo?.duplicateCount}</span> unique records will be imported. Proceed?
+              </p>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t">
+              <Button variant="outline" onClick={() => cancelMutation.mutate(pendingFileInfo?.fileId)} disabled={cancelMutation.isPending || confirmMutation.isPending}>
+                No, Cancel
+              </Button>
+              <Button variant="primary" onClick={() => confirmMutation.mutate(pendingFileInfo?.fileId)} isLoading={confirmMutation.isPending} disabled={cancelMutation.isPending || confirmMutation.isPending}>
+                Yes, Import
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

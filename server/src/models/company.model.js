@@ -47,6 +47,13 @@ const companySchema = new mongoose.Schema(
       default: null,
     },
 
+    companyNameNormalized: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: null,
+    },
+
     duplicateKey: {
       type: String,
       default: null,
@@ -178,6 +185,7 @@ companySchema.index({ fileId: 1, city: 1 });
 
 // Index for high-performance duplicate checking
 companySchema.index({ duplicateKey: 1 });
+companySchema.index({ companyNameNormalized: 1, emailNormalized: 1, cityNormalized: 1 });
 
 companySchema.index({ fileId: 1, industry: 1 });
 

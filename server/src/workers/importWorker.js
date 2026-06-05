@@ -329,13 +329,15 @@ const mapRowToCompany = (row) => {
   // =======================================
   // 4. Duplicate Key
   // =======================================
+  const c_company = (company.company_name || "").toLowerCase().trim();
   const c_city = (company.city || "").toLowerCase().trim();
   const c_email = (company.email || "").toLowerCase().trim();
   
-  if (c_city || c_email) {
+  if (c_company || c_city || c_email) {
+    company.companyNameNormalized = c_company || null;
     company.cityNormalized = c_city || null;
     company.emailNormalized = c_email || null;
-    company.duplicateKey = c_city + "|" + c_email;
+    company.duplicateKey = c_company || null;
   }
 
   return company;
@@ -386,14 +388,13 @@ const run = async () => {
     let inMemoryDuplicatesSkipped = 0;
 
     companies.forEach((c) => {
-      const city = c.city && String(c.city).toLowerCase().trim();
-      const email = c.email && String(c.email).toLowerCase().trim();
+      const companyName = c.company_name && String(c.company_name).toLowerCase().trim();
 
-      if (city && email) {
-        const key = `${city}|${email}`;
+      if (companyName) {
+        const key = companyName;
         if (pairSet.has(key)) {
           inMemoryDuplicatesSkipped++;
-          return; // Skip duplicate in-file when both city+email already present
+          return; // Skip duplicate in-file when company name already present
         }
         pairSet.add(key);
       }
@@ -440,18 +441,17 @@ const run = async () => {
       if (dupCheck.duplicateCount > 0) {
         const dupSet = new Set(
           dupCheck.duplicates
-            .filter((d) => d.city && d.email)
-            .map((d) => `${String(d.city).toLowerCase().trim()}|${String(d.email).toLowerCase().trim()}`)
+            .filter((d) => d.company_name)
+            .map((d) => String(d.company_name).toLowerCase().trim())
         );
 
         chunkToInsert = chunk.filter((c) => {
-          const city = c.city && String(c.city).toLowerCase().trim();
-          const email = c.email && String(c.email).toLowerCase().trim();
-          if (city && email) {
-            const key = `${city}|${email}`;
+          const companyName = c.company_name && String(c.company_name).toLowerCase().trim();
+          if (companyName) {
+            const key = companyName;
             return !dupSet.has(key);
           }
-          // If either city or email is missing, allow insertion (per business rules)
+          // If company name is missing, allow insertion (per business rules)
           return true;
         });
       }

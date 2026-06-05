@@ -423,7 +423,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                       <p className="text-xs text-gray-500">{contact.position || "No position"}</p>
                     </div>
                     <div className="text-right mt-2 sm:mt-0">
-                      <p className="text-xs text-blue-600">{contact.email}</p>
+                      {contact.email ? <button type="button" onClick={() => openMailComposer(contact.email, company.company_name, user?.email)} className="text-xs text-blue-600 font-medium hover:underline cursor-pointer bg-transparent border-none p-0" title={contact.email}>{contact.email}</button> : <span className="text-gray-400 text-xs">No Email</span>}
                       <p className="text-xs text-gray-600">{contact.contactNumber}</p>
                     </div>
                   </div>

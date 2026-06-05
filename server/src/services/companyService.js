@@ -382,10 +382,9 @@ const checkDuplicateData = async (companies) => {
     const duplicateKeys = [];
 
     for (const c of chunk) {
-      const city = c.city && String(c.city).trim().toLowerCase();
-      const email = c.email && String(c.email).trim().toLowerCase();
-      if (city && email) {
-        duplicateKeys.push(city + "|" + email);
+      const companyName = c.company_name && String(c.company_name).toLowerCase().trim();
+      if (companyName) {
+        duplicateKeys.push(companyName);
       }
     }
 
@@ -404,10 +403,9 @@ const checkDuplicateData = async (companies) => {
     );
 
     for (const c of chunk) {
-      const city = c.city && String(c.city).toLowerCase().trim();
-      const email = c.email && String(c.email).toLowerCase().trim();
-      if (city && email) {
-        const key = `${city}|${email}`;
+      const companyName = c.company_name && String(c.company_name).toLowerCase().trim();
+      if (companyName) {
+        const key = companyName;
         if (existingPairSet.has(key)) {
           duplicates.push({ company_name: c.company_name, city: c.city, email: c.email });
         }

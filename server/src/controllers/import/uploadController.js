@@ -330,7 +330,7 @@ const mapRowToCompany = (row) => {
 };
 
 // =======================================
-// Upload Handler
+// Upload Handler (Pre-check duplicates, no import)
 // =======================================
 
 const uploadHandler = [
@@ -345,107 +345,185 @@ const uploadHandler = [
       }
 
       // =======================================
-      // Duplicate File Check
+      // Duplicate File Check (by name)
       // =======================================
 
-      const existingFile =
-        await UploadedFile.findOne({
-          originalName:
-            req.file.originalname,
-        });
+      const existingFile = await UploadedFile.findOne({
+        originalName: req.file.originalname,
+      });
 
       if (existingFile) {
-        if (
-          req.file.path &&
-          fs.existsSync(req.file.path)
-        ) {
+        if (req.file.path && fs.existsSync(req.file.path)) {
           fs.unlinkSync(req.file.path);
         }
 
         return res.status(400).json({
-          message:
-            "This file already exists with file name: " +
-            req.file.originalname,
+          message: "This file already exists with file name: " + req.file.originalname,
         });
       }
+
+      // =======================================
+      // Parse file to get duplicate count
+      // =======================================
+      const rows = await fileService.parseFile(req.file.path, req.file.mimetype);
+      
+      const companies = rows
+        .map((row) => mapRowToCompany(row))
+        .filter((c) => Object.keys(c).length > 1 && c.company_name);
+
+      const uniqueCompanies = [];
+      const pairSet = new Set();
+
+      companies.forEach((c) => {
+        const companyName = c.company_name && String(c.company_name).toLowerCase().trim();
+
+        if (companyName) {
+          const key = companyName;
+          if (pairSet.has(key)) {
+            return; 
+          }
+          pairSet.add(key);
+        }
+        uniqueCompanies.push(c);
+      });
+
+      // Check against DB
+      const dupCheck = await companyService.checkDuplicateData(uniqueCompanies);
+      const duplicateCount = dupCheck.duplicateCount + (companies.length - uniqueCompanies.length);
 
       // =======================================
       // Create Initial Upload History record (Pending)
       // =======================================
 
-      const uploadedDoc =
-        await fileService.saveUploadedFile({
-          fileName: req.file.filename,
-          originalName: req.file.originalname,
-          sourceType: path
-            .extname(req.file.originalname)
-            .replace(".", ""),
-          totalRecords: 0, // Will be updated by worker thread once parsed
-          uploadedBy: req.user ? req.user._id : null,
-          uploadPath: req.file.path,
-        });
+      const uploadedDoc = await fileService.saveUploadedFile({
+        fileName: req.file.filename,
+        originalName: req.file.originalname,
+        sourceType: path.extname(req.file.originalname).replace(".", ""),
+        totalRecords: companies.length, 
+        uploadedBy: req.user ? req.user._id : null,
+        uploadPath: req.file.path,
+      });
 
-      // Update file status to pending explicitly
       uploadedDoc.status = "pending";
       uploadedDoc.progress = 0;
       await uploadedDoc.save();
 
       // =======================================
-      // Spawn Worker Thread for Processing
+      // Return Success Response Instantly (Waiting for confirm)
       // =======================================
 
-      const workerPath = path.resolve(__dirname, "../../workers/importWorker.js");
-      console.log(`[MAIN THREAD] Spawning worker thread for file upload pipeline: ${req.file.originalname}`);
-
-      const worker = new Worker(workerPath, {
-        workerData: {
-          filePath: req.file.path,
-          fileId: uploadedDoc._id.toString(),
-          MONGO_URI: process.env.MONGO_URI,
-          mimetype: req.file.mimetype,
-        },
-      });
-
-      // Main Thread listeners (Fail-safe logging and backup error recovery)
-      worker.on("message", (msg) => {
-        console.log(`[MAIN THREAD] Worker message from file ${uploadedDoc.originalName}:`, msg);
-      });
-
-      worker.on("error", (err) => {
-        console.error(`[MAIN THREAD] Worker thread crashed for file ${uploadedDoc.originalName}:`, err);
-        UploadedFile.findByIdAndUpdate(uploadedDoc._id, {
-          status: "failed",
-          errorMessage: err.message || "Background worker encountered an unexpected execution error.",
-          progress: 100,
-        }).catch((dbErr) => {
-          console.error(`[MAIN THREAD] Failed to log worker error to database:`, dbErr);
-        });
-      });
-
-      worker.on("exit", (code) => {
-        console.log(`[MAIN THREAD] Worker thread for file ${uploadedDoc.originalName} finished with exit code ${code}`);
-      });
-
-      // =======================================
-      // Return Success Response Instantly
-      // =======================================
-
-      return res.status(201).json({
+      return res.status(200).json({
         success: true,
-        message: "File uploaded successfully. Import process started.",
+        message: "File uploaded successfully. Awaiting confirmation.",
         file: uploadedDoc,
+        totalRecords: companies.length,
+        duplicateCount: duplicateCount,
+        fileId: uploadedDoc._id
       });
     } catch (error) {
-      console.error(
-        "UPLOAD ERROR:",
-        error
-      );
-
+      console.error("UPLOAD ERROR:", error);
       next(error);
     }
   },
 ];
 
+// =======================================
+// Confirm Import Handler (Spawns worker)
+// =======================================
+const confirmImportHandler = async (req, res, next) => {
+  try {
+    const { fileId } = req.params;
+    
+    const uploadedDoc = await UploadedFile.findById(fileId);
+    if (!uploadedDoc) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    if (uploadedDoc.status !== "pending") {
+      return res.status(400).json({ message: "File is not in pending status" });
+    }
+
+    // Spawn Worker Thread for Processing
+    const workerPath = path.resolve(__dirname, "../../workers/importWorker.js");
+    console.log(`[MAIN THREAD] Spawning worker thread for file upload pipeline: ${uploadedDoc.originalName}`);
+
+    // Since we're not inside the multer middleware, we need to infer mimetype from extension
+    let mimetype = "text/csv";
+    if (uploadedDoc.uploadPath.endsWith(".xlsx") || uploadedDoc.uploadPath.endsWith(".xls")) {
+      mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    }
+
+    const worker = new Worker(workerPath, {
+      workerData: {
+        filePath: uploadedDoc.uploadPath,
+        fileId: uploadedDoc._id.toString(),
+        MONGO_URI: process.env.MONGO_URI,
+        mimetype: mimetype,
+      },
+    });
+
+    // Main Thread listeners (Fail-safe logging and backup error recovery)
+    worker.on("message", (msg) => {
+      console.log(`[MAIN THREAD] Worker message from file ${uploadedDoc.originalName}:`, msg);
+    });
+
+    worker.on("error", (err) => {
+      console.error(`[MAIN THREAD] Worker thread crashed for file ${uploadedDoc.originalName}:`, err);
+      UploadedFile.findByIdAndUpdate(uploadedDoc._id, {
+        status: "failed",
+        errorMessage: err.message || "Background worker encountered an unexpected execution error.",
+        progress: 100,
+      }).catch((dbErr) => {
+        console.error(`[MAIN THREAD] Failed to log worker error to database:`, dbErr);
+      });
+    });
+
+    worker.on("exit", (code) => {
+      console.log(`[MAIN THREAD] Worker thread for file ${uploadedDoc.originalName} finished with exit code ${code}`);
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Import process started.",
+    });
+
+  } catch (error) {
+    console.error("CONFIRM ERROR:", error);
+    next(error);
+  }
+};
+
+// =======================================
+// Cancel Import Handler (Deletes file)
+// =======================================
+const cancelImportHandler = async (req, res, next) => {
+  try {
+    const { fileId } = req.params;
+    
+    const uploadedDoc = await UploadedFile.findById(fileId);
+    if (!uploadedDoc) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    if (uploadedDoc.uploadPath && fs.existsSync(uploadedDoc.uploadPath)) {
+      fs.unlinkSync(uploadedDoc.uploadPath);
+    }
+
+    await UploadedFile.findByIdAndDelete(fileId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Import cancelled and file deleted.",
+    });
+
+  } catch (error) {
+    console.error("CANCEL ERROR:", error);
+    next(error);
+  }
+};
+
 module.exports = {
   uploadHandler,
+  confirmImportHandler,
+  cancelImportHandler
 };
