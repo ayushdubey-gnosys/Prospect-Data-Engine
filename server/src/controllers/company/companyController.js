@@ -11,6 +11,10 @@ const createCompany = async (req, res) => {
       return res.status(400).json({ message: "A company can have a maximum of 5 employee contacts." });
     }
 
+    if (companyData.contactPages && companyData.contactPages.length > 5) {
+      return res.status(400).json({ message: "A company can have a maximum of 5 contact page links." });
+    }
+
     if (companyData.phone && companyData.contacts && companyData.contacts.length > 0) {
       for (const contact of companyData.contacts) {
         if (contact.contactNumber && contact.contactNumber === companyData.phone) {
@@ -187,9 +191,14 @@ const updateCompany = async (req, res) => {
 
     const newPhone = updateData.phone !== undefined ? updateData.phone : existingCompany.phone;
     const newContacts = updateData.contacts !== undefined ? updateData.contacts : existingCompany.contacts;
+    const newContactPages = updateData.contactPages !== undefined ? updateData.contactPages : existingCompany.contactPages;
 
     if (newContacts && newContacts.length > 5) {
       return res.status(400).json({ message: "A company can have a maximum of 5 employee contacts." });
+    }
+
+    if (newContactPages && newContactPages.length > 5) {
+      return res.status(400).json({ message: "A company can have a maximum of 5 contact page links." });
     }
 
     if (newPhone && newContacts && newContacts.length > 0) {

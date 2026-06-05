@@ -17,7 +17,7 @@ const Table = ({ columns, data, isLoading, emptyMessage = 'No data available' })
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-gray-200 overflow-visible">
           {isLoading ? (
             <tr>
               <td colSpan={columns.length} className="px-6 py-8 text-center text-gray-500">
@@ -26,9 +26,9 @@ const Table = ({ columns, data, isLoading, emptyMessage = 'No data available' })
             </tr>
           ) : data && data.length > 0 ? (
             data.map((row, rowIndex) => (
-              <tr key={rowIndex} className="hover:bg-gray-50">
+              <tr key={rowIndex} className="hover:bg-gray-50 relative z-0">
                 {columns.map((col, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 relative overflow-visible">
                     {col.cell ? col.cell(row, rowIndex, data.length) : row[col.accessor]}
                   </td>
                 ))}

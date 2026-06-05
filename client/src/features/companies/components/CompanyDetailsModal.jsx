@@ -44,7 +44,8 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
           x: Array.isArray(company.socialMedia?.x) ? company.socialMedia.x : [],
           linkedin: Array.isArray(company.socialMedia?.linkedin) ? company.socialMedia.linkedin : [],
         },
-        contacts: company.contacts ? JSON.parse(JSON.stringify(company.contacts)) : []
+        contacts: company.contacts ? JSON.parse(JSON.stringify(company.contacts)) : [],
+        contactPages: Array.isArray(company.contactPages) ? JSON.parse(JSON.stringify(company.contactPages)) : []
       });
     }
   }, [company, isEditing]);
@@ -109,6 +110,33 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
       const newContacts = [...prev.contacts];
       newContacts[index][field] = value;
       return { ...prev, contacts: newContacts };
+    });
+  };
+
+  const handleContactPageAdd = () => {
+    if (formData.contactPages.length >= 5) {
+      toast.warning("Maximum 5 contact page links allowed");
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      contactPages: [...(prev.contactPages || []), { name: "", url: "" }]
+    }));
+  };
+
+  const handleContactPageRemove = (index) => {
+    setFormData(prev => {
+      const newPages = [...(prev.contactPages || [])];
+      newPages.splice(index, 1);
+      return { ...prev, contactPages: newPages };
+    });
+  };
+
+  const handleContactPageChange = (index, field, value) => {
+    setFormData(prev => {
+      const newPages = [...(prev.contactPages || [])];
+      newPages[index] = { ...newPages[index], [field]: value };
+      return { ...prev, contactPages: newPages };
     });
   };
 
@@ -365,6 +393,46 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                       </a>
                     ) : (
                       <span className="text-sm text-gray-400 font-medium">None</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Contact Pages */}
+              <div className="flex flex-col p-3 rounded-lg border bg-white sm:col-span-2">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-gray-700">Contact Page Links</span>
+                  {isEditing && formData.contactPages.length < 5 && (
+                    <Button type="button" onClick={handleContactPageAdd} size="sm" variant="secondary"><Plus className="w-3 h-3 mr-1"/> Add Link</Button>
+                  )}
+                </div>
+
+                {isEditing ? (
+                  <div className="space-y-2">
+                    {(formData.contactPages || []).map((p, i) => (
+                      <div key={i} className="flex gap-2 items-center">
+                        <input type="text" placeholder="Page Name" value={p.name} onChange={e => handleContactPageChange(i, 'name', e.target.value)} className="border rounded p-1.5 text-sm flex-1 outline-none focus:border-indigo-500" />
+                        <input type="text" placeholder="URL" value={p.url} onChange={e => handleContactPageChange(i, 'url', e.target.value)} className="border rounded p-1.5 text-sm flex-1 outline-none focus:border-indigo-500" />
+                        <button type="button" onClick={() => handleContactPageRemove(i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4"/></button>
+                      </div>
+                    ))}
+                    {(formData.contactPages || []).length === 0 && <p className="text-xs text-gray-400">No contact page links added.</p>}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-3">
+                    {(company.contactPages || []).length > 0 ? (
+                      company.contactPages.map((p, i) => {
+                        const url = p && p.url && typeof p.url === 'string' && p.url.trim() ? (p.url.startsWith('http') ? p.url : `https://${p.url}`) : null;
+                        if (!url) return null;
+                        const name = p.name || `Contact Page ${i + 1}`;
+                        return (
+                          <a key={i} href={url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-indigo-700 hover:underline">
+                            {name}
+                          </a>
+                        );
+                      })
+                    ) : (
+                      <p className="text-xs text-gray-400">No contact page links available.</p>
                     )}
                   </div>
                 )}

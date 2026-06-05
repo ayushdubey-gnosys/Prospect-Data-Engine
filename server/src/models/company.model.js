@@ -90,6 +90,16 @@ const companySchema = new mongoose.Schema(
       linkedin: { type: [{ url: { type: String, trim: true }, username: { type: String, trim: true, default: "" } }], default: [] },
     },
 
+    contactPages: {
+      type: [
+        {
+          name: { type: String, trim: true, default: null },
+          url: { type: String, trim: true, default: null },
+        },
+      ],
+      default: [],
+    },
+
 
     companyOwnerName: {
       type: String,

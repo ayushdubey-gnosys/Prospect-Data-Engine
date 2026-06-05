@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, Download, Tag, Circle, FileText, CheckCircle2, XCircle, Clock, Users, Link as LinkIcon, Target } from 'lucide-react';
 import api from '../../../api/axios';
@@ -163,6 +163,10 @@ const CompaniesPage = () => {
   const [page, setPage] = useState(1);
   const [limitPerPage, setLimitPerPage] = useState(10);
 
+  // Hover state for company name tooltip (use explicit state + small hide delay to avoid flicker)
+  const [hoveredCompany, setHoveredCompany] = useState(null);
+  const hoverTimeoutsRef = useRef({}); // Per-row timeouts to prevent overlap
+
   // Reset page and selection when search filters change immediately
   useEffect(() => {
     setPage(1);
@@ -287,31 +291,69 @@ const CompaniesPage = () => {
     {
       header: 'Company Name',
       accessor: 'company_name',
-      cell: (row) => {
+      cell: (row, rowIndex, totalRows) => {
         const status = row.leadStatus?.status || 'none';
         const updatedBy = row.leadStatus?.updatedBy?.name || 'Unknown';
+        const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
 
         return (
-          <div className="flex items-center gap-2 group relative">
-            <div className="cursor-help flex items-center">
-              {getLeadStatusIcon(status)}
-
-              {/* Status Tooltip */}
-              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50 w-48 bg-gray-900 text-white text-xs rounded p-2 shadow-lg">
-                <p className="font-semibold">{getLeadStatusLabel(status)}</p>
+          <HoverCard
+            width="w-[28rem]"
+            preferTop={isBottom}
+            trigger={
+              <div className="flex items-center gap-2 group">
+                <div className="cursor-help flex items-center">
+                  {getLeadStatusIcon(status)}
+                </div>
+                <button
+                  onClick={() => handleOpenDetails(row._id)}
+                  className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-left focus:outline-none transition-colors"
+                >
+                  {row.company_name}
+                </button>
+              </div>
+            }
+          >
+            <div className="flex flex-col gap-3 text-left">
+              {/* Lead Status Section */}
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Lead Status</h4>
+                <p className="font-semibold text-gray-900">{getLeadStatusLabel(status)}</p>
                 {status !== 'none' && (
-                  <p className="text-gray-300 mt-1">Updated by: {updatedBy}</p>
+                  <p className="text-gray-500 text-xs mt-1">Updated by: {updatedBy}</p>
                 )}
-                <div className="absolute left-4 top-full w-2 h-2 bg-gray-900 transform rotate-45 -mt-1"></div>
+              </div>
+
+              {/* Contact Pages Section */}
+              <div className="bg-white rounded-lg p-3 border border-gray-100">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2">Contact Pages</h4>
+                {Array.isArray(row.contactPages) && row.contactPages.length > 0 ? (
+                  <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+                    {row.contactPages.map((p, idx) => {
+                      const urlRaw = typeof p === 'string' ? p : (p && (p.url || p.link) ? (p.url || p.link) : null);
+                      if (!urlRaw) return null;
+                      const pageName = typeof p === 'string' ? null : (p.name && p.name.trim() ? p.name : null);
+                      const href = urlRaw.startsWith('http') ? urlRaw : `https://${urlRaw}`;
+                      return (
+                        <a key={idx} href={href} target="_blank" rel="noreferrer" className="block p-2 rounded-lg border border-gray-100 hover:border-blue-300 hover:bg-blue-50 transition-colors group/link">
+                          {pageName ? (
+                            <>
+                              <div className="font-semibold text-gray-900 group-hover/link:text-blue-700 truncate max-w-full text-sm">{pageName}</div>
+                              <div className="text-xs text-gray-400 truncate mt-1">{urlRaw}</div>
+                            </>
+                          ) : (
+                            <div className="font-semibold text-gray-700 group-hover/link:text-blue-700 truncate max-w-full text-sm">{urlRaw}</div>
+                          )}
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-xs">No contact links available for this company</div>
+                )}
               </div>
             </div>
-            <button
-              onClick={() => handleOpenDetails(row._id)}
-              className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-left focus:outline-none transition-colors"
-            >
-              {row.company_name}
-            </button>
-          </div>
+          </HoverCard>
         );
       },
     },
