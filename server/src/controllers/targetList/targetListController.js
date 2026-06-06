@@ -39,6 +39,11 @@ const createTargetList = async (req, res, next) => {
       return res.status(400).json({ message: "Target list name is required." });
     }
 
+    const existingList = await TargetList.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    if (existingList) {
+      return res.status(400).json({ message: "A target list with this name already exists." });
+    }
+
     // Build the query to find companies
     const query = await buildFilterQuery(filters || {});
     
@@ -61,12 +66,30 @@ const createTargetList = async (req, res, next) => {
 
 const getTargetLists = async (req, res, next) => {
   try {
-    const targetLists = await TargetList.find()
+    const { page = 1, limit = 10, search = '' } = req.query;
+
+    const query = {};
+    if (search) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+
+    const skip = (Math.max(1, parseInt(page)) - 1) * parseInt(limit);
+    const total = await TargetList.countDocuments(query);
+
+    const targetLists = await TargetList.find(query)
       .populate("createdBy", "name email")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
       .lean();
 
-    res.json(targetLists);
+    res.json({
+      data: targetLists,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / parseInt(limit))
+    });
   } catch (error) {
     next(error);
   }
