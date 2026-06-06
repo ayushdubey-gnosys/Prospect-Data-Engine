@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Building2, Mail, Phone, Globe, Calendar, Tag as TagIcon, 
-  Copy, Check, ExternalLink, Edit2, Clock, CheckCircle2, 
+import {
+  Building2, Mail, Phone, Globe, Calendar, Tag as TagIcon,
+  Copy, Check, ExternalLink, Edit2, Clock, CheckCircle2,
   XCircle, Circle, Save, FileText, Plus, Trash2, X
 } from "lucide-react";
 import { useCompany } from "../hooks/useCompany";
@@ -18,7 +18,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [copiedField, setCopiedField] = useState(null);
-  
+
   const role = user?.role || "sales";
   const canEditTags = role === "admin" || role === "sales";
   const canUpdateDetails = role === "admin" || role === "sales";
@@ -214,22 +214,22 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 </div>
                 <div className="flex-1 max-w-lg">
                   {isEditing ? (
-                    <input 
-                      type="text" 
-                      value={formData.company_name} 
-                      onChange={e => setFormData({...formData, company_name: e.target.value})}
+                    <input
+                      type="text"
+                      value={formData.company_name}
+                      onChange={e => setFormData({ ...formData, company_name: e.target.value })}
                       className="text-xl font-bold bg-white/20 border border-white/30 rounded px-2 py-1 w-full text-white outline-none focus:ring-2 focus:ring-indigo-400"
                     />
                   ) : (
                     <h2 className="text-2xl font-bold tracking-tight">{company.company_name}</h2>
                   )}
-                  
+
                   <div className="flex flex-wrap gap-2 mt-2">
                     {isEditing ? (
-                      <input 
-                        type="text" 
-                        value={formData.industry} 
-                        onChange={e => setFormData({...formData, industry: e.target.value})}
+                      <input
+                        type="text"
+                        value={formData.industry}
+                        onChange={e => setFormData({ ...formData, industry: e.target.value })}
                         placeholder="Industry"
                         className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 outline-none w-32"
                       />
@@ -279,7 +279,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
             {/* Meta & Lead Status */}
             <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Identifiers & Meta</h3>
-              
+
               <div className="flex items-center gap-3 py-1 border-b border-gray-50 pb-3">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <div>
@@ -324,7 +324,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                     className="w-full flex-1 min-h-[100px] border border-gray-300 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                     placeholder="Company description..."
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 ) : (
                   <textarea
@@ -348,13 +348,13 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 </Button>
               )}
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Email */}
               <div className="flex flex-col p-3 rounded-lg border border-gray-50 bg-gray-50/30">
                 <span className="block text-xs text-gray-400 mb-1">Email Address</span>
                 {isEditing ? (
-                  <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                  <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
                 ) : (
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-blue-600 text-sm truncate">{company.email || "None"}</span>
@@ -369,7 +369,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
               <div className="flex flex-col p-3 rounded-lg border border-gray-50 bg-gray-50/30">
                 <span className="block text-xs text-gray-400 mb-1">Phone Connection</span>
                 {isEditing ? (
-                  <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                  <input type="text" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
                 ) : (
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-gray-700 text-sm truncate">{company.phone || "None"}</span>
@@ -384,7 +384,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
               <div className="flex flex-col p-3 rounded-lg border border-indigo-50 bg-indigo-50/20 sm:col-span-2">
                 <span className="block text-xs text-indigo-500/70 mb-1">Official Website</span>
                 {isEditing ? (
-                  <input type="text" value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                  <input type="text" value={formData.website} onChange={e => setFormData({ ...formData, website: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
                 ) : (
                   <div className="flex justify-between items-center">
                     {company.website ? (
@@ -399,11 +399,11 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
               </div>
 
               {/* Contact Pages */}
-              <div className="flex flex-col p-3 rounded-lg border bg-white sm:col-span-2">
+              <div className="flex flex-col p-3 rounded-lg shadow-sm shadow-gray-100  bg-white sm:col-span-2">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-semibold text-gray-700">Contact Page Links</span>
                   {isEditing && formData.contactPages.length < 5 && (
-                    <Button type="button" onClick={handleContactPageAdd} size="sm" variant="secondary"><Plus className="w-3 h-3 mr-1"/> Add Link</Button>
+                    <Button type="button" onClick={handleContactPageAdd} size="sm" variant="secondary"><Plus className="w-3 h-3 mr-1" /> Add Link</Button>
                   )}
                 </div>
 
@@ -413,7 +413,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                       <div key={i} className="flex gap-2 items-center">
                         <input type="text" placeholder="Page Name" value={p.name} onChange={e => handleContactPageChange(i, 'name', e.target.value)} className="border rounded p-1.5 text-sm flex-1 outline-none focus:border-indigo-500" />
                         <input type="text" placeholder="URL" value={p.url} onChange={e => handleContactPageChange(i, 'url', e.target.value)} className="border rounded p-1.5 text-sm flex-1 outline-none focus:border-indigo-500" />
-                        <button type="button" onClick={() => handleContactPageRemove(i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4"/></button>
+                        <button type="button" onClick={() => handleContactPageRemove(i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     ))}
                     {(formData.contactPages || []).length === 0 && <p className="text-xs text-gray-400">No contact page links added.</p>}
@@ -426,7 +426,8 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                         if (!url) return null;
                         const name = p.name || `Contact Page ${i + 1}`;
                         return (
-                          <a key={i} href={url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-indigo-700 hover:underline">
+                          <a key={i} href={url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-md font-medium transition-colors border border-gray-300 bg-transparent hover:bg-gray-100 text-gray-700 h-8 px-3 text-sm">
+                            <ExternalLink className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
                             {name}
                           </a>
                         );
@@ -444,7 +445,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
               <div className="p-3 bg-gray-50/40 rounded-lg border border-gray-50">
                 <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">City</span>
                 {isEditing ? (
-                  <input type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                  <input type="text" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
                 ) : (
                   <span className="text-sm font-semibold text-gray-700 capitalize">{company.city || "-"}</span>
                 )}
@@ -452,23 +453,23 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
               <div className="p-3 bg-gray-50/40 rounded-lg border border-gray-50">
                 <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">Country</span>
                 {isEditing ? (
-                  <input type="text" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value})} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
+                  <input type="text" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
                 ) : (
                   <span className="text-sm font-semibold text-gray-700 capitalize">{company.country || "-"}</span>
                 )}
               </div>
             </div>
           </div>
-          
+
           {/* Employee Contacts Section */}
           <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Employee Contacts</h3>
               {isEditing && formData.contacts.length < 5 && (
-                <Button type="button" onClick={handleAddContact} size="sm" variant="secondary"><Plus className="w-3.5 h-3.5 mr-1"/> Add Contact</Button>
+                <Button type="button" onClick={handleAddContact} size="sm" variant="secondary"><Plus className="w-3.5 h-3.5 mr-1" /> Add Contact</Button>
               )}
             </div>
-            
+
             {isEditing ? (
               <div className="space-y-3">
                 {formData.contacts.map((contact, i) => (
@@ -477,7 +478,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                     <input type="text" placeholder="Position" value={contact.position} onChange={e => handleContactChange(i, 'position', e.target.value)} className="border rounded p-1.5 text-sm flex-1 min-w-[120px] outline-none focus:border-indigo-500" />
                     <input type="email" placeholder="Email" value={contact.email} onChange={e => handleContactChange(i, 'email', e.target.value)} className="border rounded p-1.5 text-sm flex-1 min-w-[120px] outline-none focus:border-indigo-500" />
                     <input type="text" placeholder="Phone" value={contact.contactNumber} onChange={e => handleContactChange(i, 'contactNumber', e.target.value)} className="border rounded p-1.5 text-sm flex-1 min-w-[120px] outline-none focus:border-indigo-500" />
-                    <button type="button" onClick={() => handleRemoveContact(i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4"/></button>
+                    <button type="button" onClick={() => handleRemoveContact(i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
                 {formData.contacts.length === 0 && <p className="text-xs text-gray-400">No contacts added.</p>}
@@ -499,7 +500,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
               </div>
             )}
           </div>
-          
+
           {/* Social Media Links Section */}
           <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Social Media</h3>
@@ -508,21 +509,21 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 {['facebook', 'youtube', 'instagram', 'x', 'linkedin'].map((platform) => (
                   <div key={platform} className="p-3 bg-gray-50 rounded-lg border">
                     <div className="flex justify-between items-center mb-2">
-                       <span className="text-sm font-semibold text-gray-700 capitalize">{platform === 'x' ? 'X (Twitter)' : platform}</span>
-                       {(formData.socialMedia[platform] || []).length < 3 && (
-                         <Button type="button" onClick={() => handleSocialAdd(platform)} size="sm" variant="secondary"><Plus className="w-3 h-3 mr-1"/> Add Link</Button>
-                       )}
+                      <span className="text-sm font-semibold text-gray-700 capitalize">{platform === 'x' ? 'X (Twitter)' : platform}</span>
+                      {(formData.socialMedia[platform] || []).length < 3 && (
+                        <Button type="button" onClick={() => handleSocialAdd(platform)} size="sm" variant="secondary"><Plus className="w-3 h-3 mr-1" /> Add Link</Button>
+                      )}
                     </div>
                     <div className="space-y-2">
                       {(formData.socialMedia[platform] || []).map((link, i) => (
                         <div key={i} className="flex gap-2">
-                           <input type="text" placeholder="URL" value={link.url} onChange={e => handleSocialChange(platform, i, 'url', e.target.value)} className="border rounded p-1.5 text-sm flex-1 outline-none focus:border-indigo-500" />
-                           <input type="text" placeholder="Username (Optional)" value={link.username} onChange={e => handleSocialChange(platform, i, 'username', e.target.value)} className="border rounded p-1.5 text-sm w-1/3 outline-none focus:border-indigo-500" />
-                           <button type="button" onClick={() => handleSocialRemove(platform, i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4"/></button>
+                          <input type="text" placeholder="URL" value={link.url} onChange={e => handleSocialChange(platform, i, 'url', e.target.value)} className="border rounded p-1.5 text-sm flex-1 outline-none focus:border-indigo-500" />
+                          <input type="text" placeholder="Username (Optional)" value={link.username} onChange={e => handleSocialChange(platform, i, 'username', e.target.value)} className="border rounded p-1.5 text-sm w-1/3 outline-none focus:border-indigo-500" />
+                          <button type="button" onClick={() => handleSocialRemove(platform, i)} className="text-red-500 hover:text-red-700 p-1.5"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       ))}
                       {(!formData.socialMedia[platform] || formData.socialMedia[platform].length === 0) && (
-                         <p className="text-xs text-gray-400">No {platform} links added.</p>
+                        <p className="text-xs text-gray-400">No {platform} links added.</p>
                       )}
                     </div>
                   </div>
@@ -581,9 +582,9 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                   <TagIcon className="w-8 h-8 text-gray-300 mx-auto" />
                   <p className="text-xs text-gray-400">No tags have been assigned to this company yet.</p>
                   {canEditTags && (
-                    <Button 
+                    <Button
                       onClick={() => onEditTags(company)}
-                      variant="outline" 
+                      variant="outline"
                       size="sm"
                     >
                       + Add First Tag

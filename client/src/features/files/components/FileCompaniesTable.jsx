@@ -5,6 +5,7 @@ import { Circle, FileText, CheckCircle2, XCircle, Clock, Users, Link as LinkIcon
 import { openMailComposer } from '../../../utils/mailUtils';
 import { useAuth } from '../../../hooks/useAuth';
 import CompanyDetailsModal from '../../companies/components/CompanyDetailsModal';
+import CompanyNameHoverCards from '../../companies/components/CompanyNameHoverCards';
 
 const getLeadStatusIcon = (status) => {
   switch (status) {
@@ -19,14 +20,7 @@ const getLeadStatusIcon = (status) => {
   }
 };
 
-const getLeadStatusLabel = (status) => {
-  switch (status) {
-    case 'in_progress': return 'In Progress';
-    case 'converted': return 'Converted';
-    case 'dead': return 'Dead';
-    default: return 'None';
-  }
-};
+
 
 const getColumns = (userEmail, onOpenCompany) => [
   {
@@ -37,26 +31,24 @@ const getColumns = (userEmail, onOpenCompany) => [
       const updatedBy = row.leadStatus?.updatedBy?.name || 'Unknown';
       
       return (
-        <div className="flex items-center gap-2 group relative">
-          <div className="cursor-help flex items-center">
-            {getLeadStatusIcon(status)}
-            
-            {/* Status Tooltip */}
-            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50 w-48 bg-gray-900 text-white text-xs rounded p-2 shadow-lg">
-              <p className="font-semibold">{getLeadStatusLabel(status)}</p>
-              {status !== 'none' && (
-                <p className="text-gray-300 mt-1">Updated by: {updatedBy}</p>
-              )}
-              <div className="absolute left-4 top-full w-2 h-2 bg-gray-900 transform rotate-45 -mt-1"></div>
+        <CompanyNameHoverCards
+          status={status}
+          updatedBy={updatedBy}
+          contactPages={row.contactPages}
+          trigger={
+            <div className="flex items-center gap-2 group">
+              <div className="cursor-help flex items-center">
+                {getLeadStatusIcon(status)}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); onOpenCompany(row._id); }}
+                className="font-medium text-gray-900 text-left hover:text-indigo-600"
+              >
+                {row.company_name}
+              </button>
             </div>
-          </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onOpenCompany(row._id); }}
-            className="font-medium text-gray-900 text-left hover:text-indigo-600"
-          >
-            {row.company_name}
-          </button>
-        </div>
+          }
+        />
       );
     }
   },
