@@ -231,6 +231,10 @@ const UsersPage = () => {
                         <option value="marketing">
                           Marketing
                         </option>
+
+                        <option value="cold_mail">
+                          Cold Mail
+                        </option>
                       </select>
 
                     </td>

@@ -120,7 +120,7 @@ const TargetListDetailsPage = () => {
         row.email ? (
           <button
             type="button"
-            onClick={() => openMailComposer(row.email, row.company_name)}
+            onClick={() => openMailComposer(row.email, row.company_name, user)}
             className="text-blue-600 hover:text-blue-800 hover:underline font-medium select-all text-left cursor-pointer bg-transparent border-none p-0"
           >
             {row.email}
@@ -172,7 +172,7 @@ const TargetListDetailsPage = () => {
                       <span className="text-gray-500 font-medium truncate" title={contact.position}>{contact.position || "No position"}</span>
                     </div>
                     <div className="flex flex-col items-end gap-1 text-right max-w-[50%]">
-                      {contact.email ? <button type="button" onClick={() => openMailComposer(contact.email, row.company_name, user?.email)} className="text-blue-600 font-medium hover:underline truncate w-full text-right cursor-pointer bg-transparent border-none p-0" title={contact.email}>{contact.email}</button> : <span className="text-gray-400">No Email</span>}
+                      {contact.email ? <button type="button" onClick={() => openMailComposer(contact.email, row.company_name, user)} className="text-blue-600 font-medium hover:underline truncate w-full text-right cursor-pointer bg-transparent border-none p-0" title={contact.email}>{contact.email}</button> : <span className="text-gray-400">No Email</span>}
                       {contact.contactNumber ? <span className="text-gray-700 font-medium truncate w-full" title={contact.contactNumber}>{contact.contactNumber}</span> : <span className="text-gray-400">No Phone</span>}
                     </div>
                   </div>

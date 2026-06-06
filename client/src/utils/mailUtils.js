@@ -16,10 +16,10 @@ const WEBMAIL_BASE_URL = 'https://mail.gnosysdigital.com/';
  *
  * @param {string} toEmail       - The company's email address (recipient)
  * @param {string} companyName   - The company's name (for subject line)
- * @param {string} fromEmail     - The logged-in user's email address (sender)
+ * @param {object} user          - The logged-in user object
  * @returns {boolean}            - true if opened, false if validation failed
  */
-export const openMailComposer = (toEmail, companyName = '', fromEmail = '') => {
+export const openMailComposer = (toEmail, companyName = '', user = null) => {
   // Validate recipient email
   if (!toEmail || typeof toEmail !== 'string' || toEmail.trim() === '') {
     toast.warning('No email address available for this company.');
@@ -32,12 +32,23 @@ export const openMailComposer = (toEmail, companyName = '', fromEmail = '') => {
     return false;
   }
 
+  const fromEmail = user?.email;
+  const userRole = user?.role;
+  const subject = `Business Inquiry - ${companyName || 'Company'}`;
+
+  if (userRole === 'cold_mail') {
+    // For cold_mail users, redirect to Gmail compose window
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmail.trim())}&su=${encodeURIComponent(subject)}`;
+    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+    return true;
+  }
+
   // Build Roundcube compose URL with pre-filled fields
   const params = new URLSearchParams({
     _task: 'mail',
     _action: 'compose',
     _to: toEmail.trim(),
-    _subject: `Business Inquiry - ${companyName || 'Company'}`,
+    _subject: subject,
   });
 
   // Pre-fill From only if logged-in user's email is available

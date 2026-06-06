@@ -343,7 +343,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contact Channels</h3>
               {!isEditing && (
-                <Button onClick={() => openMailComposer(company.email, company.company_name, user?.email)} variant="outline" size="sm">
+                <Button onClick={() => openMailComposer(company.email, company.company_name, user)} variant="outline" size="sm">
                   <Mail className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> Send Email
                 </Button>
               )}
@@ -357,7 +357,17 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                   <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
                 ) : (
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-blue-600 text-sm truncate">{company.email || "None"}</span>
+                    {company.email ? (
+                      <button 
+                        type="button"
+                        onClick={() => openMailComposer(company.email, company.company_name, user)}
+                        className="font-semibold text-blue-600 hover:text-blue-800 hover:underline text-sm truncate bg-transparent border-none p-0 cursor-pointer text-left"
+                      >
+                        {company.email}
+                      </button>
+                    ) : (
+                      <span className="font-semibold text-gray-400 text-sm truncate">None</span>
+                    )}
                     {company.email && (
                       <button onClick={() => handleCopy(company.email, "email")} className="p-1 text-gray-400 hover:text-blue-500"><Copy className="w-3.5 h-3.5" /></button>
                     )}
@@ -492,7 +502,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                       <p className="text-xs text-gray-500">{contact.position || "No position"}</p>
                     </div>
                     <div className="text-right mt-2 sm:mt-0">
-                      {contact.email ? <button type="button" onClick={() => openMailComposer(contact.email, company.company_name, user?.email)} className="text-xs text-blue-600 font-medium hover:underline cursor-pointer bg-transparent border-none p-0" title={contact.email}>{contact.email}</button> : <span className="text-gray-400 text-xs">No Email</span>}
+                      {contact.email ? <button type="button" onClick={() => openMailComposer(contact.email, company.company_name, user)} className="text-xs text-blue-600 font-medium hover:underline cursor-pointer bg-transparent border-none p-0" title={contact.email}>{contact.email}</button> : <span className="text-gray-400 text-xs">No Email</span>}
                       <p className="text-xs text-gray-600">{contact.contactNumber}</p>
                     </div>
                   </div>
