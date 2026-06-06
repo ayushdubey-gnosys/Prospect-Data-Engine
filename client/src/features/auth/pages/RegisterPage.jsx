@@ -37,6 +37,7 @@ const registerSchema = z.object({
     'admin',
     'sales',
     'marketing',
+    'cold_mail',
   ]),
 });
 
@@ -297,6 +298,10 @@ const RegisterPage = () => {
 
                 <option value="admin">
                   Admin
+                </option>
+
+                <option value="cold_mail">
+                  Cold Mail
                 </option>
 
               </select>
