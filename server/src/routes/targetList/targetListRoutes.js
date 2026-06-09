@@ -6,18 +6,21 @@ const {
   getTargetListById,
   repopulateTargetList,
   deleteTargetList,
+  assignTargetList,
 } = require("../../controllers/targetList/targetListController");
 
 const router = express.Router();
 
-// Only admins can manage target lists
 router.use(protect);
-router.use(authorize("admin"));
 
-router.post("/", createTargetList);
-router.get("/", getTargetLists);
-router.get("/:id", getTargetListById);
-router.post("/:id/repopulate", repopulateTargetList);
-router.delete("/:id", deleteTargetList);
+// Get lists: allow admin and sales
+router.get("/", authorize("admin", "sales"), getTargetLists);
+router.get("/:id", authorize("admin", "sales"), getTargetListById);
+
+// Manage lists: allow only admin
+router.post("/", authorize("admin"), createTargetList);
+router.post("/:id/repopulate", authorize("admin"), repopulateTargetList);
+router.delete("/:id", authorize("admin"), deleteTargetList);
+router.post("/:id/assign", authorize("admin"), assignTargetList);
 
 module.exports = router;

@@ -1,6 +1,8 @@
 const TargetList = require("../../models/targetList.model");
 const Company = require("../../models/company.model");
 const Tag = require("../../models/tag.model");
+const User = require("../../models/user.model");
+const { sendAssignmentEmail } = require("../../utils/emailService");
 
 // Helper to build filter query, similar to company.controller.js getCompanies
 const buildFilterQuery = async (queryObj) => {
@@ -73,11 +75,20 @@ const getTargetLists = async (req, res, next) => {
       query.name = { $regex: search, $options: 'i' };
     }
 
+    if (req.user.role === 'sales') {
+      query.$or = [
+        { createdBy: req.user._id },
+        { 'assignments.user': req.user._id }
+      ];
+    }
+
     const skip = (Math.max(1, parseInt(page)) - 1) * parseInt(limit);
     const total = await TargetList.countDocuments(query);
 
     const targetLists = await TargetList.find(query)
       .populate("createdBy", "name email")
+      .populate("assignments.user", "name email")
+      .populate("assignments.assignedBy", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
@@ -185,10 +196,60 @@ const deleteTargetList = async (req, res, next) => {
   }
 };
 
+const assignTargetList = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId, description } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "Salesman user ID is required." });
+    }
+
+    const targetList = await TargetList.findById(id);
+    if (!targetList) {
+      return res.status(404).json({ message: "Target list not found." });
+    }
+
+    const salesman = await User.findById(userId);
+    if (!salesman) {
+      return res.status(404).json({ message: "Salesman not found." });
+    }
+
+    // Check if already assigned
+    const alreadyAssigned = targetList.assignments.find(a => a.user.toString() === userId);
+    if (alreadyAssigned) {
+      return res.status(400).json({ message: "Target list is already assigned to this salesman." });
+    }
+
+    targetList.assignments.push({
+      user: userId,
+      description: description || "",
+      assignedBy: req.user._id,
+      assignedAt: new Date(),
+    });
+
+    await targetList.save();
+
+    // Send email
+    await sendAssignmentEmail(
+      salesman.email,
+      salesman.name,
+      targetList.name,
+      description,
+      req.user.name
+    );
+
+    res.json({ message: "Target list assigned successfully." });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTargetList,
   getTargetLists,
   getTargetListById,
   repopulateTargetList,
   deleteTargetList,
+  assignTargetList,
 };

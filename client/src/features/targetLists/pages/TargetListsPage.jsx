@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Target, Search, Clock, Users, Trash2, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Target, Search, Clock, Users, Trash2, ArrowRight, ChevronLeft, ChevronRight, UserPlus, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../api/axios';
 import { toast } from 'react-toastify';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
+import AssignTargetListModal from '../components/AssignTargetListModal';
 
 const TargetListsPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedListToAssign, setSelectedListToAssign] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -134,7 +141,8 @@ const TargetListsPage = () => {
                   <th className="py-4 px-6 font-semibold">Filters Used</th>
                   <th className="py-4 px-6 font-semibold text-center w-32">Companies</th>
                   <th className="py-4 px-6 font-semibold w-40">Created By</th>
-                  <th className="py-4 px-6 font-semibold text-right w-24">Actions</th>
+                  {isAdmin && <th className="py-4 px-6 font-semibold w-48">Assigned To</th>}
+                  <th className="py-4 px-6 font-semibold text-right w-32">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -146,6 +154,11 @@ const TargetListsPage = () => {
                         <Clock className="w-3 h-3" />
                         {new Date(list.createdAt).toLocaleDateString()}
                       </div>
+                      {!isAdmin && list.assignments && list.assignments.some(a => a.user?._id === user?._id || a.user === user?._id) && (
+                        <div className="mt-1.5 text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded inline-block border border-indigo-100">
+                          <span className="font-semibold">Assigned:</span> {list.assignments.find(a => a.user?._id === user?._id || a.user === user?._id)?.description || "No description"}
+                        </div>
+                      )}
                     </td>
                     <td className="py-4 px-6">
                       {renderFilters(list.filters)}
@@ -159,15 +172,45 @@ const TargetListsPage = () => {
                     <td className="py-4 px-6">
                       <div className="font-medium text-gray-900 truncate max-w-[150px]" title={list.createdBy?.name || 'Unknown'}>{list.createdBy?.name || 'Unknown'}</div>
                     </td>
+                    {isAdmin && (
+                      <td className="py-4 px-6">
+                        {list.assignments && list.assignments.length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            {list.assignments.map((assignment, idx) => (
+                              <div key={idx} className="text-xs text-gray-700 bg-gray-50 border rounded px-2 py-1 truncate" title={assignment.description}>
+                                <span className="font-bold">{assignment.user?.name}</span>
+                                {assignment.description && <span className="text-gray-400 ml-1">- {assignment.description}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Not assigned</span>
+                        )}
+                      </td>
+                    )}
                     <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => deleteMutation.mutate(list._id)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete List"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                        {isAdmin && (
+                          <button
+                            onClick={() => {
+                              setSelectedListToAssign(list);
+                              setIsAssignModalOpen(true);
+                            }}
+                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Assign to Salesman"
+                          >
+                            <UserPlus className="w-4 h-4" />
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button
+                            onClick={() => deleteMutation.mutate(list._id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete List"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => navigate(`/target-lists/${list._id}`)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -209,6 +252,18 @@ const TargetListsPage = () => {
           </div>
         )}
       </div>
+
+      {selectedListToAssign && (
+        <AssignTargetListModal
+          isOpen={isAssignModalOpen}
+          onClose={() => {
+            setIsAssignModalOpen(false);
+            setSelectedListToAssign(null);
+          }}
+          targetListId={selectedListToAssign._id}
+          targetListName={selectedListToAssign.name}
+        />
+      )}
     </div>
   );
 };

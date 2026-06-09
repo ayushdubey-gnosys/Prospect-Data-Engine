@@ -358,7 +358,7 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 ) : (
                   <div className="flex justify-between items-center">
                     {company.email ? (
-                      <button 
+                      <button
                         type="button"
                         onClick={() => openMailComposer(company.email, company.company_name, user)}
                         className="font-semibold text-blue-600 hover:text-blue-800 hover:underline text-sm truncate bg-transparent border-none p-0 cursor-pointer text-left"
