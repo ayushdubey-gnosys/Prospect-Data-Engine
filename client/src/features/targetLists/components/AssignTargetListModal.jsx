@@ -41,21 +41,21 @@ const AssignTargetListModal = ({ isOpen, onClose, targetListId, targetListName }
 
   const handleAssign = () => {
     if (!selectedUserId) {
-      toast.error("Please select a salesman.");
+      toast.error("Please select a user.");
       return;
     }
     assignMutation.mutate({ userId: selectedUserId, description });
   };
 
   const users = usersResponse?.data || [];
-  // Filter for sales users, or anyone that could be assigned a list
-  const assignableUsers = users.filter(u => u.role === 'sales' || u.role === 'admin' || u.role === 'superadmin');
+  // Filter for users that could be assigned a list
+  const assignableUsers = users.filter(u => u.role === 'sales' || u.role === 'cold_mail' || u.role === 'admin' || u.role === 'superadmin');
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Assign Target List: ${targetListName}`} className="max-w-md">
       <div className="p-4 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Salesman</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Select User</label>
           {usersLoading ? (
             <div className="text-sm text-gray-500 py-2">Loading users...</div>
           ) : (

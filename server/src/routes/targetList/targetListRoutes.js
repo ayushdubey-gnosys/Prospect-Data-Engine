@@ -13,9 +13,9 @@ const router = express.Router();
 
 router.use(protect);
 
-// Get lists: allow admin and sales
-router.get("/", authorize("admin", "sales"), getTargetLists);
-router.get("/:id", authorize("admin", "sales"), getTargetListById);
+// Get lists: allow admin, sales, and cold_mail
+router.get("/", authorize("admin", "sales", "cold_mail"), getTargetLists);
+router.get("/:id", authorize("admin", "sales", "cold_mail"), getTargetListById);
 
 // Manage lists: allow only admin
 router.post("/", authorize("admin"), createTargetList);

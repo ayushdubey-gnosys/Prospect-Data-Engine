@@ -13,24 +13,43 @@ const sendAssignmentEmail = async (salesmanEmail, salesmanName, targetListName, 
     });
 
     const mailOptions = {
-      from: `"TD Web Services" <${process.env.SMTP_FROM_EMAIL || "hr@in.tdwebservices.com"}>`,
+      from: `"Prospect Engine" <${process.env.SMTP_FROM_EMAIL || "noreply@gnosysdigital.com"}>`,
+      replyTo: process.env.SMTP_FROM_EMAIL || "noreply@gnosysdigital.com",
       to: salesmanEmail,
       subject: `New Target List Assigned: ${targetListName}`,
+      text: `Hello ${salesmanName},\n\nYou have been assigned a new target list for outreach by ${adminName}.\n\nList Details:\nName: ${targetListName}\nNote: ${description || "No description provided."}\n\nPlease log in to the portal to view the list.\n\nRegards,\nPDE - Prospect Engine Team`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-          <h2 style="color: #333;">New Target List Assignment</h2>
-          <p>Hello <strong>${salesmanName}</strong>,</p>
-          <p>You have been assigned a new target list by <strong>${adminName}</strong>.</p>
-          
-          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 20px;">
-            <p><strong>Target List Name:</strong> ${targetListName}</p>
-            <p><strong>Description:</strong></p>
-            <p style="white-space: pre-wrap; color: #555;">${description || "No description provided."}</p>
+        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <div style="background-color: #0b0f19; padding: 24px; text-align: center; border-bottom: 3px solid #2563eb;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;">Prospect Engine</h1>
+            <p style="color: #94a3b8; margin: 4px 0 0 0; font-size: 12px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">Centralized Data Hub</p>
           </div>
           
-          <p style="margin-top: 30px;">Please login to the Prospect Data Engine to view the list and start outreach.</p>
-          <br/>
-          <p style="font-size: 0.9em; color: #777;">Regards,<br/>TD Web Services Team</p>
+          <!-- Body -->
+          <div style="padding: 32px 24px;">
+            <h2 style="color: #1e293b; margin: 0 0 16px 0; font-size: 18px;">New Target List Assignment</h2>
+            <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 16px 0;">Hello <strong style="color: #0f172a;">${salesmanName}</strong>,</p>
+            <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">You have been assigned a new target list for outreach by <strong style="color: #0f172a;">${adminName}</strong>.</p>
+            
+            <!-- Info Card -->
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin-bottom: 32px;">
+              <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">List Details</p>
+              <p style="margin: 0 0 12px 0; font-size: 16px; color: #0f172a; font-weight: 600;">${targetListName}</p>
+              <p style="margin: 0; font-size: 14px; color: #475569; line-height: 1.5; white-space: pre-wrap;">${description || "No description provided."}</p>
+            </div>
+            
+            <!-- Action Button -->
+            <div style="text-align: center; margin-bottom: 24px;">
+              <a href="https://pde.gnosysdigital.com/target-lists" style="display: inline-block; padding: 12px 28px; background-color: #034463ff; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);">View Target List</a>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f1f5f9; padding: 20px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; font-size: 13px; color: #64748b;">Regards,<br/><strong style="color: #475569; font-size: 14px; display: inline-block; margin-top: 4px;">PDE - Prospect Engine Team </strong></p>
+            <p style="margin: 8px 0 0 0; font-size: 11px; color: #94a3b8;"> Dwarkadhish Group </p>
+          </div>
         </div>
       `,
     };

@@ -26,7 +26,7 @@ const Sidebar = () => {
     { name: 'Uploaded Files', path: '/uploaded-files', icon: FolderOpen },
     { name: 'Import', path: '/import', icon: UploadCloud, roles: ['admin', 'sales'] },
     { name: 'Export', path: '/export', icon: DownloadCloud, roles: ['admin', 'marketing'] },
-    { name: 'Target Lists', path: '/target-lists', icon: Target, roles: ['admin'] },
+    { name: 'Target Lists', path: '/target-lists', icon: Target, roles: ['admin', 'sales', 'cold_mail'] },
     { name: 'Tags', path: '/tags', icon: Tags, roles: ['admin', 'sales'] },
     { name: 'Users', path: '/users', icon: Users, roles: ['admin'] },
     { name: 'Profile', path: '/profile', icon: User },

@@ -81,7 +81,7 @@ const AppRoutes = () => {
         <Route
           path="target-lists"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={['admin', 'sales', 'cold_mail']}>
               <TargetListsPage />
             </ProtectedRoute>
           }
@@ -89,7 +89,7 @@ const AppRoutes = () => {
         <Route
           path="target-lists/:id"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={['admin', 'sales', 'cold_mail']}>
               <TargetListDetailsPage />
             </ProtectedRoute>
           }
