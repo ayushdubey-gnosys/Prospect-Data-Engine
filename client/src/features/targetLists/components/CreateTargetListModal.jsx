@@ -20,8 +20,8 @@ const CreateTargetListModal = ({ isOpen, onClose, filters, onSuccess }) => {
     setError(null);
 
     try {
-      await api.post('/target-lists', { name, filters });
-      onSuccess();
+      const res = await api.post('/target-lists', { name, filters });
+      onSuccess(res.data);
       onClose();
       setName('');
     } catch (err) {

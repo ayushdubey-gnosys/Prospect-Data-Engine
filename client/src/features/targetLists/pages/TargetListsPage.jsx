@@ -15,6 +15,7 @@ const TargetListsPage = () => {
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   const [page, setPage] = useState(1);
+  const [limitPerPage, setLimitPerPage] = useState(10);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -30,10 +31,10 @@ const TargetListsPage = () => {
   }, [search]);
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ['target-lists', page, debouncedSearch],
+    queryKey: ['target-lists', page, limitPerPage, debouncedSearch],
     queryFn: async () => {
       const res = await api.get('/target-lists', {
-        params: { page, limit: 10, search: debouncedSearch }
+        params: { page, limit: limitPerPage, search: debouncedSearch }
       });
       return res.data;
     }
@@ -65,9 +66,9 @@ const TargetListsPage = () => {
     if (filters.tag) elements.push({ label: 'Tag', value: filters.tag, color: 'bg-pink-50/80 text-pink-700 border-pink-200' });
 
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-nowrap gap-2 overflow-x-auto custom-scrollbar pb-1 max-w-[280px]">
         {elements.map((el, i) => (
-          <span key={i} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border shadow-sm transition-all hover:shadow-md ${el.color}`}>
+          <span key={i} className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border shadow-sm transition-all hover:shadow-md ${el.color}`}>
             <span className="opacity-70 uppercase tracking-wider text-[10px]">{el.label}:</span>
             <span>{el.value}</span>
           </span>
@@ -102,18 +103,36 @@ const TargetListsPage = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
         {/* Search Bar */}
         <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50 rounded-t-2xl">
-          <div className="relative w-full max-w-md group">
+          <div className="relative flex-1 w-full max-w-md group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input
               type="text"
               placeholder="Search target lists by name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
             />
           </div>
-          <div className="text-sm px-4 py-2 bg-white rounded-lg border border-slate-200 text-slate-600 font-semibold shadow-sm">
-            <span className="text-blue-600">{totalCount}</span> {totalCount === 1 ? 'list' : 'lists'} found
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-600">Rows:</span>
+              <select
+                value={limitPerPage}
+                onChange={(e) => {
+                  setLimitPerPage(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="pl-3 pr-8 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            <div className="text-sm px-4 py-1.5 bg-white rounded-lg border border-slate-200 text-slate-600 font-semibold shadow-sm">
+              <span className="text-blue-600">{totalCount}</span> {totalCount === 1 ? 'list' : 'lists'} found
+            </div>
           </div>
         </div>
 
@@ -209,29 +228,23 @@ const TargetListsPage = () => {
                     {isAdmin && (
                       <td className="py-5 px-6">
                         {list.assignments && list.assignments.length > 0 ? (
-                          <div className="flex flex-col gap-2">
+                          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto custom-scrollbar pb-1 max-w-[220px]">
                             {list.assignments.map((assignment, idx) => (
-                              <div key={idx} className="flex flex-col bg-white border border-slate-200 rounded-lg p-2.5 shadow-sm hover:border-blue-300 transition-colors">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[9px] font-bold">
-                                      {getInitials(assignment.user?.name)}
-                                    </div>
-                                    <span className="font-semibold text-xs text-slate-700 truncate max-w-[120px]">{assignment.user?.name}</span>
-                                  </div>
-                                  {assignment.description && (
-                                    <div className="relative group/note flex items-center">
-                                      <span className="text-blue-600 underline decoration-blue-200 hover:text-blue-800 cursor-pointer text-[10px] whitespace-nowrap">View Note</span>
-                                      <div className="absolute z-50 right-0 top-full mt-3 hidden group-hover/note:block w-[450px] max-w-[80vw] bg-white border border-slate-200 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] rounded-xl p-5 text-xs text-slate-700 normal-case whitespace-pre-wrap cursor-default" onClick={(e) => e.stopPropagation()}>
-                                        <div className="absolute -top-2 right-6 w-4 h-4 bg-white border-t border-l border-slate-200 transform rotate-45"></div>
-                                        <div className="relative z-10">
-                                          <div className="font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2 text-[14px]">Note for {assignment.user?.name}:</div>
-                                          <div className="text-[13.5px] leading-relaxed text-slate-600">{assignment.description}</div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
+                              <div key={idx} className="shrink-0 flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-full pl-1 pr-2.5 py-1 shadow-sm hover:border-blue-300 transition-colors cursor-default group/assign">
+                                <div className="w-5 h-5 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[9px] font-bold shrink-0">
+                                  {getInitials(assignment.user?.name)}
                                 </div>
+                                <span className="font-medium text-xs text-blue-900 truncate max-w-[80px]">{assignment.user?.name}</span>
+                                {assignment.description && (
+                                  <div className="relative group/note flex items-center ml-0.5">
+                                    <FileText className="w-3 h-3 text-blue-500 hover:text-blue-700 cursor-pointer" />
+                                    <div className="absolute z-50 right-0 bottom-full mb-2 hidden group-hover/note:block w-[250px] bg-gray-900 text-white rounded-lg p-3 text-xs normal-case whitespace-pre-wrap shadow-xl">
+                                      <div className="font-bold mb-1 border-b border-gray-700 pb-1">{assignment.user?.name} Note:</div>
+                                      <div className="text-gray-200">{assignment.description}</div>
+                                      <div className="absolute right-1 bottom-0 w-2 h-2 bg-gray-900 transform rotate-45 translate-y-1/2"></div>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -283,24 +296,38 @@ const TargetListsPage = () => {
 
         {/* Pagination controls */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-slate-500 font-medium">
-              Page <span className="text-slate-800 font-bold">{page}</span> of <span className="text-slate-800 font-bold">{totalPages}</span>
+              Showing <span className="font-bold text-slate-800">{((page - 1) * limitPerPage) + 1}</span> to <span className="font-bold text-slate-800">{Math.min(page * limitPerPage, totalCount)}</span> of <span className="font-bold text-slate-800">{totalCount}</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-slate-600 transition-all shadow-sm"
+                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white text-sm font-semibold shadow-sm transition-all"
               >
-                <ChevronLeft className="w-4 h-4" />
+                Prev
               </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1).map((p, i, arr) => {
+                if (i > 0 && arr[i - 1] !== p - 1) return <span key={`ellipsis-${p}`} className="px-2 text-slate-400">...</span>;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`min-w-[32px] h-8 rounded-lg text-sm font-semibold transition border ${page === p ? "bg-blue-600 text-white border-blue-600" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"}`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-slate-600 transition-all shadow-sm"
+                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white text-sm font-semibold shadow-sm transition-all"
               >
-                <ChevronRight className="w-4 h-4" />
+                Next
               </button>
             </div>
           </div>

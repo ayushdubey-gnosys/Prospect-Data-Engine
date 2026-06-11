@@ -10,6 +10,7 @@ import HoverCard from '../../../components/ui/HoverCard';
 import Button from '../../../components/ui/Button';
 import { openMailComposer } from '../../../utils/mailUtils';
 import CompanyDetailsModal from '../../companies/components/CompanyDetailsModal';
+import CompanyNameHoverCards from '../../companies/components/CompanyNameHoverCards';
 
 const TargetListDetailsPage = () => {
   const { id } = useParams();
@@ -77,24 +78,24 @@ const TargetListDetailsPage = () => {
         const updatedBy = row.leadStatus?.updatedBy?.name || 'Unknown';
 
         return (
-          <div className="flex items-center gap-2 group relative">
-            <div className="cursor-help flex items-center">
-              {getLeadStatusIcon(status)}
-              <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-50 w-48 bg-gray-900 text-white text-xs rounded p-2 shadow-lg">
-                <p className="font-semibold">{getLeadStatusLabel(status)}</p>
-                {status !== 'none' && (
-                  <p className="text-gray-300 mt-1">Updated by: {updatedBy}</p>
-                )}
-                <div className="absolute left-4 top-full w-2 h-2 bg-gray-900 transform rotate-45 -mt-1"></div>
+          <CompanyNameHoverCards
+            status={status}
+            updatedBy={updatedBy}
+            contactPages={row.contactPages}
+            trigger={
+              <div className="flex items-center gap-2 group">
+                <div className="cursor-help flex items-center">
+                  {getLeadStatusIcon(status)}
+                </div>
+                <button
+                  onClick={() => handleOpenDetails(row._id)}
+                  className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-left focus:outline-none transition-colors"
+                >
+                  {row.company_name}
+                </button>
               </div>
-            </div>
-            <button
-              onClick={() => handleOpenDetails(row._id)}
-              className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-left focus:outline-none transition-colors"
-            >
-              {row.company_name}
-            </button>
-          </div>
+            }
+          />
         );
       },
     },

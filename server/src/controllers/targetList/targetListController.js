@@ -75,7 +75,7 @@ const getTargetLists = async (req, res, next) => {
       query.name = { $regex: search, $options: 'i' };
     }
 
-    if (req.user.role === 'sales') {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'marketing') {
       query.$or = [
         { createdBy: req.user._id },
         { 'assignments.user': req.user._id }
