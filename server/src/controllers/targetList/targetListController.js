@@ -236,7 +236,8 @@ const assignTargetList = async (req, res, next) => {
       salesman.name,
       targetList.name,
       description,
-      req.user.name
+      req.user.name,
+      req.user.email
     );
 
     res.json({ message: "Target list assigned successfully." });

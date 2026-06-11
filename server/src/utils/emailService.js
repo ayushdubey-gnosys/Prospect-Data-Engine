@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const sendAssignmentEmail = async (salesmanEmail, salesmanName, targetListName, description, adminName) => {
+const sendAssignmentEmail = async (salesmanEmail, salesmanName, targetListName, description, adminName, adminEmail) => {
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.mailtrap.io",
@@ -13,8 +13,8 @@ const sendAssignmentEmail = async (salesmanEmail, salesmanName, targetListName, 
     });
 
     const mailOptions = {
-      from: `"Prospect Engine" <${process.env.SMTP_FROM_EMAIL || "noreply@gnosysdigital.com"}>`,
-      replyTo: process.env.SMTP_FROM_EMAIL || "noreply@gnosysdigital.com",
+      from: `"${adminName} via Prospect Engine" <${process.env.SMTP_FROM_EMAIL || "noreply@gnosysdigital.com"}>`,
+      replyTo: adminEmail || process.env.SMTP_FROM_EMAIL || "noreply@gnosysdigital.com",
       to: salesmanEmail,
       subject: `New Target List Assigned: ${targetListName}`,
       text: `Hello ${salesmanName},\n\nYou have been assigned a new target list for outreach by ${adminName}.\n\nList Details:\nName: ${targetListName}\nNote: ${description || "No description provided."}\n\nPlease log in to the portal to view the list.\n\nRegards,\nPDE - Prospect Engine Team`,
