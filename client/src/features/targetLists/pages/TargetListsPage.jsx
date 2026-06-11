@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../hooks/useAuth';
 import AssignTargetListModal from '../components/AssignTargetListModal';
+import HoverCard from '../../../components/ui/HoverCard';
 
 const TargetListsPage = () => {
   const navigate = useNavigate();
@@ -189,15 +190,14 @@ const TargetListsPage = () => {
                             const desc = list.assignments.find(a => a.user?._id === user?._id || a.user === user?._id)?.description;
                             if (desc) {
                               return (
-                                <div className="relative group/note ml-1 flex items-center">
-                                  <span className="text-indigo-600 underline decoration-indigo-300 hover:text-indigo-800 cursor-pointer text-[10px]">View Note</span>
-                                  <div className="absolute z-50 left-0 top-full mt-3 hidden group-hover/note:block w-[450px] max-w-[80vw] bg-white border border-slate-200 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] rounded-xl p-5 text-xs text-slate-700 normal-case whitespace-pre-wrap cursor-default" onClick={(e) => e.stopPropagation()}>
-                                    <div className="absolute -top-2 left-6 w-4 h-4 bg-white border-t border-l border-slate-200 transform rotate-45"></div>
-                                    <div className="relative z-10">
-                                      <div className="font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2 text-[14px]">Assignment Note:</div>
-                                      <div className="text-[13.5px] leading-relaxed text-slate-600">{desc}</div>
-                                    </div>
-                                  </div>
+                                <div className="ml-1 flex items-center" onClick={(e) => e.stopPropagation()}>
+                                  <HoverCard
+                                    width="w-[450px]"
+                                    trigger={<span className="text-indigo-600 underline decoration-indigo-300 hover:text-indigo-800 cursor-pointer text-[10px]">View Note</span>}
+                                  >
+                                    <div className="font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2 text-[14px]">Assignment Note:</div>
+                                    <div className="text-[13.5px] leading-relaxed text-slate-600 whitespace-pre-wrap text-left normal-case">{desc}</div>
+                                  </HoverCard>
                                 </div>
                               );
                             }
@@ -236,13 +236,14 @@ const TargetListsPage = () => {
                                 </div>
                                 <span className="font-medium text-xs text-blue-900 truncate max-w-[80px]">{assignment.user?.name}</span>
                                 {assignment.description && (
-                                  <div className="relative group/note flex items-center ml-0.5">
-                                    <FileText className="w-3 h-3 text-blue-500 hover:text-blue-700 cursor-pointer" />
-                                    <div className="absolute z-50 right-0 bottom-full mb-2 hidden group-hover/note:block w-[250px] bg-gray-900 text-white rounded-lg p-3 text-xs normal-case whitespace-pre-wrap shadow-xl">
-                                      <div className="font-bold mb-1 border-b border-gray-700 pb-1">{assignment.user?.name} Note:</div>
-                                      <div className="text-gray-200">{assignment.description}</div>
-                                      <div className="absolute right-1 bottom-0 w-2 h-2 bg-gray-900 transform rotate-45 translate-y-1/2"></div>
-                                    </div>
+                                  <div className="flex items-center ml-0.5 mt-[1px]" onClick={(e) => e.stopPropagation()}>
+                                    <HoverCard
+                                      width="w-[280px]"
+                                      trigger={<FileText className="w-3.5 h-3.5 text-blue-500 hover:text-blue-700 cursor-pointer" />}
+                                    >
+                                      <div className="font-bold text-slate-800 mb-2 border-b border-slate-100 pb-2 text-[13px]">{assignment.user?.name} Note:</div>
+                                      <div className="text-[13px] leading-relaxed text-slate-600 whitespace-pre-wrap normal-case text-left">{assignment.description}</div>
+                                    </HoverCard>
                                   </div>
                                 )}
                               </div>
