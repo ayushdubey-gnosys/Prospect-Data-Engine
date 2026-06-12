@@ -9,6 +9,7 @@ const {
   bulkTagCompanies,
   getDashboardStats,
   getDashboardCharts,
+  updateCompanyStatus,
 } = require("../../controllers/company/companyController");
 
 const { protect, authorize } = require("../../middleware/authMiddleware");
@@ -25,6 +26,7 @@ router.get("/", protect, getCompanies);
 
 router.get("/:id", protect, getCompany);
 
+router.put("/:id/status", protect, updateCompanyStatus);
 router.put("/:id", protect, authorize("admin"), updateCompany);
 
 router.delete("/:id", protect, authorize("admin"), deleteCompany);

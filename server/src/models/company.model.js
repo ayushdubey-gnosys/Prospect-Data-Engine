@@ -163,7 +163,7 @@ const companySchema = new mongoose.Schema(
     leadStatus: {
       status: {
         type: String,
-        enum: ["in_progress", "converted", "dead", "none"],
+        enum: ["in_progress", "converted", "dead", "none", "New", "Assigned", "Contacted", "Meeting Scheduled", "Proposal Sent", "Negotiation", "Won", "Lost", "On Hold"],
         default: "none",
       },
       updatedBy: {
@@ -175,6 +175,21 @@ const companySchema = new mongoose.Schema(
         type: Date,
         default: null,
       },
+    },
+
+    leadDetails: {
+      dealValue: { type: Number, default: null },
+      closingDate: { type: Date, default: null },
+      remarks: { type: String, default: null },
+      lossReason: { type: String, default: null },
+      holdReason: { type: String, default: null },
+      priority: { type: String, enum: ["High", "Medium", "Low"], default: "Medium" },
+    },
+
+    nextFollowUp: {
+      date: { type: Date, default: null },
+      notes: { type: String, default: null },
+      assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     },
   },
   {

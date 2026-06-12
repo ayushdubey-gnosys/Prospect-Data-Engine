@@ -254,6 +254,58 @@ const assignTargetList = async (req, res, next) => {
   }
 };
 
+const getTargetListStats = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const targetList = await TargetList.findById(id).lean();
+
+    if (!targetList) {
+      return res.status(404).json({ message: "Target list not found." });
+    }
+
+    const companyIds = targetList.companies;
+
+    // Fetch all companies in this list to aggregate stats
+    const companies = await Company.find({ _id: { $in: companyIds } }).lean();
+
+    let totalTargets = companies.length;
+    let assignedLeads = 0;
+    let unassignedLeads = 0;
+    let activeFollowUps = 0; // We'll query FollowUp collection for this later
+    let wonOpportunities = 0;
+    let lostOpportunities = 0;
+
+    companies.forEach(company => {
+      // Assuming unassigned means 'none' or 'New' status, and no assignedTo? Wait,
+      // Target list assignments vs Company assignments. We might just look at Company leadStatus
+      const status = company.leadStatus?.status || "New";
+      if (status === "Won" || status === "converted") wonOpportunities++;
+      if (status === "Lost" || status === "dead") lostOpportunities++;
+      if (status === "New" || status === "none") unassignedLeads++;
+      else assignedLeads++; // any other status implies someone is working on it
+    });
+    
+    // Get active follow ups
+    const FollowUp = require("../../models/followUp.model");
+    activeFollowUps = await FollowUp.countDocuments({
+      companyId: { $in: companyIds },
+      status: "Pending"
+    });
+
+    res.json({
+      totalTargets,
+      assignedLeads,
+      unassignedLeads,
+      activeFollowUps,
+      wonOpportunities,
+      lostOpportunities
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTargetList,
   getTargetLists,
@@ -261,4 +313,5 @@ module.exports = {
   repopulateTargetList,
   deleteTargetList,
   assignTargetList,
+  getTargetListStats,
 };

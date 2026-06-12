@@ -11,6 +11,7 @@ import Button from '../../../components/ui/Button';
 import { openMailComposer } from '../../../utils/mailUtils';
 import CompanyDetailsModal from '../../companies/components/CompanyDetailsModal';
 import CompanyNameHoverCards from '../../companies/components/CompanyNameHoverCards';
+import CompanyTimelineDrawer from '../../companies/components/CompanyTimelineDrawer';
 
 const TargetListDetailsPage = () => {
   const { id } = useParams();
@@ -36,8 +37,17 @@ const TargetListDetailsPage = () => {
     onSuccess: (res) => {
       toast.success(res.data.message);
       queryClient.invalidateQueries(['target-list', id]);
+      queryClient.invalidateQueries(['target-list-stats', id]);
     },
     onError: () => toast.error("Failed to repopulate target list")
+  });
+
+  const { data: statsData } = useQuery({
+    queryKey: ['target-list-stats', id],
+    queryFn: async () => {
+      const res = await api.get(`/target-lists/${id}/stats`);
+      return res.data;
+    }
   });
 
   const targetList = data?.targetList;
@@ -98,6 +108,44 @@ const TargetListDetailsPage = () => {
           />
         );
       },
+    },
+    {
+      header: 'Assigned To',
+      accessor: 'assignedTo',
+      cell: () => {
+        const assignments = targetList?.assignments || [];
+        if (assignments.length === 0) return <span className="text-gray-400 text-xs italic">Unassigned</span>;
+        return (
+          <div className="flex items-center gap-1">
+            <div className="flex -space-x-2 overflow-hidden">
+              {assignments.slice(0, 2).map((a, i) => (
+                <div key={i} className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700" title={a.user?.name}>
+                  {a.user?.name ? a.user.name.substring(0, 2).toUpperCase() : 'U'}
+                </div>
+              ))}
+            </div>
+            {assignments.length > 2 && <span className="text-xs text-gray-500 font-medium ml-1">+{assignments.length - 2}</span>}
+          </div>
+        );
+      }
+    },
+    {
+      header: 'Status',
+      accessor: 'status',
+      cell: (row) => {
+        const status = row.leadStatus?.status || 'New';
+        let colorClass = 'bg-gray-100 text-gray-700 border-gray-200';
+        if (status === 'Assigned') colorClass = 'bg-blue-100 text-blue-700 border-blue-200';
+        else if (status === 'Contacted') colorClass = 'bg-amber-100 text-amber-700 border-amber-200';
+        else if (status === 'Meeting Scheduled') colorClass = 'bg-purple-100 text-purple-700 border-purple-200';
+        else if (status === 'Proposal Sent') colorClass = 'bg-indigo-100 text-indigo-700 border-indigo-200';
+        else if (status === 'Negotiation') colorClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+        else if (status === 'Won' || status === 'converted') colorClass = 'bg-green-100 text-green-700 border-green-200';
+        else if (status === 'Lost' || status === 'dead') colorClass = 'bg-red-100 text-red-700 border-red-200';
+        else if (status === 'On Hold') colorClass = 'bg-slate-200 text-slate-700 border-slate-300';
+        
+        return <span className={`px-2 py-1 rounded text-[10px] font-bold border ${colorClass}`}>{status === 'converted' ? 'Won' : status === 'dead' ? 'Lost' : status}</span>;
+      }
     },
     {
       header: 'Website',
@@ -311,6 +359,35 @@ const TargetListDetailsPage = () => {
         </Button>
       </div>
 
+      {statsData && (
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Total Targets</span>
+            <span className="text-2xl font-bold text-gray-900">{statsData.totalTargets}</span>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Assigned Leads</span>
+            <span className="text-2xl font-bold text-blue-600">{statsData.assignedLeads}</span>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Unassigned</span>
+            <span className="text-2xl font-bold text-orange-500">{statsData.unassignedLeads}</span>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Active Follow-ups</span>
+            <span className="text-2xl font-bold text-purple-600">{statsData.activeFollowUps}</span>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Won Opps</span>
+            <span className="text-2xl font-bold text-green-500">{statsData.wonOpportunities}</span>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Lost Opps</span>
+            <span className="text-2xl font-bold text-red-500">{statsData.lostOpportunities}</span>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 shrink-0">
@@ -368,10 +445,11 @@ const TargetListDetailsPage = () => {
         )}
       </div>
 
-      <CompanyDetailsModal
+      <CompanyTimelineDrawer
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         companyId={selectedCompanyId}
+        targetListId={id}
       />
     </div>
   );

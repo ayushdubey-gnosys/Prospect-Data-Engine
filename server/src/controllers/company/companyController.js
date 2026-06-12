@@ -2,6 +2,7 @@ const Company = require("../../models/company.model");
 const UploadedFile = require("../../models/uploadedFile.model");
 const Tag = require("../../models/tag.model");
 const User = require("../../models/user.model");
+const Activity = require("../../models/activity.model");
 
 const createCompany = async (req, res) => {
   try {
@@ -401,6 +402,65 @@ const getDashboardCharts = async (req, res) => {
   }
 };
 
+const updateCompanyStatus = async (req, res) => {
+  try {
+    const { status, dealValue, closingDate, remarks, lossReason, holdReason, targetListId } = req.body;
+    const company = await Company.findById(req.params.id);
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    if (status === "Won") {
+      if (!dealValue || !closingDate) {
+        return res.status(400).json({ message: "Deal value and closing date are mandatory for won deals." });
+      }
+    } else if (status === "Lost") {
+      if (!lossReason) {
+        return res.status(400).json({ message: "Reason is mandatory for lost deals." });
+      }
+    } else if (status === "On Hold") {
+      if (!holdReason) {
+        return res.status(400).json({ message: "Hold reason is mandatory." });
+      }
+    }
+
+    const oldStatus = company.leadStatus?.status || "New";
+
+    // Update company
+    company.leadStatus = {
+      status,
+      updatedBy: req.user._id,
+      updatedAt: new Date()
+    };
+    
+    if (!company.leadDetails) company.leadDetails = {};
+    
+    if (dealValue !== undefined) company.leadDetails.dealValue = dealValue;
+    if (closingDate !== undefined) company.leadDetails.closingDate = closingDate;
+    if (remarks !== undefined) company.leadDetails.remarks = remarks;
+    if (lossReason !== undefined) company.leadDetails.lossReason = lossReason;
+    if (holdReason !== undefined) company.leadDetails.holdReason = holdReason;
+
+    await company.save();
+
+    // Create an Activity record for the timeline
+    await Activity.create({
+      companyId: company._id,
+      targetListId: targetListId || null,
+      type: "Status Change",
+      notes: `Status changed from ${oldStatus} to ${status}`,
+      metadata: { oldStatus, newStatus: status, dealValue, lossReason, holdReason },
+      createdBy: req.user._id,
+      date: new Date()
+    });
+
+    res.json(company);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createCompany,
   getCompanies,
@@ -410,4 +470,5 @@ module.exports = {
   bulkTagCompanies,
   getDashboardStats,
   getDashboardCharts,
+  updateCompanyStatus,
 };
