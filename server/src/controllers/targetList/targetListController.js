@@ -68,11 +68,19 @@ const createTargetList = async (req, res, next) => {
 
 const getTargetLists = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, limit = 10, search = '', createdBy = '', assignedUser = '' } = req.query;
 
     const query = {};
     if (search) {
       query.name = { $regex: search, $options: 'i' };
+    }
+
+    if (createdBy) {
+      query.createdBy = createdBy;
+    }
+
+    if (assignedUser) {
+      query['assignments.user'] = assignedUser;
     }
 
     if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'marketing') {

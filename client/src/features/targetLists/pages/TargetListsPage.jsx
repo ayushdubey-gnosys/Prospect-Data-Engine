@@ -23,6 +23,21 @@ const TargetListsPage = () => {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedListToAssign, setSelectedListToAssign] = useState(null);
 
+  const [createdByAdmin, setCreatedByAdmin] = useState('');
+  const [assignedRole, setAssignedRole] = useState('');
+  const [assignedUserId, setAssignedUserId] = useState('');
+
+  const { data: usersData } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const res = await api.get('/users');
+      return res.data.data;
+    },
+    enabled: isAdmin,
+  });
+  const usersList = usersData || [];
+  const admins = usersList.filter(u => u.role === 'admin' || u.role === 'superadmin');
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
@@ -32,10 +47,10 @@ const TargetListsPage = () => {
   }, [search]);
 
   const { data: response, isLoading } = useQuery({
-    queryKey: ['target-lists', page, limitPerPage, debouncedSearch],
+    queryKey: ['target-lists', page, limitPerPage, debouncedSearch, createdByAdmin, assignedUserId],
     queryFn: async () => {
       const res = await api.get('/target-lists', {
-        params: { page, limit: limitPerPage, search: debouncedSearch }
+        params: { page, limit: limitPerPage, search: debouncedSearch, createdBy: createdByAdmin, assignedUser: assignedUserId }
       });
       return res.data;
     }
@@ -137,6 +152,48 @@ const TargetListsPage = () => {
           </div>
         </div>
 
+        {isAdmin && (
+          <div className="flex flex-wrap gap-4 items-end bg-slate-50/30 p-4 border-b border-slate-100">
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Created By (Admin)</label>
+              <select
+                value={createdByAdmin}
+                onChange={(e) => setCreatedByAdmin(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
+              >
+                <option value="">All Admins</option>
+                {admins.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Assigned Role</label>
+              <select
+                value={assignedRole}
+                onChange={(e) => { setAssignedRole(e.target.value); setAssignedUserId(''); }}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
+              >
+                <option value="">All Roles</option>
+                <option value="sales">Sales</option>
+                <option value="cold_mail">Cold Mail</option>
+                <option value="marketing">Marketing</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Assigned User</label>
+              <select
+                value={assignedUserId}
+                onChange={(e) => setAssignedUserId(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
+                disabled={!assignedRole}
+              >
+                <option value="">All Users</option>
+                {usersList.filter(u => u.role === assignedRole).map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
             <div className="relative w-12 h-12">
@@ -173,11 +230,11 @@ const TargetListsPage = () => {
                   <th className="py-4 px-6 text-right w-32">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-200">
                 {targetLists.map((list) => (
-                  <tr key={list._id} className="hover:bg-blue-50/30 transition-all duration-200 group cursor-pointer" onClick={() => navigate(`/target-lists/${list._id}`)}>
+                  <tr key={list._id} className="hover:bg-blue-50/30 transition-all duration-200 group">
                     <td className="py-5 px-6">
-                      <div className="font-bold text-slate-800 text-[15px] truncate max-w-[220px] group-hover:text-blue-700 transition-colors" title={list.name}>{list.name}</div>
+                      <div onClick={() => navigate(`/target-lists/${list._id}`)} className="font-bold text-slate-800 text-[15px] truncate max-w-[220px] hover:text-blue-700 transition-colors cursor-pointer inline-block" title={list.name}>{list.name}</div>
                       <div className="flex items-center gap-2 text-xs text-slate-400 mt-1.5 font-medium">
                         <Clock className="w-3.5 h-3.5" />
                         {new Date(list.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -296,27 +353,51 @@ const TargetListsPage = () => {
         )}
 
         {/* Pagination controls */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-slate-500 font-medium">
-              Showing <span className="font-bold text-slate-800">{((page - 1) * limitPerPage) + 1}</span> to <span className="font-bold text-slate-800">{Math.min(page * limitPerPage, totalCount)}</span> of <span className="font-bold text-slate-800">{totalCount}</span>
+        {totalCount > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-t border-gray-100 rounded-b-2xl">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="text-xs sm:text-sm text-gray-500 font-medium">
+                Showing <span className="font-semibold text-gray-700">{limitPerPage === 'all' ? 1 : Math.min((page - 1) * limitPerPage + 1, totalCount)}</span> to{" "}
+                <span className="font-semibold text-gray-700">{limitPerPage === 'all' ? totalCount : Math.min(page * limitPerPage, totalCount)}</span> of{" "}
+                <span className="font-semibold text-gray-700">{totalCount}</span> lists
+              </div>
             </div>
+
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                type="button"
+                onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white text-sm font-semibold shadow-sm transition-all"
+                className={`px-3 py-1.5 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold transition ${page === 1
+                  ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                  }`}
               >
-                Prev
+                Previous
               </button>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1).map((p, i, arr) => {
-                if (i > 0 && arr[i - 1] !== p - 1) return <span key={`ellipsis-${p}`} className="px-2 text-slate-400">...</span>;
+
+              {/* Dynamic Page Numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                if (
+                  totalPages > 5 &&
+                  p !== 1 &&
+                  p !== totalPages &&
+                  Math.abs(p - page) > 1
+                ) {
+                  if (p === 2 && page > 3) return <span key={p} className="px-1 text-gray-400 text-xs select-none">...</span>;
+                  if (p === totalPages - 1 && page < totalPages - 2) return <span key={p} className="px-1 text-gray-400 text-xs select-none">...</span>;
+                  return null;
+                }
+
                 return (
                   <button
                     key={p}
+                    type="button"
                     onClick={() => setPage(p)}
-                    className={`min-w-[32px] h-8 rounded-lg text-sm font-semibold transition border ${page === p ? "bg-blue-600 text-white border-blue-600" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"}`}
+                    className={`min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 rounded-lg text-xs sm:text-sm font-semibold transition border ${page === p
+                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-100"
+                      : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
                   >
                     {p}
                   </button>
@@ -324,9 +405,13 @@ const TargetListsPage = () => {
               })}
 
               <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                type="button"
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white text-sm font-semibold shadow-sm transition-all"
+                className={`px-3 py-1.5 rounded-lg border border-gray-200 text-xs sm:text-sm font-semibold transition ${page === totalPages
+                  ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                  }`}
               >
                 Next
               </button>

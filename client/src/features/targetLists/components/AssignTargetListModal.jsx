@@ -16,7 +16,7 @@ const AssignTargetListModal = ({ isOpen, onClose, targetListId, targetListName }
     queryKey: ['users'],
     queryFn: async () => {
       const res = await api.get('/users');
-      return res.data;
+      return res.data.data;
     },
     enabled: isOpen,
   });
@@ -47,7 +47,7 @@ const AssignTargetListModal = ({ isOpen, onClose, targetListId, targetListName }
     assignMutation.mutate({ userId: selectedUserId, description });
   };
 
-  const users = usersResponse?.data || [];
+  const users = usersResponse || [];
   // Filter for users that could be assigned a list
   const assignableUsers = users.filter(u => u.role === 'sales' || u.role === 'cold_mail' || u.role === 'admin' || u.role === 'superadmin');
 

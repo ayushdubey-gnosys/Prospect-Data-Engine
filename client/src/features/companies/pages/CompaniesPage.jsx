@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Download, Tag, Circle, FileText, CheckCircle2, XCircle, Clock, Users, Link as LinkIcon, Target } from 'lucide-react';
 import api from '../../../api/axios';
@@ -35,6 +35,7 @@ const fetchCompanies = async (searchParams, page = 1, limit = 10) => {
 const CompaniesPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const role = user?.role || 'sales';
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -869,6 +870,7 @@ const CompaniesPage = () => {
         filters={filters}
         onSuccess={(newList) => {
           toast.success('Target list created successfully');
+          queryClient.invalidateQueries(['target-lists']);
           navigate(`/target-lists`);
         }}
       />
