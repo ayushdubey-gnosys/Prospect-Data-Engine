@@ -43,6 +43,17 @@ export const openMailComposer = (toEmail, companyName = '', user = null) => {
     return true;
   }
 
+  let webmailBaseUrl = 'https://mail.gnosysdigital.com/'; // Default fallback
+  
+  if (fromEmail) {
+    const emailLower = fromEmail.trim().toLowerCase();
+    if (emailLower.endsWith('@sginc.ca')) {
+      webmailBaseUrl = 'http://mail.sginc.ca/';
+    } else if (emailLower.endsWith('@gnosysdigital.com')) {
+      webmailBaseUrl = 'https://mail.gnosysdigital.com/';
+    }
+  }
+
   // Build Roundcube compose URL with pre-filled fields
   const params = new URLSearchParams({
     _task: 'mail',
@@ -56,7 +67,7 @@ export const openMailComposer = (toEmail, companyName = '', user = null) => {
     params.set('_from', fromEmail.trim());
   }
 
-  const composeUrl = `${WEBMAIL_BASE_URL}?${params.toString()}`;
+  const composeUrl = `${webmailBaseUrl}?${params.toString()}`;
 
   window.open(composeUrl, '_blank', 'noopener,noreferrer');
   return true;
