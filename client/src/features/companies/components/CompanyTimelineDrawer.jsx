@@ -27,7 +27,7 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
   });
 
   useEffect(() => {
-    if (company?.leadStatus?.status && company.leadStatus.status !== "none") {
+    if (company?.leadStatus?.status && company.leadStatus.status !== "none" && company.leadStatus.status !== "New") {
       setNewStatus(company.leadStatus.status);
     } else {
       setNewStatus("Assigned");
