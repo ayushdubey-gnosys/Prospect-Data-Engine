@@ -11,6 +11,8 @@ const AssignTargetListModal = ({ isOpen, onClose, targetListId, targetListName }
   const [selectedUserId, setSelectedUserId] = useState('');
   const [description, setDescription] = useState('');
 
+  const [priority, setPriority] = useState('Medium');
+
   // Fetch users for assignment (mostly sales users)
   const { data: usersResponse, isLoading: usersLoading } = useQuery({
     queryKey: ['users'],
@@ -33,6 +35,7 @@ const AssignTargetListModal = ({ isOpen, onClose, targetListId, targetListName }
       onClose();
       setSelectedUserId('');
       setDescription('');
+      setPriority('Medium');
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to assign target list");
@@ -44,7 +47,7 @@ const AssignTargetListModal = ({ isOpen, onClose, targetListId, targetListName }
       toast.error("Please select a user.");
       return;
     }
-    assignMutation.mutate({ userId: selectedUserId, description });
+    assignMutation.mutate({ userId: selectedUserId, description, priority });
   };
 
   const users = usersResponse || [];
@@ -72,6 +75,19 @@ const AssignTargetListModal = ({ isOpen, onClose, targetListId, targetListName }
               ))}
             </select>
           )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          >
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
         </div>
 
         <div>

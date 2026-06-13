@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Clock, Calendar, MessageSquare, Plus, PhoneCall, Mail, Users, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Calendar, MessageSquare, PhoneCall, Mail, Users, CheckCircle2, AlertCircle, User as UserIcon } from 'lucide-react';
 import api from '../../../api/axios';
 import { toast } from 'react-toastify';
 import Button from '../../../components/ui/Button';
 
-const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId }) => {
+const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targetList }) => {
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState("");
-  const [activityType, setActivityType] = useState("Note");
-  const [showStatusUpdate, setShowStatusUpdate] = useState(false);
-  const [newStatus, setNewStatus] = useState("");
+  const [newStatus, setNewStatus] = useState("Assigned");
+  const [nextFollowUpDate, setNextFollowUpDate] = useState("");
+  
   const [dealValue, setDealValue] = useState("");
   const [closingDate, setClosingDate] = useState("");
   const [remarks, setRemarks] = useState("");
@@ -26,6 +26,14 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId }) => 
     enabled: !!companyId && isOpen,
   });
 
+  useEffect(() => {
+    if (company?.leadStatus?.status && company.leadStatus.status !== "none") {
+      setNewStatus(company.leadStatus.status);
+    } else {
+      setNewStatus("Assigned");
+    }
+  }, [company]);
+
   const { data: activities, isLoading: activitiesLoading } = useQuery({
     queryKey: ['activities', companyId],
     queryFn: async () => {
@@ -35,25 +43,6 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId }) => 
     enabled: !!companyId && isOpen,
   });
 
-  const { data: followUps } = useQuery({
-    queryKey: ['follow-ups', companyId],
-    queryFn: async () => {
-      const res = await api.get(`/follow-ups/company/${companyId}`);
-      return res.data;
-    },
-    enabled: !!companyId && isOpen,
-  });
-
-  const addActivityMutation = useMutation({
-    mutationFn: (data) => api.post('/activities', data),
-    onSuccess: () => {
-      setNewComment("");
-      queryClient.invalidateQueries(['activities', companyId]);
-      toast.success("Activity logged");
-    },
-    onError: () => toast.error("Failed to log activity")
-  });
-
   const updateStatusMutation = useMutation({
     mutationFn: (data) => api.put(`/company/${companyId}/status`, data),
     onSuccess: () => {
@@ -61,27 +50,19 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId }) => 
       queryClient.invalidateQueries(['activities', companyId]);
       queryClient.invalidateQueries(['target-list', targetListId]);
       queryClient.invalidateQueries(['target-list-stats', targetListId]);
-      setShowStatusUpdate(false);
-      setNewStatus("");
-      toast.success("Status updated successfully");
+      setNewComment("");
+      setNextFollowUpDate("");
+      toast.success("Activity logged and status updated");
     },
-    onError: (err) => toast.error(err.response?.data?.message || "Failed to update status")
+    onError: (err) => toast.error(err.response?.data?.message || "Failed to update")
   });
 
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
-    addActivityMutation.mutate({
-      companyId,
-      targetListId,
-      type: activityType,
-      notes: newComment,
-    });
-  };
-
-  const handleUpdateStatus = () => {
+  const handleUpdate = () => {
     if (!newStatus) return;
     updateStatusMutation.mutate({
       status: newStatus,
+      notes: newComment,
+      nextFollowUpDate: nextFollowUpDate || undefined,
       targetListId,
       dealValue: dealValue ? Number(dealValue) : undefined,
       closingDate: closingDate || undefined,
@@ -102,143 +83,263 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId }) => 
     }
   };
 
+  const getStatusBadgeColor = (status) => {
+    let s = status === 'none' ? 'New' : status;
+    switch (s) {
+      case 'Assigned': return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'Contacted': return 'text-orange-700 bg-orange-50 border-orange-200';
+      case 'Meeting Scheduled': return 'text-purple-700 bg-purple-50 border-purple-200';
+      case 'Proposal Sent': return 'text-indigo-700 bg-indigo-50 border-indigo-200';
+      case 'Negotiation': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+      case 'Won': case 'converted': return 'text-green-700 bg-green-50 border-green-200';
+      case 'Lost': case 'dead': return 'text-red-700 bg-red-50 border-red-200';
+      case 'On Hold': return 'text-slate-700 bg-slate-100 border-slate-300';
+      case 'New': default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
   if (!isOpen) return null;
+
+  // Assignment logic
+  let assignedUser = null;
+  let assignedBy = null;
+  let assignmentDate = null;
+  const priority = company?.leadDetails?.priority || targetList?.priority || 'Medium';
+
+  if (targetList && targetList.assignments) {
+    // Assuming the current user or first assignment
+    const assignment = targetList.assignments[0];
+    if (assignment) {
+      assignedUser = assignment.user;
+      assignedBy = targetList.createdBy;
+      assignmentDate = assignment.assignedAt || targetList.createdAt;
+    }
+  }
+
+  const currentStatus = company?.leadStatus?.status && company.leadStatus.status !== 'none' ? company.leadStatus.status : "New";
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden pointer-events-none">
       <div className="absolute inset-0 bg-black/20 pointer-events-auto transition-opacity" onClick={onClose} />
-      <div className="absolute inset-y-0 right-0 w-full max-w-md bg-gray-50 shadow-2xl flex flex-col pointer-events-auto transform transition-transform duration-300">
+      <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl flex flex-col pointer-events-auto transform transition-transform duration-300">
         
-        {/* Header */}
-        <div className="bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">{company?.company_name || "Company Details"}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${company?.leadStatus?.status === 'New' ? 'bg-gray-100 text-gray-700' : 'bg-blue-100 text-blue-700'}`}>
-                {company?.leadStatus?.status || "New"}
-              </span>
+        {/* Header Section */}
+        <div className="px-6 py-5 border-b border-gray-100 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">{company?.company_name || "Company Details"}</h2>
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getStatusBadgeColor(currentStatus)}`}>
+                  {currentStatus}
+                </span>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition -mt-6 -mr-2">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div>
+              <div className="text-xs text-gray-500 mb-1">Assigned To</div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0">
+                   {assignedUser?.avatar ? (
+                     <img src={assignedUser.avatar} alt={assignedUser.name} className="w-full h-full object-cover" />
+                   ) : (
+                     <span className="text-blue-700 font-bold text-xs">{assignedUser?.name?.substring(0,2).toUpperCase() || 'U'}</span>
+                   )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-900">{assignedUser?.name || 'Unknown'}</span>
+                  <span className="text-[10px] text-gray-500 capitalize">{assignedUser?.role || 'Sales Executive'}</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500 mb-1">Team Lead</div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden shrink-0">
+                   {assignedBy?.avatar ? (
+                     <img src={assignedBy.avatar} alt={assignedBy.name} className="w-full h-full object-cover" />
+                   ) : (
+                     <span className="text-indigo-700 font-bold text-xs">{assignedBy?.name?.substring(0,2).toUpperCase() || 'A'}</span>
+                   )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-900">{assignedBy?.name || 'Admin'}</span>
+                  <span className="text-[10px] text-gray-500 capitalize">{assignedBy?.role || 'Team Lead'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-2">
+              <div className="text-xs text-gray-500 mb-1">Assignment Date</div>
+              <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                {assignmentDate ? new Date(assignmentDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+              </div>
+            </div>
+            <div className="mt-2">
+              <div className="text-xs text-gray-500 mb-1">Priority</div>
+              <div>
+                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${priority === 'High' ? 'bg-red-50 text-red-700 border border-red-200' : priority === 'Low' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`}>
+                  {priority}
+                </span>
+              </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition">
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Timeline Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <h3 className="font-semibold text-gray-800 border-b border-gray-200 pb-2">Activity Timeline</h3>
+        <div className="flex-1 overflow-y-auto px-6 py-4 bg-gray-50/50">
+          <h3 className="font-bold text-gray-900 mb-6 text-sm">Activity Timeline</h3>
           
           {activitiesLoading ? (
             <div className="text-center text-sm text-gray-500 py-10">Loading timeline...</div>
           ) : activities?.length === 0 ? (
             <div className="text-center text-sm text-gray-500 py-10">No activity logged yet.</div>
           ) : (
-            <div className="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
-              {activities?.map((activity, idx) => (
-                <div key={activity._id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-100 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded border border-gray-200 bg-white shadow-sm">
-                    <div className="flex items-center justify-between space-x-2 mb-1">
-                      <div className="font-bold text-gray-900 text-sm">{activity.type}</div>
-                      <time className="text-xs font-medium text-indigo-500">
-                        {new Date(activity.date).toLocaleDateString()} {new Date(activity.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                      </time>
+            <div className="relative border-l-[3px] border-gray-300 ml-3 space-y-8 pb-4">
+              {activities?.map((activity, idx) => {
+                const getStatusDotColor = (status) => {
+                  let s = status === 'none' ? 'New' : status;
+                  switch (s) {
+                    case 'Assigned': return 'bg-[#3b82f6]'; // blue-500
+                    case 'Contacted': return 'bg-[#f97316]'; // orange-500
+                    case 'Meeting Scheduled': return 'bg-[#a855f7]'; // purple-500
+                    case 'Proposal Sent': return 'bg-[#6366f1]'; // indigo-500
+                    case 'Negotiation': return 'bg-[#eab308]'; // yellow-500
+                    case 'Won': case 'converted': return 'bg-[#22c55e]'; // green-500
+                    case 'Lost': case 'dead': return 'bg-[#ef4444]'; // red-500
+                    case 'On Hold': return 'bg-[#475569]'; // slate-600
+                    case 'New': default: return 'bg-[#cbd5e1]'; // slate-300
+                  }
+                };
+
+                const dotColor = getStatusDotColor(activity.metadata?.newStatus);
+                
+                return (
+                  <div key={activity._id} className="relative pl-6">
+                    <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-4 border-white ${dotColor} shadow-sm`}></div>
+                    
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+                          <span>{new Date(activity.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date(activity.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        {activity.metadata?.newStatus && (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadgeColor(activity.metadata.newStatus)}`}>
+                            {activity.metadata.newStatus === 'converted' ? 'Won' : activity.metadata.newStatus === 'dead' ? 'Lost' : activity.metadata.newStatus}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="font-bold text-gray-900 text-sm">
+                         {activity.type === "Status Change" && activity.metadata?.oldStatus && activity.metadata?.newStatus 
+                           ? `Status changed to ${activity.metadata.newStatus}` 
+                           : activity.type === "Note" ? "Note Added" : activity.type}
+                      </div>
+                      
+                      {activity.notes && (
+                        <div className="text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-100 shadow-sm mt-1">
+                          {activity.notes}
+                        </div>
+                      )}
+
+                      {activity.metadata?.nextFollowUpDate && (
+                        <div className="flex items-center gap-1.5 mt-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded w-max border border-blue-100">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>Next Follow-up: {new Date(activity.metadata.nextFollowUpDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} at {new Date(activity.metadata.nextFollowUpDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                          {activity.createdBy?.avatar ? (
+                            <img src={activity.createdBy.avatar} alt="User" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon className="w-3 h-3 text-gray-500" />
+                          )}
+                        </div>
+                        <span className="text-[11px] font-medium text-gray-500">By {activity.createdBy?.name || "Unknown"}</span>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 whitespace-pre-wrap">{activity.notes}</div>
-                    <div className="text-[10px] text-gray-400 mt-2 font-medium">By {activity.createdBy?.name || "Unknown"}</div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Action Footer */}
-        <div className="bg-white border-t border-gray-200 p-4">
+        {/* Action Footer - Unified Form */}
+        <div className="bg-white border-t border-gray-200 p-5 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
           
-          <div className="flex gap-2 mb-3">
-            <button 
-              onClick={() => setShowStatusUpdate(false)} 
-              className={`flex-1 text-sm font-semibold py-1.5 rounded-lg border transition ${!showStatusUpdate ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-            >
-              Log Activity
-            </button>
-            <button 
-              onClick={() => setShowStatusUpdate(true)} 
-              className={`flex-1 text-sm font-semibold py-1.5 rounded-lg border transition ${showStatusUpdate ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-            >
-              Update Status
-            </button>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex-1">
+               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</label>
+               <select 
+                 value={newStatus} 
+                 onChange={(e) => setNewStatus(e.target.value)}
+                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+               >
+                 <option value="Assigned">Assigned</option>
+                 <option value="Contacted">Contacted</option>
+                 <option value="Meeting Scheduled">Meeting Scheduled</option>
+                 <option value="Proposal Sent">Proposal Sent</option>
+                 <option value="Negotiation">Negotiation</option>
+                 <option value="Won">Won</option>
+                 <option value="Lost">Lost</option>
+                 <option value="On Hold">On Hold</option>
+               </select>
+            </div>
+            
+            <div className="flex-1">
+               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Next Follow-up</label>
+               <input 
+                 type="datetime-local" 
+                 value={nextFollowUpDate}
+                 onChange={(e) => setNextFollowUpDate(e.target.value)}
+                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+               />
+            </div>
           </div>
 
-          {!showStatusUpdate ? (
-            <>
-              <div className="mb-3 flex items-center gap-2">
-                <select 
-                  value={activityType} 
-                  onChange={(e) => setActivityType(e.target.value)}
-                  className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="Note">Note</option>
-                  <option value="Call">Call</option>
-                  <option value="Email">Email</option>
-                  <option value="Meeting">Meeting</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <textarea
-                  className="flex-1 border border-gray-300 rounded-lg p-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  rows={2}
-                  placeholder={`Log a ${activityType.toLowerCase()}...`}
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                />
-                <Button onClick={handleAddComment} disabled={addActivityMutation.isLoading || !newComment.trim()} className="shrink-0 h-auto">
-                  Save
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="space-y-3">
-              <select 
-                value={newStatus} 
-                onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded px-2 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Select New Status...</option>
-                <option value="Assigned">Assigned</option>
-                <option value="Contacted">Contacted</option>
-                <option value="Meeting Scheduled">Meeting Scheduled</option>
-                <option value="Proposal Sent">Proposal Sent</option>
-                <option value="Negotiation">Negotiation</option>
-                <option value="Won">Won</option>
-                <option value="Lost">Lost</option>
-                <option value="On Hold">On Hold</option>
-              </select>
+          <div className="space-y-3 mb-3">
+             {newStatus === "Won" && (
+               <div className="grid grid-cols-2 gap-2">
+                 <input type="number" placeholder="Deal Value" value={dealValue} onChange={(e) => setDealValue(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+                 <input type="date" value={closingDate} onChange={(e) => setClosingDate(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+                 <input type="text" placeholder="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="col-span-2 w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+               </div>
+             )}
+             {newStatus === "Lost" && (
+               <input type="text" placeholder="Reason for Loss (Mandatory)" value={lossReason} onChange={(e) => setLossReason(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+             )}
+             {newStatus === "On Hold" && (
+               <input type="text" placeholder="Hold Reason (Mandatory)" value={holdReason} onChange={(e) => setHoldReason(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+             )}
+          </div>
 
-              {newStatus === "Won" && (
-                <div className="grid grid-cols-2 gap-2">
-                  <input type="number" placeholder="Deal Value" value={dealValue} onChange={(e) => setDealValue(e.target.value)} className="w-full text-sm border border-gray-300 rounded px-2 py-1.5" />
-                  <input type="date" value={closingDate} onChange={(e) => setClosingDate(e.target.value)} className="w-full text-sm border border-gray-300 rounded px-2 py-1.5" />
-                  <input type="text" placeholder="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="col-span-2 w-full text-sm border border-gray-300 rounded px-2 py-1.5" />
-                </div>
-              )}
+          <div>
+             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Add Comment</label>
+             <textarea
+               className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+               rows={2}
+               placeholder="Enter update or comment..."
+               value={newComment}
+               onChange={(e) => setNewComment(e.target.value)}
+             />
+          </div>
 
-              {newStatus === "Lost" && (
-                <input type="text" placeholder="Reason for Loss (Mandatory)" value={lossReason} onChange={(e) => setLossReason(e.target.value)} className="w-full text-sm border border-gray-300 rounded px-2 py-1.5" />
-              )}
-
-              {newStatus === "On Hold" && (
-                <input type="text" placeholder="Hold Reason (Mandatory)" value={holdReason} onChange={(e) => setHoldReason(e.target.value)} className="w-full text-sm border border-gray-300 rounded px-2 py-1.5" />
-              )}
-
-              <div className="flex justify-end">
-                <Button onClick={handleUpdateStatus} disabled={!newStatus || updateStatusMutation.isLoading}>Update</Button>
-              </div>
-            </div>
-          )}
+          <div className="flex justify-end gap-2 mt-3">
+            <Button onClick={onClose} variant="outline" className="text-gray-600 bg-white border-gray-300 hover:bg-gray-50">
+               Cancel
+            </Button>
+            <Button onClick={handleUpdate} disabled={updateStatusMutation.isLoading} className="bg-blue-600 hover:bg-blue-700 shadow-sm">
+               Save Comment
+            </Button>
+          </div>
+          
         </div>
 
       </div>

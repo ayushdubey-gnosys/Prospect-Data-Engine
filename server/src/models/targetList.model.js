@@ -11,6 +11,11 @@ const targetListSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.Mixed, // Store the raw filter object used to create the list
       default: {},
     },
+    priority: {
+      type: String,
+      enum: ["Low", "Medium", "High"],
+      default: "Medium"
+    },
     companies: [
       {
         type: mongoose.Schema.Types.ObjectId,

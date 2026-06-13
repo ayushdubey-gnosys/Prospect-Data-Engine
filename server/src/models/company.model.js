@@ -164,7 +164,7 @@ const companySchema = new mongoose.Schema(
       status: {
         type: String,
         enum: ["in_progress", "converted", "dead", "none", "New", "Assigned", "Contacted", "Meeting Scheduled", "Proposal Sent", "Negotiation", "Won", "Lost", "On Hold"],
-        default: "none",
+        default: "New",
       },
       updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -190,6 +190,11 @@ const companySchema = new mongoose.Schema(
       date: { type: Date, default: null },
       notes: { type: String, default: null },
       assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    },
+
+    latestActivity: {
+      notes: { type: String, default: null },
+      date: { type: Date, default: null },
     },
   },
   {

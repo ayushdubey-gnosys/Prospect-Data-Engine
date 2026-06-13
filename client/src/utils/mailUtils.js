@@ -44,7 +44,7 @@ export const openMailComposer = (toEmail, companyName = '', user = null) => {
   }
 
   let webmailBaseUrl = 'https://mail.gnosysdigital.com/'; // Default fallback
-  
+
   if (fromEmail) {
     const emailLower = fromEmail.trim().toLowerCase();
     if (emailLower.endsWith('@sginc.ca')) {

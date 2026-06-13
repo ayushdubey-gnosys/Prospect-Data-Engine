@@ -404,7 +404,7 @@ const getDashboardCharts = async (req, res) => {
 
 const updateCompanyStatus = async (req, res) => {
   try {
-    const { status, dealValue, closingDate, remarks, lossReason, holdReason, targetListId } = req.body;
+    const { status, notes, nextFollowUpDate, dealValue, closingDate, remarks, lossReason, holdReason, targetListId } = req.body;
     const company = await Company.findById(req.params.id);
 
     if (!company) {
@@ -427,11 +427,30 @@ const updateCompanyStatus = async (req, res) => {
 
     const oldStatus = company.leadStatus?.status || "New";
 
-    // Update company
+    // Update company leadStatus
     company.leadStatus = {
       status,
       updatedBy: req.user._id,
       updatedAt: new Date()
+    };
+    
+    // Update Next Follow Up
+    if (nextFollowUpDate) {
+      company.nextFollowUp = {
+        date: new Date(nextFollowUpDate),
+        assignedTo: req.user._id,
+      };
+    } else {
+      company.nextFollowUp = {
+        date: null,
+        assignedTo: null,
+      };
+    }
+
+    // Update Latest Activity summary for table
+    company.latestActivity = {
+      notes: notes || `Status changed to ${status}`,
+      date: new Date()
     };
     
     if (!company.leadDetails) company.leadDetails = {};
@@ -444,16 +463,42 @@ const updateCompanyStatus = async (req, res) => {
 
     await company.save();
 
-    // Create an Activity record for the timeline
-    await Activity.create({
-      companyId: company._id,
-      targetListId: targetListId || null,
-      type: "Status Change",
-      notes: `Status changed from ${oldStatus} to ${status}`,
-      metadata: { oldStatus, newStatus: status, dealValue, lossReason, holdReason },
-      createdBy: req.user._id,
-      date: new Date()
-    });
+    // Create or update Activity record for the timeline
+    let activityTitle = oldStatus !== status ? `Status changed to ${status}` : "Note Added";
+    let activityNotes = notes || (oldStatus !== status ? `Status changed from ${oldStatus} to ${status}` : "");
+    let activityType = oldStatus !== status ? "Status Change" : "Note";
+
+    const isOnlyFollowUpOrDetails = oldStatus === status && !notes;
+
+    if (isOnlyFollowUpOrDetails && nextFollowUpDate) {
+      // Find the latest activity and update its metadata with the new follow up date
+      const latestActivity = await Activity.findOne({ companyId: company._id }).sort({ date: -1 });
+      if (latestActivity) {
+        latestActivity.metadata = { ...latestActivity.metadata, nextFollowUpDate };
+        await latestActivity.save();
+      } else {
+        // Fallback: create a note if somehow no activity exists
+        await Activity.create({
+          companyId: company._id,
+          targetListId: targetListId || null,
+          type: "Note",
+          notes: "Updated follow-up date",
+          metadata: { oldStatus, newStatus: status, dealValue, lossReason, holdReason, nextFollowUpDate },
+          createdBy: req.user._id,
+          date: new Date()
+        });
+      }
+    } else {
+      await Activity.create({
+        companyId: company._id,
+        targetListId: targetListId || null,
+        type: activityType,
+        notes: activityNotes,
+        metadata: { oldStatus, newStatus: status, dealValue, lossReason, holdReason, nextFollowUpDate },
+        createdBy: req.user._id,
+        date: new Date()
+      });
+    }
 
     res.json(company);
   } catch (error) {

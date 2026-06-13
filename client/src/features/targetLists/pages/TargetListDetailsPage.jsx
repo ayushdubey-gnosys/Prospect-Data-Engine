@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Target, Search, ArrowLeft, RefreshCw, CheckCircle2, Clock, XCircle, Circle, Link as LinkIcon, FileText, Users, Plus } from 'lucide-react';
+import { Target, Search, ArrowLeft, RefreshCw, CheckCircle2, Clock, XCircle, Circle, Link as LinkIcon, FileText, Users, Plus, MoreVertical, Calendar, Flag, User as UserIcon } from 'lucide-react';
 import api from '../../../api/axios';
 import { useAuth } from '../../../hooks/useAuth';
 import { toast } from 'react-toastify';
@@ -61,13 +61,24 @@ const TargetListDetailsPage = () => {
     setIsDetailsOpen(true);
   };
 
-  const getLeadStatusIcon = (status) => {
-    switch (status) {
-      case 'in_progress': return <Clock className="w-4 h-4 text-blue-500" />;
-      case 'converted': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case 'dead': return <XCircle className="w-4 h-4 text-red-500" />;
-      default: return <Circle className="w-4 h-4 text-gray-200" />;
+  const getLeadStatusColor = (status) => {
+    let s = status === 'none' ? 'New' : status;
+    switch (s) {
+      case 'Assigned': return 'bg-[#3b82f6]'; // blue-500
+      case 'Contacted': return 'bg-[#f97316]'; // orange-500
+      case 'Meeting Scheduled': return 'bg-[#a855f7]'; // purple-500
+      case 'Proposal Sent': return 'bg-[#6366f1]'; // indigo-500
+      case 'Negotiation': return 'bg-[#eab308]'; // yellow-500
+      case 'Won': case 'converted': return 'bg-[#22c55e]'; // green-500
+      case 'Lost': case 'dead': return 'bg-[#ef4444]'; // red-500
+      case 'On Hold': return 'bg-[#475569]'; // slate-600
+      case 'New': default: return 'bg-[#cbd5e1]'; // slate-300
     }
+  };
+
+  const getLeadStatusIcon = (status) => {
+    const colorClass = getLeadStatusColor(status);
+    return <div className={`w-3 h-3 rounded-full ${colorClass}`}></div>;
   };
 
   const getLeadStatusLabel = (status) => {
@@ -81,7 +92,7 @@ const TargetListDetailsPage = () => {
 
   const columns = [
     {
-      header: 'Company Name',
+      header: 'COMPANY NAME',
       accessor: 'company_name',
       cell: (row) => {
         const status = row.leadStatus?.status || 'none';
@@ -109,31 +120,14 @@ const TargetListDetailsPage = () => {
         );
       },
     },
+
     {
-      header: 'Assigned To',
-      accessor: 'assignedTo',
-      cell: () => {
-        const assignments = targetList?.assignments || [];
-        if (assignments.length === 0) return <span className="text-gray-400 text-xs italic">Unassigned</span>;
-        return (
-          <div className="flex items-center gap-1">
-            <div className="flex -space-x-2 overflow-hidden">
-              {assignments.slice(0, 2).map((a, i) => (
-                <div key={i} className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700" title={a.user?.name}>
-                  {a.user?.name ? a.user.name.substring(0, 2).toUpperCase() : 'U'}
-                </div>
-              ))}
-            </div>
-            {assignments.length > 2 && <span className="text-xs text-gray-500 font-medium ml-1">+{assignments.length - 2}</span>}
-          </div>
-        );
-      }
-    },
-    {
-      header: 'Status',
+      header: 'ASSIGNMENT STATUS',
       accessor: 'status',
       cell: (row) => {
-        const status = row.leadStatus?.status || 'New';
+        let status = row.leadStatus?.status || 'New';
+        if (status === 'none') status = 'New';
+        
         let colorClass = 'bg-gray-100 text-gray-700 border-gray-200';
         if (status === 'Assigned') colorClass = 'bg-blue-100 text-blue-700 border-blue-200';
         else if (status === 'Contacted') colorClass = 'bg-amber-100 text-amber-700 border-amber-200';
@@ -148,41 +142,73 @@ const TargetListDetailsPage = () => {
       }
     },
     {
-      header: 'Website',
-      accessor: 'website',
-      cell: (row) =>
-        row.website ? (
-          <a
-            href={row.website.startsWith('http') ? row.website : `https://${row.website}`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-          >
-            Visit
-          </a>
-        ) : '-',
+      header: 'LATEST ACTIVITY',
+      accessor: 'latestActivity',
+      cell: (row) => {
+        if (!row.latestActivity || !row.latestActivity.date) return <span className="text-gray-400 text-xs">-</span>;
+        return (
+          <div className="flex flex-col gap-1 min-w-[120px]">
+            <span className="text-[12px] font-bold text-[#1e3a8a]">{new Date(row.latestActivity.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            <span className="text-[11px] text-gray-500 truncate max-w-[180px] block" title={row.latestActivity.notes}>{row.latestActivity.notes}</span>
+          </div>
+        );
+      }
     },
     {
-      header: 'Email',
+      header: 'NEXT FOLLOW-UP',
+      accessor: 'nextFollowUp',
+      cell: (row) => {
+        if (!row.nextFollowUp || !row.nextFollowUp.date) return <span className="text-gray-400 text-xs">-</span>;
+        
+        const followUpDate = new Date(row.nextFollowUp.date);
+        
+        let status = row.leadStatus?.status || 'New';
+        if (status === 'none') status = 'New';
+        
+        let colorClass = 'text-gray-700 bg-gray-50 border border-gray-200';
+        if (status === 'Assigned') colorClass = 'text-blue-700 bg-blue-50 border border-blue-200';
+        else if (status === 'Contacted') colorClass = 'text-amber-700 bg-amber-50 border border-amber-200';
+        else if (status === 'Meeting Scheduled') colorClass = 'text-purple-700 bg-purple-50 border border-purple-200';
+        else if (status === 'Proposal Sent') colorClass = 'text-indigo-700 bg-indigo-50 border border-indigo-200';
+        else if (status === 'Negotiation') colorClass = 'text-yellow-700 bg-yellow-50 border border-yellow-200';
+        else if (status === 'Won' || status === 'converted') colorClass = 'text-green-700 bg-green-50 border border-green-200';
+        else if (status === 'Lost' || status === 'dead') colorClass = 'text-red-700 bg-red-50 border border-red-200';
+        else if (status === 'On Hold') colorClass = 'text-slate-700 bg-slate-100 border border-slate-300';
+        
+        return (
+          <div className={`inline-flex flex-col items-start justify-center gap-0.5 px-2.5 py-1.5 rounded-lg ${colorClass}`}>
+            <div className="flex items-center gap-1.5 font-bold text-[11px]">
+               <Calendar className="w-3.5 h-3.5 opacity-80" />
+               {followUpDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </div>
+            <span className="text-[10px] font-medium opacity-80 ml-5">
+               {followUpDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+        );
+      }
+    },
+    {
+      header: 'EMAIL',
       accessor: 'email',
       cell: (row) =>
         row.email ? (
           <button
             type="button"
             onClick={() => openMailComposer(row.email, row.company_name, user)}
-            className="text-blue-600 hover:text-blue-800 hover:underline font-medium select-all text-left cursor-pointer bg-transparent border-none p-0"
+            className="text-blue-600 hover:text-blue-800 hover:underline font-medium select-all text-left cursor-pointer bg-transparent border-none p-0 text-xs"
           >
             {row.email}
           </button>
         ) : '-',
     },
     {
-      header: 'Contact No',
+      header: 'CONTACT NO',
       accessor: 'phone',
-      cell: (row) => row.phone || '-',
+      cell: (row) => <span className="text-xs">{row.phone || '-'}</span>,
     },
     {
-      header: 'Contact Employees',
+      header: 'CONTACT EMPLOYEES',
       accessor: 'contacts',
       cell: (row, rowIndex, totalRows) => {
         const rawContacts = row.contacts || [];
@@ -203,7 +229,7 @@ const TargetListDetailsPage = () => {
             width="w-[26rem]"
             trigger={
               <button className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
-                <Users className="w-3.5 h-3.5" /> {contacts.length > 0 ? `View ${contacts.length} Contacts` : 'Contact Employees'}
+                <Users className="w-3.5 h-3.5" /> {contacts.length > 0 ? `${contacts.length} View Contacts` : 'View Contacts'}
               </button>
             }
           >
@@ -232,61 +258,17 @@ const TargetListDetailsPage = () => {
         );
       }
     },
+    { header: 'CITY', accessor: 'city', cell: (row) => row.city || '-' },
+    { header: 'COUNTRY', accessor: 'country', cell: (row) => row.country || '-' },
+    { header: 'INDUSTRY', accessor: 'industry', cell: (row) => row.industry || '-' },
     {
-      header: 'Social Media Links',
-      accessor: 'socialMedia',
-      cell: (row, rowIndex, totalRows) => {
-        const social = row.socialMedia || {};
-        const hasPlatformLinks = (platform) => Array.isArray(social[platform]) && social[platform].length > 0;
-        const hasLinks = ['facebook', 'youtube', 'instagram', 'x', 'linkedin'].some(hasPlatformLinks);
-        const isBottom = totalRows && totalRows > 5 && (totalRows - rowIndex) <= 5;
-
-        const renderLinks = (platform, label, urlPrefix, colorClass, hoverClass, borderClass, textClass) => {
-          if (!hasPlatformLinks(platform)) return null;
-          return social[platform].map((link, idx) => {
-            const urlRaw = typeof link === 'string' ? link : (link && (typeof link.url === 'string' ? link.url : (typeof link.link === 'string' ? link.link : '')));
-            if (!urlRaw || typeof urlRaw !== 'string') return null;
-            const url = urlRaw.startsWith('http') ? urlRaw : `https://${urlRaw}`;
-            const username = typeof link === 'string' ? label : (typeof link.username === 'string' && link.username.trim() ? link.username : label);
-
-            return (
-              <a key={`${platform}-${idx}`} href={url} target="_blank" rel="noreferrer" className={`flex flex-col p-2.5 rounded-lg border border-transparent ${hoverClass} transition-all group/link`}>
-                <span className={`font-semibold text-gray-700 group-hover/link:${textClass}`}>{String(username)}</span>
-                <span className={`text-xs ${colorClass} break-all`}>{String(urlRaw)}</span>
-              </a>
-            );
-          });
-        };
-
-        return (
-          <HoverCard preferTop={isBottom} width="w-[26rem]" trigger={<button className="flex items-center gap-1.5 text-xs font-medium text-pink-600 hover:text-pink-800 bg-pink-50 hover:bg-pink-100 px-2 py-1 rounded transition"><LinkIcon className="w-3.5 h-3.5" /> Connect on Social</button>}>
-            <h4 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Social Media Links</h4>
-            {!hasLinks ? (
-              <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-100"><span className="text-sm text-gray-500 font-medium">No links available</span></div>
-            ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
-                {renderLinks('facebook', 'Facebook', '', 'text-blue-500', 'hover:border-blue-100 hover:bg-blue-50/50', '', 'text-blue-700')}
-                {renderLinks('youtube', 'YouTube', '', 'text-red-500', 'hover:border-red-100 hover:bg-red-50/50', '', 'text-red-700')}
-                {renderLinks('instagram', 'Instagram', '', 'text-pink-500', 'hover:border-pink-100 hover:bg-pink-50/50', '', 'text-pink-700')}
-                {renderLinks('x', 'X (Twitter)', '', 'text-gray-600', 'hover:border-gray-200 hover:bg-gray-50', '', 'text-gray-900')}
-                {renderLinks('linkedin', 'LinkedIn', '', 'text-blue-600', 'hover:border-blue-100 hover:bg-blue-50/50', '', 'text-blue-700')}
-              </div>
-            )}
-          </HoverCard>
-        );
-      }
-    },
-    { header: 'City', accessor: 'city', cell: (row) => row.city || '-' },
-    { header: 'Country', accessor: 'country', cell: (row) => row.country || '-' },
-    { header: 'Industry', accessor: 'industry', cell: (row) => row.industry || '-' },
-    {
-      header: 'Tags',
+      header: 'TAGS',
       accessor: 'tags',
       cell: (row) => {
         const tags = row.tags || [];
         return (
           <div className="flex items-center gap-2 min-w-[150px] max-w-[250px]">
-            {tags.length === 0 ? <span className="text-gray-400 text-xs italic">No tags</span> : (
+            {tags.length === 0 ? <span className="text-gray-400 text-xs italic">-</span> : (
               <div className="flex flex-nowrap gap-1.5 py-1 overflow-x-auto custom-scrollbar flex-1 pb-1">
                 {tags.map((t) => (
                   <span key={t._id} className="inline-flex shrink-0 items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{t.name}</span>
@@ -298,20 +280,13 @@ const TargetListDetailsPage = () => {
       },
     },
     {
-      header: 'Description',
-      accessor: 'description',
+      header: 'ACTIONS',
+      accessor: 'actions',
       cell: (row) => {
-        if (!row.description) return <span className="text-gray-400 text-xs">-</span>;
         return (
-          <div className="relative group inline-block">
-            <button className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded transition">
-              <FileText className="w-3.5 h-3.5" /> Watch description
-            </button>
-            <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-50 w-64 bg-white border border-gray-200 shadow-xl rounded-lg p-3">
-              <h4 className="text-xs font-bold text-gray-800 mb-1 border-b pb-1">Description</h4>
-              <p className="text-xs text-gray-600 whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">{row.description}</p>
-            </div>
-          </div>
+          <button className="p-1 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center h-full">
+            <MoreVertical className="w-4 h-4 text-gray-500" />
+          </button>
         );
       }
     },
@@ -330,33 +305,85 @@ const TargetListDetailsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => navigate('/target-lists')}
-            className="p-2 bg-white rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Target className="w-6 h-6 text-blue-600" />
-              {targetList?.name || 'Loading...'}
-            </h1>
-            <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-              <Search className="w-3.5 h-3.5" />
-              Filters: {formatFilters(targetList?.filters)}
-            </p>
+      <div className="flex flex-col gap-4">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col xl:flex-row items-start justify-between gap-6 w-full">
+          
+          {/* Left Side: Title */}
+          <div className="flex items-start gap-4 shrink-0">
+            <button 
+              onClick={() => navigate('/target-lists')}
+              className="p-2 bg-gray-50 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors mt-1"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="pt-1">
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Target className="w-6 h-6 text-blue-600" />
+                {targetList?.name || 'Loading...'}
+              </h1>
+            </div>
           </div>
+          
+          {/* Center: Meta Data Professional Section */}
+          <div className="flex-1 flex flex-wrap items-center justify-start xl:justify-center gap-4 text-sm w-full">
+            {/* Created By & Date */}
+            <div className="flex items-center gap-2 bg-gray-50 text-gray-700 px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+              <UserIcon className="w-4 h-4 text-gray-500" />
+              <span>
+                Created by <span className="font-semibold text-gray-900">{targetList?.createdBy?.name || 'Unknown'}</span>
+                <span className="mx-2 text-gray-400">|</span>
+                {targetList?.createdAt ? new Date(targetList.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+              </span>
+            </div>
+
+            {/* Assignments */}
+            {targetList?.assignments && targetList.assignments.length > 0 && (
+              <div className="flex items-center gap-2 bg-blue-50 text-blue-800 px-3 py-2 rounded-lg border border-blue-200 shadow-sm">
+                <Users className="w-4 h-4 text-blue-500" />
+                <div className="flex items-center gap-1">
+                  <span className="font-medium mr-1">Assigned:</span>
+                  {targetList.assignments.map((assignment, idx) => (
+                    <span key={idx} className="font-semibold">
+                      {assignment.user?.name || 'Unknown'}
+                      <span className="text-blue-500 capitalize ml-1 font-normal">({assignment.user?.role || 'user'})</span>
+                      {idx < targetList.assignments.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Priority */}
+            <div className="flex items-center gap-2 bg-orange-50 text-orange-800 px-3 py-2 rounded-lg border border-orange-200 shadow-sm">
+              <Flag className="w-4 h-4 text-orange-500" />
+              <span>Priority: <span className="font-semibold">{targetList?.priority || 'Medium'}</span></span>
+            </div>
+
+            {/* Filters (Full text wrap without truncation) */}
+            <div className="w-full mt-1">
+              <div className="flex items-start gap-2 bg-green-50 text-green-800 px-3 py-2.5 rounded-lg border border-green-200 shadow-sm">
+                <Search className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
+                <span className="break-words leading-relaxed text-sm">
+                  <span className="font-medium mr-1">Filters:</span> 
+                  {formatFilters(targetList?.filters)}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Side: Repopulate Button */}
+          <div className="shrink-0 flex items-start pt-1">
+            <Button
+              onClick={() => repopulateMutation.mutate()}
+              disabled={repopulateMutation.isLoading}
+              className="shadow-sm"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${repopulateMutation.isLoading ? 'animate-spin' : ''}`} />
+              Repopulate
+            </Button>
+          </div>
+          
         </div>
-        
-        <Button
-          onClick={() => repopulateMutation.mutate()}
-          disabled={repopulateMutation.isLoading}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${repopulateMutation.isLoading ? 'animate-spin' : ''}`} />
-          Repopulate
-        </Button>
       </div>
 
       {statsData && (
@@ -424,7 +451,7 @@ const TargetListDetailsPage = () => {
             
             {/* Pagination controls */}
             {totalPages > 1 && (
-              <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 bg-gray-50/50 rounded-b-xl">
+              <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 bg-gray-50/50">
                 <div className="text-sm text-gray-700 font-medium">
                   Showing <span className="font-bold text-gray-900">{((page - 1) * limitPerPage) + 1}</span> to <span className="font-bold text-gray-900">{Math.min(page * limitPerPage, total)}</span> of <span className="font-bold text-gray-900">{total}</span>
                 </div>
@@ -441,6 +468,21 @@ const TargetListDetailsPage = () => {
                 </div>
               </div>
             )}
+            
+            {/* Status Legend Indicator */}
+            <div className="px-4 sm:px-6 py-5 border-t border-gray-200 bg-white rounded-b-xl">
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 bg-gray-50/50 border border-gray-100 rounded-lg p-3">
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#cbd5e1]"></div><span className="text-[11px] font-bold text-gray-600">New</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></div><span className="text-[11px] font-bold text-gray-600">Assigned</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#f97316]"></div><span className="text-[11px] font-bold text-gray-600">Contacted</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#a855f7]"></div><span className="text-[11px] font-bold text-gray-600">Meeting Scheduled</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#6366f1]"></div><span className="text-[11px] font-bold text-gray-600">Proposal Sent</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#eab308]"></div><span className="text-[11px] font-bold text-gray-600">Negotiation</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]"></div><span className="text-[11px] font-bold text-gray-600">Won</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></div><span className="text-[11px] font-bold text-gray-600">Lost</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-[#475569]"></div><span className="text-[11px] font-bold text-gray-600">On Hold</span></div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -450,6 +492,7 @@ const TargetListDetailsPage = () => {
         onClose={() => setIsDetailsOpen(false)}
         companyId={selectedCompanyId}
         targetListId={id}
+        targetList={targetList}
       />
     </div>
   );

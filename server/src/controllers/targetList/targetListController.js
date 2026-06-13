@@ -120,7 +120,9 @@ const getTargetListById = async (req, res, next) => {
     const { page = 1, limit = 10 } = req.query;
 
     const targetList = await TargetList.findById(id)
-      .populate("createdBy", "name email")
+      .populate("createdBy", "name email role")
+      .populate("assignments.user", "name email role")
+      .populate("assignments.assignedBy", "name email role")
       .lean();
 
     if (!targetList) {
@@ -207,7 +209,7 @@ const deleteTargetList = async (req, res, next) => {
 const assignTargetList = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { userId, description } = req.body;
+    const { userId, description, priority } = req.body;
 
     if (!userId) {
       return res.status(400).json({ message: "Salesman user ID is required." });
@@ -235,6 +237,10 @@ const assignTargetList = async (req, res, next) => {
       assignedBy: req.user._id,
       assignedAt: new Date(),
     });
+    
+    if (priority) {
+      targetList.priority = priority;
+    }
 
     await targetList.save();
 
@@ -286,10 +292,9 @@ const getTargetListStats = async (req, res, next) => {
     });
     
     // Get active follow ups
-    const FollowUp = require("../../models/followUp.model");
-    activeFollowUps = await FollowUp.countDocuments({
-      companyId: { $in: companyIds },
-      status: "Pending"
+    activeFollowUps = await Company.countDocuments({
+      _id: { $in: companyIds },
+      "nextFollowUp.date": { $gte: new Date() }
     });
 
     res.json({

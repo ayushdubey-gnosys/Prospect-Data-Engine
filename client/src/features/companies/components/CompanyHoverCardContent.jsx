@@ -10,30 +10,18 @@ import {
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
-  in_progress: {
-    label: 'In Progress',
-    Icon: Clock,
-    badge: 'bg-blue-50 text-blue-700 border-blue-100',
-    iconColor: 'text-blue-500',
-  },
-  converted: {
-    label: 'Converted',
-    Icon: CheckCircle2,
-    badge: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-    iconColor: 'text-emerald-500',
-  },
-  dead: {
-    label: 'Dead',
-    Icon: XCircle,
-    badge: 'bg-red-50 text-red-700 border-red-100',
-    iconColor: 'text-red-500',
-  },
-  none: {
-    label: 'None',
-    Icon: Circle,
-    badge: 'bg-gray-50 text-gray-600 border-gray-100',
-    iconColor: 'text-gray-300',
-  },
+  'Assigned': { label: 'Assigned', Icon: Circle, badge: 'text-blue-700 bg-blue-50 border-blue-200', iconColor: 'text-[#3b82f6]' },
+  'Contacted': { label: 'Contacted', Icon: Circle, badge: 'text-orange-700 bg-orange-50 border-orange-200', iconColor: 'text-[#f97316]' },
+  'Meeting Scheduled': { label: 'Meeting Scheduled', Icon: Circle, badge: 'text-purple-700 bg-purple-50 border-purple-200', iconColor: 'text-[#a855f7]' },
+  'Proposal Sent': { label: 'Proposal Sent', Icon: Circle, badge: 'text-indigo-700 bg-indigo-50 border-indigo-200', iconColor: 'text-[#6366f1]' },
+  'Negotiation': { label: 'Negotiation', Icon: Circle, badge: 'text-yellow-700 bg-yellow-50 border-yellow-200', iconColor: 'text-[#eab308]' },
+  'Won': { label: 'Won', Icon: CheckCircle2, badge: 'text-green-700 bg-green-50 border-green-200', iconColor: 'text-[#22c55e]' },
+  'converted': { label: 'Won', Icon: CheckCircle2, badge: 'text-green-700 bg-green-50 border-green-200', iconColor: 'text-[#22c55e]' },
+  'Lost': { label: 'Lost', Icon: XCircle, badge: 'text-red-700 bg-red-50 border-red-200', iconColor: 'text-[#ef4444]' },
+  'dead': { label: 'Lost', Icon: XCircle, badge: 'text-red-700 bg-red-50 border-red-200', iconColor: 'text-[#ef4444]' },
+  'On Hold': { label: 'On Hold', Icon: Circle, badge: 'text-slate-700 bg-slate-100 border-slate-300', iconColor: 'text-[#475569]' },
+  'New': { label: 'New', Icon: Circle, badge: 'text-gray-600 bg-gray-50 border-gray-200', iconColor: 'text-[#cbd5e1]' },
+  'none': { label: 'New', Icon: Circle, badge: 'text-gray-600 bg-gray-50 border-gray-200', iconColor: 'text-[#cbd5e1]' },
 };
 
 const formatUrlDisplay = (url) => {
