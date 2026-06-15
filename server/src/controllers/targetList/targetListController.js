@@ -117,7 +117,7 @@ const getTargetLists = async (req, res, next) => {
 const getTargetListById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, filterStat } = req.query;
 
     const targetList = await TargetList.findById(id)
       .populate("createdBy", "name email role")
@@ -129,11 +129,32 @@ const getTargetListById = async (req, res, next) => {
       return res.status(404).json({ message: "Target list not found." });
     }
 
+    const query = { _id: { $in: targetList.companies } };
+
+    if (filterStat) {
+      if (filterStat === 'assigned') {
+        query['leadStatus.status'] = { $nin: ['New', 'none', null] };
+      } else if (filterStat === 'unassigned') {
+        query.$or = [
+          { 'leadStatus.status': 'New' },
+          { 'leadStatus.status': 'none' },
+          { leadStatus: { $exists: false } },
+          { 'leadStatus.status': { $exists: false } }
+        ];
+      } else if (filterStat === 'active_followups') {
+        query['nextFollowUp.date'] = { $gte: new Date() };
+      } else if (filterStat === 'won') {
+        query['leadStatus.status'] = { $in: ['Won', 'converted'] };
+      } else if (filterStat === 'lost') {
+        query['leadStatus.status'] = { $in: ['Lost', 'dead'] };
+      }
+    }
+
     const skip = (Math.max(1, page) - 1) * parseInt(limit);
-    const total = targetList.companies.length;
+    const total = await Company.countDocuments(query);
 
     // Fetch the companies with pagination
-    const companies = await Company.find({ _id: { $in: targetList.companies } })
+    const companies = await Company.find(query)
       .populate("tags")
       .populate("leadStatus.updatedBy", "name email")
       .skip(skip)

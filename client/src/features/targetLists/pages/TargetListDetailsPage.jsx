@@ -23,11 +23,16 @@ const TargetListDetailsPage = () => {
   const [limitPerPage, setLimitPerPage] = useState(10);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+  const [filterStat, setFilterStat] = useState('');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['target-list', id, page, limitPerPage],
+    queryKey: ['target-list', id, page, limitPerPage, filterStat],
     queryFn: async () => {
-      const res = await api.get(`/target-lists/${id}?page=${page}&limit=${limitPerPage}`);
+      let url = `/target-lists/${id}?page=${page}&limit=${limitPerPage}`;
+      if (filterStat) {
+        url += `&filterStat=${filterStat}`;
+      }
+      const res = await api.get(url);
       return res.data;
     }
   });
@@ -376,28 +381,46 @@ const TargetListDetailsPage = () => {
       </div>
 
       {statsData && (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
-            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Total Targets</span>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
+          <div 
+            onClick={() => setFilterStat('')}
+            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === '' ? 'ring-2 ring-zinc-400 border-transparent' : 'border-gray-100'}`}
+          >
+            <span className="text-gray-500 text-xs font-semibold  uppercase tracking-wider mb-1">Total Targets</span>
             <span className="text-2xl font-bold text-gray-900">{statsData.totalTargets}</span>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+          <div 
+            onClick={() => setFilterStat('assigned')}
+            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'assigned' ? 'ring-2 ring-blue-600 border-transparent' : 'border-gray-100'}`}
+          >
             <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Assigned Leads</span>
             <span className="text-2xl font-bold text-blue-600">{statsData.assignedLeads}</span>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+          <div 
+            onClick={() => setFilterStat('unassigned')}
+            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'unassigned' ? 'ring-2 ring-orange-500 border-transparent' : 'border-gray-100'}`}
+          >
             <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Unassigned</span>
             <span className="text-2xl font-bold text-orange-500">{statsData.unassignedLeads}</span>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+          <div 
+            onClick={() => setFilterStat('active_followups')}
+            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'active_followups' ? 'ring-2 ring-purple-600 border-transparent' : 'border-gray-100'}`}
+          >
             <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Active Follow-ups</span>
             <span className="text-2xl font-bold text-purple-600">{statsData.activeFollowUps}</span>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+          <div 
+            onClick={() => setFilterStat('won')}
+            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'won' ? 'ring-2 ring-green-500 border-transparent' : 'border-gray-100'}`}
+          >
             <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Won Opps</span>
             <span className="text-2xl font-bold text-green-500">{statsData.wonOpportunities}</span>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+          <div 
+            onClick={() => setFilterStat('lost')}
+            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'lost' ? 'ring-2 ring-red-500 border-transparent' : 'border-gray-100'}`}
+          >
             <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Lost Opps</span>
             <span className="text-2xl font-bold text-red-500">{statsData.lostOpportunities}</span>
           </div>
