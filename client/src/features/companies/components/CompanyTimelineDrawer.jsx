@@ -101,19 +101,15 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
   if (!isOpen) return null;
 
   // Assignment logic
-  let assignedUser = null;
+  let assignedUsers = [];
   let assignedBy = null;
   let assignmentDate = null;
   const priority = company?.leadDetails?.priority || targetList?.priority || 'Medium';
 
-  if (targetList && targetList.assignments) {
-    // Assuming the current user or first assignment
-    const assignment = targetList.assignments[0];
-    if (assignment) {
-      assignedUser = assignment.user;
-      assignedBy = targetList.createdBy;
-      assignmentDate = assignment.assignedAt || targetList.createdAt;
-    }
+  if (targetList && targetList.assignments && targetList.assignments.length > 0) {
+    assignedUsers = targetList.assignments.map(a => a.user).filter(Boolean);
+    assignedBy = targetList.createdBy;
+    assignmentDate = targetList.assignments[0].assignedAt || targetList.createdAt;
   }
 
   const currentStatus = company?.leadStatus?.status && company.leadStatus.status !== 'none' ? company.leadStatus.status : "New";
@@ -125,61 +121,78 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
         
         {/* Header Section */}
         <div className="px-6 py-5 border-b border-gray-100 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">{company?.company_name || "Company Details"}</h2>
+          <div className="flex items-start justify-between">
+            <div className="flex-1 pr-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-xl font-bold text-gray-900">{company?.company_name || "Company Details"}</h2>
+                {assignedBy && (
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 mt-0.5">
+                    <span className="text-[10px] uppercase font-bold text-gray-400">Assigned by:</span>
+                    <div className="flex items-center gap-1">
+                      <div className="w-4 h-4 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden shrink-0">
+                         {assignedBy.avatar ? (
+                           <img src={assignedBy.avatar} alt={assignedBy.name} className="w-full h-full object-cover" />
+                         ) : (
+                           <span className="text-indigo-700 font-bold text-[8px]">{assignedBy.name?.substring(0,2).toUpperCase() || 'A'}</span>
+                         )}
+                      </div>
+                      <span className="font-semibold text-gray-700">{assignedBy.name}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-2 mt-2">
                 <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getStatusBadgeColor(currentStatus)}`}>
                   {currentStatus}
                 </span>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition -mt-6 -mr-2">
+            <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition -mt-1 -mr-2 shrink-0">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
+            <div className="col-span-2">
               <div className="text-xs text-gray-500 mb-1">Assigned To</div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0">
-                   {assignedUser?.avatar ? (
-                     <img src={assignedUser.avatar} alt={assignedUser.name} className="w-full h-full object-cover" />
-                   ) : (
-                     <span className="text-blue-700 font-bold text-xs">{assignedUser?.name?.substring(0,2).toUpperCase() || 'U'}</span>
-                   )}
+              {assignedUsers.length > 0 ? (
+                <div className="flex flex-row flex-wrap gap-4">
+                  {assignedUsers.map((user, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0">
+                         {user?.avatar ? (
+                           <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                         ) : (
+                           <span className="text-blue-700 font-bold text-xs">{user?.name?.substring(0,2).toUpperCase() || 'U'}</span>
+                         )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-gray-900">{user?.name || 'Unknown'}</span>
+                        <span className="text-[10px] text-gray-500 capitalize">{user?.role || 'Sales Executive'}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-gray-900">{assignedUser?.name || 'Unknown'}</span>
-                  <span className="text-[10px] text-gray-500 capitalize">{assignedUser?.role || 'Sales Executive'}</span>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0">
+                     <span className="text-blue-700 font-bold text-xs">U</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-900">Unknown</span>
+                    <span className="text-[10px] text-gray-500 capitalize">Sales Executive</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Team Lead</div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden shrink-0">
-                   {assignedBy?.avatar ? (
-                     <img src={assignedBy.avatar} alt={assignedBy.name} className="w-full h-full object-cover" />
-                   ) : (
-                     <span className="text-indigo-700 font-bold text-xs">{assignedBy?.name?.substring(0,2).toUpperCase() || 'A'}</span>
-                   )}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-gray-900">{assignedBy?.name || 'Admin'}</span>
-                  <span className="text-[10px] text-gray-500 capitalize">{assignedBy?.role || 'Team Lead'}</span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-2">
+            <div className="mt-1">
               <div className="text-xs text-gray-500 mb-1">Assignment Date</div>
               <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 {assignmentDate ? new Date(assignmentDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
               </div>
             </div>
-            <div className="mt-2">
+            <div className="mt-1">
               <div className="text-xs text-gray-500 mb-1">Priority</div>
               <div>
                 <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${priority === 'High' ? 'bg-red-50 text-red-700 border border-red-200' : priority === 'Low' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`}>

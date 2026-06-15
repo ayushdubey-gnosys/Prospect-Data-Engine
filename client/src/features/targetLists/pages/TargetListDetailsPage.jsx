@@ -279,17 +279,6 @@ const TargetListDetailsPage = () => {
         );
       },
     },
-    {
-      header: 'ACTIONS',
-      accessor: 'actions',
-      cell: (row) => {
-        return (
-          <button className="p-1 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center h-full">
-            <MoreVertical className="w-4 h-4 text-gray-500" />
-          </button>
-        );
-      }
-    },
   ];
 
   const formatFilters = (filters) => {
