@@ -17,6 +17,33 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
   const [lossReason, setLossReason] = useState("");
   const [holdReason, setHoldReason] = useState("");
 
+  const [drawerWidth, setDrawerWidth] = useState(448);
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+      let newWidth = window.innerWidth - e.clientX;
+      if (newWidth < 350) newWidth = 350; // Minimum width
+      if (newWidth > window.innerWidth - 100) newWidth = window.innerWidth - 100; // Maximum width
+      setDrawerWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
+
   const { data: company } = useQuery({
     queryKey: ['company', companyId],
     queryFn: async () => {
@@ -114,10 +141,42 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
 
   const currentStatus = company?.leadStatus?.status && company.leadStatus.status !== 'none' ? company.leadStatus.status : "New";
 
+  const isOptionDisabled = (optionStatus) => {
+    const sequence = ["Assigned", "Contacted", "Meeting Scheduled", "Proposal Sent", "Negotiation"];
+    const currentIndex = sequence.indexOf(currentStatus);
+    const optionIndex = sequence.indexOf(optionStatus);
+    
+    // If the option we are rendering is one of the sequential ones
+    if (optionIndex !== -1) {
+      if (currentIndex !== -1) {
+        // We are currently in the sequence, so disable previous and current steps
+        return optionIndex <= currentIndex;
+      } else {
+        // We are NOT in the sequence (e.g. Won, Lost, On Hold).
+        // Disable all sequential steps since we're past them, unless we are "New"
+        return currentStatus !== "New" && currentStatus !== "none";
+      }
+    }
+    
+    // Won, Lost, On Hold are never disabled (can always jump between them)
+    return false;
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-hidden pointer-events-none">
       <div className="absolute inset-0 bg-black/20 pointer-events-auto transition-opacity" onClick={onClose} />
-      <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl flex flex-col pointer-events-auto transform transition-transform duration-300">
+      <div 
+        className="absolute inset-y-0 right-0 bg-white shadow-2xl flex flex-col pointer-events-auto transform transition-transform duration-300"
+        style={{ width: `${drawerWidth}px`, transitionProperty: isResizing ? 'none' : 'transform' }}
+      >
+        {/* Resize Handle */}
+        <div 
+          className="absolute inset-y-0 left-0 w-1.5 cursor-col-resize hover:bg-blue-500/50 active:bg-blue-500 z-50 transition-colors"
+          onMouseDown={(e) => {
+             e.preventDefault();
+             setIsResizing(true);
+          }}
+        />
         
         {/* Header Section */}
         <div className="px-6 py-5 border-b border-gray-100 flex flex-col gap-4">
@@ -259,6 +318,42 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
                         </div>
                       )}
 
+                      {/* Extra Status Metadata */}
+                      {(activity.metadata?.dealValue || activity.metadata?.lossReason || activity.metadata?.holdReason) && (
+                        <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200 mt-1 space-y-1.5 text-sm shadow-sm">
+                          {activity.metadata?.dealValue && (
+                            <div className="flex items-center justify-between border-b border-gray-200 pb-1.5">
+                              <span className="text-gray-500 font-bold text-xs uppercase tracking-wider">Deal Value</span>
+                              <span className="text-green-600 font-bold">${Number(activity.metadata.dealValue).toLocaleString()}</span>
+                            </div>
+                          )}
+                          {activity.metadata?.closingDate && (
+                            <div className="flex items-center justify-between border-b border-gray-200 pb-1.5">
+                              <span className="text-gray-500 font-bold text-xs uppercase tracking-wider">Closing Date</span>
+                              <span className="text-gray-900 font-semibold">{new Date(activity.metadata.closingDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            </div>
+                          )}
+                          {activity.metadata?.remarks && (
+                            <div className="pt-1">
+                              <span className="text-gray-500 font-bold text-xs uppercase tracking-wider block mb-1">Remarks</span>
+                              <span className="text-gray-700 text-xs">{activity.metadata.remarks}</span>
+                            </div>
+                          )}
+                          {activity.metadata?.lossReason && (
+                            <div className="pt-1">
+                              <span className="text-gray-500 font-bold text-xs uppercase tracking-wider block mb-1">Reason for Loss</span>
+                              <span className="text-red-600 font-medium text-sm">{activity.metadata.lossReason}</span>
+                            </div>
+                          )}
+                          {activity.metadata?.holdReason && (
+                            <div className="pt-1">
+                              <span className="text-gray-500 font-bold text-xs uppercase tracking-wider block mb-1">Hold Reason</span>
+                              <span className="text-orange-600 font-medium text-sm">{activity.metadata.holdReason}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {activity.metadata?.nextFollowUpDate && (
                         <div className="flex items-center gap-1.5 mt-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded w-max border border-blue-100">
                           <Calendar className="w-3.5 h-3.5" />
@@ -295,14 +390,14 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
                  onChange={(e) => setNewStatus(e.target.value)}
                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                >
-                 <option value="Assigned">Assigned</option>
-                 <option value="Contacted">Contacted</option>
-                 <option value="Meeting Scheduled">Meeting Scheduled</option>
-                 <option value="Proposal Sent">Proposal Sent</option>
-                 <option value="Negotiation">Negotiation</option>
-                 <option value="Won">Won</option>
-                 <option value="Lost">Lost</option>
-                 <option value="On Hold">On Hold</option>
+                 <option value="Assigned" disabled={isOptionDisabled("Assigned")}>Assigned</option>
+                 <option value="Contacted" disabled={isOptionDisabled("Contacted")}>Contacted</option>
+                 <option value="Meeting Scheduled" disabled={isOptionDisabled("Meeting Scheduled")}>Meeting Scheduled</option>
+                 <option value="Proposal Sent" disabled={isOptionDisabled("Proposal Sent")}>Proposal Sent</option>
+                 <option value="Negotiation" disabled={isOptionDisabled("Negotiation")}>Negotiation</option>
+                 <option value="Won" disabled={isOptionDisabled("Won")}>Won</option>
+                 <option value="Lost" disabled={isOptionDisabled("Lost")}>Lost</option>
+                 <option value="On Hold" disabled={isOptionDisabled("On Hold")}>On Hold</option>
                </select>
             </div>
             
@@ -319,10 +414,19 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
 
           <div className="space-y-3 mb-3">
              {newStatus === "Won" && (
-               <div className="grid grid-cols-2 gap-2">
-                 <input type="number" placeholder="Deal Value" value={dealValue} onChange={(e) => setDealValue(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
-                 <input type="date" value={closingDate} onChange={(e) => setClosingDate(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
-                 <input type="text" placeholder="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="col-span-2 w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+               <div className="grid grid-cols-2 gap-3">
+                 <div className="flex flex-col">
+                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Deal Value</label>
+                   <input type="number" placeholder="e.g. 50000" value={dealValue} onChange={(e) => setDealValue(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors" />
+                 </div>
+                 <div className="flex flex-col">
+                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Closing Date</label>
+                   <input type="date" value={closingDate} onChange={(e) => setClosingDate(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors" />
+                 </div>
+                 <div className="col-span-2 flex flex-col">
+                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Remarks</label>
+                   <input type="text" placeholder="Add any remarks..." value={remarks} onChange={(e) => setRemarks(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors" />
+                 </div>
                </div>
              )}
              {newStatus === "Lost" && (

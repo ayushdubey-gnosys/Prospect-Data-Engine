@@ -483,7 +483,7 @@ const updateCompanyStatus = async (req, res) => {
           targetListId: targetListId || null,
           type: "Note",
           notes: "Updated follow-up date",
-          metadata: { oldStatus, newStatus: status, dealValue, lossReason, holdReason, nextFollowUpDate },
+          metadata: { oldStatus, newStatus: status, dealValue, closingDate, remarks, lossReason, holdReason, nextFollowUpDate },
           createdBy: req.user._id,
           date: new Date()
         });
@@ -494,7 +494,7 @@ const updateCompanyStatus = async (req, res) => {
         targetListId: targetListId || null,
         type: activityType,
         notes: activityNotes,
-        metadata: { oldStatus, newStatus: status, dealValue, lossReason, holdReason, nextFollowUpDate },
+        metadata: { oldStatus, newStatus: status, dealValue, closingDate, remarks, lossReason, holdReason, nextFollowUpDate },
         createdBy: req.user._id,
         date: new Date()
       });
