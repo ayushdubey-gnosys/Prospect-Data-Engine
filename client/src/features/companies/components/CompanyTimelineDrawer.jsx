@@ -179,7 +179,7 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
         />
         
         {/* Header Section */}
-        <div className="px-6 py-5 border-b border-gray-100 flex flex-col gap-4">
+        <div className="px-5 py-3 border-b border-gray-100 flex flex-col gap-2 shrink-0">
           <div className="flex items-start justify-between">
             <div className="flex-1 pr-4">
               <div className="flex flex-wrap items-center gap-3">
@@ -211,9 +211,9 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mt-2">
+          <div className="grid grid-cols-2 gap-3 mt-1">
             <div className="col-span-2">
-              <div className="text-xs text-gray-500 mb-1">Assigned To</div>
+              <div className="text-[10px] uppercase font-bold text-gray-500 mb-0.5">Assigned To</div>
               {assignedUsers.length > 0 ? (
                 <div className="flex flex-row flex-wrap gap-4">
                   {assignedUsers.map((user, idx) => (
@@ -244,17 +244,17 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
                 </div>
               )}
             </div>
-            <div className="mt-1">
-              <div className="text-xs text-gray-500 mb-1">Assignment Date</div>
-              <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
-                <Calendar className="w-4 h-4 text-gray-400" />
+            <div className="mt-0">
+              <div className="text-[10px] uppercase font-bold text-gray-500 mb-0.5">Assignment Date</div>
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-gray-700">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
                 {assignmentDate ? new Date(assignmentDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
               </div>
             </div>
-            <div className="mt-1">
-              <div className="text-xs text-gray-500 mb-1">Priority</div>
+            <div className="mt-0">
+              <div className="text-[10px] uppercase font-bold text-gray-500 mb-0.5">Priority</div>
               <div>
-                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${priority === 'High' ? 'bg-red-50 text-red-700 border border-red-200' : priority === 'Low' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`}>
+                <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${priority === 'High' ? 'bg-red-50 text-red-700 border border-red-200' : priority === 'Low' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-orange-50 text-orange-700 border border-orange-200'}`}>
                   {priority}
                 </span>
               </div>
@@ -380,15 +380,15 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
         </div>
 
         {/* Action Footer - Unified Form */}
-        <div className="bg-white border-t border-gray-200 p-5 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="bg-gray-50/50 border-t border-gray-200 p-4 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
           
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-2 mb-2">
             <div className="flex-1">
-               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</label>
+               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Status</label>
                <select 
                  value={newStatus} 
                  onChange={(e) => setNewStatus(e.target.value)}
-                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                 className="w-full text-[13px] border border-gray-300 rounded-md px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors shadow-sm"
                >
                  <option value="Assigned" disabled={isOptionDisabled("Assigned")}>Assigned</option>
                  <option value="Contacted" disabled={isOptionDisabled("Contacted")}>Contacted</option>
@@ -402,45 +402,45 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
             </div>
             
             <div className="flex-1">
-               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Next Follow-up</label>
+               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Next Follow-up</label>
                <input 
                  type="datetime-local" 
                  value={nextFollowUpDate}
                  onChange={(e) => setNextFollowUpDate(e.target.value)}
-                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                 className="w-full text-[13px] border border-gray-300 rounded-md px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors shadow-sm"
                />
             </div>
           </div>
 
-          <div className="space-y-3 mb-3">
+          <div className="space-y-2 mb-2">
              {newStatus === "Won" && (
-               <div className="grid grid-cols-2 gap-3">
+               <div className="grid grid-cols-2 gap-2">
                  <div className="flex flex-col">
-                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Deal Value</label>
-                   <input type="number" placeholder="e.g. 50000" value={dealValue} onChange={(e) => setDealValue(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors" />
+                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Deal Value</label>
+                   <input type="number" placeholder="e.g. 50000" value={dealValue} onChange={(e) => setDealValue(e.target.value)} className="w-full text-[13px] border border-gray-300 rounded-md px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors shadow-sm" />
                  </div>
                  <div className="flex flex-col">
-                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Closing Date</label>
-                   <input type="date" value={closingDate} onChange={(e) => setClosingDate(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors" />
+                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Closing Date</label>
+                   <input type="date" value={closingDate} onChange={(e) => setClosingDate(e.target.value)} className="w-full text-[13px] border border-gray-300 rounded-md px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors shadow-sm" />
                  </div>
                  <div className="col-span-2 flex flex-col">
-                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Remarks</label>
-                   <input type="text" placeholder="Add any remarks..." value={remarks} onChange={(e) => setRemarks(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors" />
+                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Remarks</label>
+                   <input type="text" placeholder="Add any remarks..." value={remarks} onChange={(e) => setRemarks(e.target.value)} className="w-full text-[13px] border border-gray-300 rounded-md px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors shadow-sm" />
                  </div>
                </div>
              )}
              {newStatus === "Lost" && (
-               <input type="text" placeholder="Reason for Loss (Mandatory)" value={lossReason} onChange={(e) => setLossReason(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+               <input type="text" placeholder="Reason for Loss (Mandatory)" value={lossReason} onChange={(e) => setLossReason(e.target.value)} className="w-full text-[13px] border border-gray-300 rounded-md px-2.5 py-1.5 shadow-sm" />
              )}
              {newStatus === "On Hold" && (
-               <input type="text" placeholder="Hold Reason (Mandatory)" value={holdReason} onChange={(e) => setHoldReason(e.target.value)} className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2" />
+               <input type="text" placeholder="Hold Reason (Mandatory)" value={holdReason} onChange={(e) => setHoldReason(e.target.value)} className="w-full text-[13px] border border-gray-300 rounded-md px-2.5 py-1.5 shadow-sm" />
              )}
           </div>
 
           <div>
-             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Add Comment</label>
+             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Add Comment</label>
              <textarea
-               className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+               className="w-full border border-gray-300 rounded-md px-2.5 py-2 text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors shadow-sm"
                rows={2}
                placeholder="Enter update or comment..."
                value={newComment}
@@ -449,16 +449,15 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
           </div>
 
           <div className="flex justify-end gap-2 mt-3">
-            <Button onClick={onClose} variant="outline" className="text-gray-600 bg-white border-gray-300 hover:bg-gray-50">
-               Cancel
+            <Button variant="outline" size="sm" onClick={onClose} className="px-4 py-1.5 text-xs h-8">
+              Cancel
             </Button>
-            <Button onClick={handleUpdate} disabled={updateStatusMutation.isLoading} className="bg-blue-600 hover:bg-blue-700 shadow-sm">
+            <Button onClick={handleUpdate} disabled={updateStatusMutation.isLoading} className="px-4 py-1.5 text-xs h-8 bg-blue-600 hover:bg-blue-700">
+              {updateStatusMutation.isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
                Save Comment
             </Button>
           </div>
-          
         </div>
-
       </div>
     </div>
   );
