@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
 import {
   Database,
   UploadCloud,
@@ -11,12 +13,15 @@ import {
   Building2,
   Search,
   Layers3,
+  Target,
 } from "lucide-react";
 
 const AboutPage = () => {
-  return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-8">
+  const { isAuthenticated } = useAuth();
 
+  return (
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-8 relative">
+      
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl border border-gray-200 bg-black text-white">
 
@@ -193,7 +198,7 @@ const AboutPage = () => {
       </div>
 
       {/* Roles */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
         {/* Admin */}
         <div className="bg-white border border-gray-200 rounded-3xl p-8">
@@ -243,6 +248,60 @@ const AboutPage = () => {
           </ul>
         </div>
 
+        {/* Cold Mail User */}
+        <div className="bg-white border border-gray-200 rounded-3xl p-8">
+          <Target className="w-10 h-10 text-gray-900 mb-5" />
+
+          <h3 className="text-2xl font-semibold text-gray-900">
+            Cold Mail User
+          </h3>
+
+          <ul className="mt-5 space-y-3 text-sm text-gray-600">
+            <li>• Read-only data access</li>
+            <li>• Work on assigned Target Lists</li>
+            <li>• Contact leads and update status</li>
+            <li>• Track outreach progress</li>
+          </ul>
+        </div>
+
+      </div>
+
+      {/* Target List Flow Section */}
+      <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+            <Target className="w-7 h-7 text-gray-800" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-semibold text-gray-900">
+              Target List Management Flow
+            </h2>
+            <p className="text-gray-500 mt-1">
+              End-to-end workflow for lead assignment and outreach
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-6 text-gray-600 leading-relaxed">
+          <p>
+            The Target List module enables structured lead management and outbound outreach. The flow begins with the <strong>Admin</strong> filtering specific data from the centralized database based on campaign requirements. This filtered data is then grouped into a separate <strong>Target List</strong> with a unique identifier.
+          </p>
+
+          <p>
+            Once the target list is created, it is directly assigned to either a <strong>Sales User</strong> or a <strong>Cold Mail User</strong>. Upon assignment, the user automatically receives an email notification informing them about their new leads, keeping them fully updated.
+          </p>
+
+          <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
+            <h4 className="font-semibold text-gray-900 mb-4">Lead Updation Flow</h4>
+            <ul className="list-disc list-inside space-y-3 text-sm">
+              <li><strong>Review Assignment:</strong> The assigned user accesses their target list to review the allocated companies and prospects.</li>
+              <li><strong>Outreach:</strong> The user contacts the leads via email or calls. Cold Mail Users are restricted to read-only access for core data but can fully operate on their assigned lists.</li>
+              <li><strong>Status Update:</strong> After contacting, the user updates the lead's status (e.g., Contacted, Meeting Scheduled, Proposal Sent, Won, Lost) directly within the Target List module.</li>
+              <li><strong>Next Follow-up:</strong> Along with the status update, the user can also set a "Next Follow-up" date/time, keeping the admin completely updated on future interactions.</li>
+              <li><strong>Tracking:</strong> The Admin can monitor the progress, activity timeline, and conversion metrics of each target list in real-time as users log their updates.</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Workflow */}
@@ -289,6 +348,50 @@ const AboutPage = () => {
           </div>
 
         </div>
+
+        {/* Target List Workflow Flowchart */}
+        <div className="mt-12 border-t border-white/10 pt-10">
+          <h2 className="text-2xl font-semibold text-white">
+            Target List Workflow
+          </h2>
+          <p className="text-white/70 mt-2 max-w-3xl leading-relaxed text-sm">
+            Step-by-step process of creating, assigning, and executing a target list campaign.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center gap-4 text-sm">
+            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10">
+              Admin Filters DB
+            </div>
+            <div className="text-white/40">→</div>
+            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10">
+              Create Target List
+            </div>
+            <div className="text-white/40">→</div>
+            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10">
+              Assign User (Email)
+            </div>
+            <div className="text-white/40">→</div>
+            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10">
+              Lead Outreach
+            </div>
+            <div className="text-white/40">→</div>
+            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10">
+              Update Status & Follow-up
+            </div>
+            <div className="text-white/40">→</div>
+            <div className="px-5 py-3 rounded-2xl bg-white/10 border border-white/10">
+              Admin Tracking
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Footer text */}
+      <div className="text-center pb-8 pt-4">
+        <p className="text-sm font-medium text-gray-500 tracking-wide">
+          Developed by Dwarkadhish Group
+        </p>
       </div>
 
     </div>

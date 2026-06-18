@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 import ProtectedRoute from './ProtectedRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -19,6 +20,12 @@ import AboutPage from '../features/dashboard/pages/AboutPage';
 import TargetListsPage from '../features/targetLists/pages/TargetListsPage';
 import TargetListDetailsPage from '../features/targetLists/pages/TargetListDetailsPage';
 
+const IndexRoute = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return null;
+  return isAuthenticated ? <DashboardPage /> : <AboutPage />;
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -33,19 +40,15 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Protected Routes inside Dashboard Layout */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="companies" element={<CompaniesPage />} />
+      {/* Main Layout Route - Public so unauthenticated users see the sidebar */}
+      <Route path="/" element={<DashboardLayout />}>
+        {/* Dynamic Index Route */}
+        <Route index element={<IndexRoute />} />
+        
+        {/* Protected Inner Routes */}
+        <Route path="companies" element={<ProtectedRoute><CompaniesPage /></ProtectedRoute>} />
         <Route path="uploaded-files" element={<ProtectedRoute allowedRoles={['admin', 'sales', 'marketing', 'cold_mail']}><UploadedFilesPage /></ProtectedRoute>} />
-        <Route path="files/:fileId" element={<FileDetailsPage />} />
+        <Route path="files/:fileId" element={<ProtectedRoute><FileDetailsPage /></ProtectedRoute>} />
         <Route
           path="import"
           element={
@@ -94,7 +97,7 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="about" element={<AboutPage />} />
       </Route>
 

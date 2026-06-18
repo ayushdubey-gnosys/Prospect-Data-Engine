@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const Navbar = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -40,7 +40,7 @@ const Navbar = () => {
         </span>
       </div>
 
-      {/* Operator Credentials & Actions */}
+        {/* Operator Credentials & Actions */}
       <div className="flex items-center space-x-6">
 
         {/* User Operator Identity Box - Semi-Bold Contrast */}
@@ -59,20 +59,35 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Semi-Bold Action Trigger */}
-        <button
-          onClick={handleLogout}
-          className="
-            flex items-center text-sm font-semibold text-slate-700 
-            hover:text-red-700 bg-slate-50 hover:bg-red-50 
-            border border-slate-200 hover:border-red-200 
-            rounded-lg px-3 py-1.5 transition-all duration-150 
-            focus:outline-none focus:ring-2 focus:ring-red-500
-          "
-        >
-          <LogOut className="h-4 w-4 mr-2 text-slate-500 group-hover:text-red-700 shrink-0" />
-          Disconnect
-        </button>
+        {/* Action Trigger: Disconnect or Sign In */}
+        {isAuthenticated ? (
+          <button
+            onClick={handleLogout}
+            className="
+              flex items-center text-sm font-semibold text-slate-700 
+              hover:text-red-700 bg-slate-50 hover:bg-red-50 
+              border border-slate-200 hover:border-red-200 
+              rounded-lg px-3 py-1.5 transition-all duration-150 
+              focus:outline-none focus:ring-2 focus:ring-red-500
+            "
+          >
+            <LogOut className="h-4 w-4 mr-2 text-slate-500 shrink-0" />
+            Disconnect
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/login')}
+            className="
+              flex items-center text-sm font-semibold text-slate-700 
+              hover:text-blue-700 bg-slate-50 hover:bg-blue-50 
+              border border-slate-200 hover:border-blue-200 
+              rounded-lg px-4 py-1.5 transition-all duration-150 
+              focus:outline-none focus:ring-2 focus:ring-blue-500
+            "
+          >
+            Sign In
+          </button>
+        )}
 
       </div>
     </header>
