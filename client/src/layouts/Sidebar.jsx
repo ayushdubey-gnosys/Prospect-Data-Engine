@@ -21,7 +21,7 @@ const Sidebar = () => {
   const role = user?.role || 'sales';
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Companies', path: '/companies', icon: Building2 },
     { name: 'Uploaded Files', path: '/uploaded-files', icon: FolderOpen },
     { name: 'Import', path: '/import', icon: UploadCloud, roles: ['admin', 'sales'] },

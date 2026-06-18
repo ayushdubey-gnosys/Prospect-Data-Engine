@@ -20,12 +20,6 @@ import AboutPage from '../features/dashboard/pages/AboutPage';
 import TargetListsPage from '../features/targetLists/pages/TargetListsPage';
 import TargetListDetailsPage from '../features/targetLists/pages/TargetListDetailsPage';
 
-const IndexRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return null;
-  return isAuthenticated ? <DashboardPage /> : <AboutPage />;
-};
-
 const AppRoutes = () => {
   return (
     <Routes>
@@ -42,10 +36,11 @@ const AppRoutes = () => {
 
       {/* Main Layout Route - Public so unauthenticated users see the sidebar */}
       <Route path="/" element={<DashboardLayout />}>
-        {/* Dynamic Index Route */}
-        <Route index element={<IndexRoute />} />
+        {/* Always show About Page on the index route */}
+        <Route index element={<AboutPage />} />
         
         {/* Protected Inner Routes */}
+        <Route path="dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="companies" element={<ProtectedRoute><CompaniesPage /></ProtectedRoute>} />
         <Route path="uploaded-files" element={<ProtectedRoute allowedRoles={['admin', 'sales', 'marketing', 'cold_mail']}><UploadedFilesPage /></ProtectedRoute>} />
         <Route path="files/:fileId" element={<ProtectedRoute><FileDetailsPage /></ProtectedRoute>} />
