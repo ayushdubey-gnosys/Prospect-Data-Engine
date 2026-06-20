@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../api/axios";
 import { toast } from "react-toastify";
 import { openMailComposer } from "../../../utils/mailUtils";
+import { getLeadStatusIcon } from "../../../utils/statusColors";
 
 const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
   const { data: company, isLoading, isError } = useCompany(companyId);
@@ -290,26 +291,36 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                 </div>
               </div>
 
-              <div>
-                <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Lead Status</span>
-                {canUpdateDetails && !isEditing ? (
-                  <select
-                    className="w-full sm:w-auto bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 outline-none font-medium"
-                    value={company.leadStatus?.status || "none"}
-                    onChange={(e) => handleUpdateLeadStatus(e.target.value)}
-                    disabled={updateCompanyMutation.isLoading}
-                  >
-                    <option value="none">⚪ None</option>
-                    <option value="in_progress">🔵 In Progress</option>
-                    <option value="converted">🟢 Converted</option>
-                    <option value="dead">🔴 Dead</option>
-                  </select>
-                ) : (
+              <div className="space-y-3">
+                <div>
+                  <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Lead Status</span>
                   <div className="flex items-center gap-2">
-                    {company.leadStatus?.status === "in_progress" && <span className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full"><Clock className="w-4 h-4" /> In Progress</span>}
-                    {company.leadStatus?.status === "converted" && <span className="flex items-center gap-1.5 text-sm font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full"><CheckCircle2 className="w-4 h-4" /> Converted</span>}
-                    {company.leadStatus?.status === "dead" && <span className="flex items-center gap-1.5 text-sm font-semibold text-red-600 bg-red-50 px-3 py-1 rounded-full"><XCircle className="w-4 h-4" /> Dead</span>}
-                    {(!company.leadStatus?.status || company.leadStatus?.status === "none") && <span className="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full"><Circle className="w-4 h-4" /> None</span>}
+                    {getLeadStatusIcon(company.leadStatus?.status)}
+                    <span className="text-sm font-medium text-gray-700 capitalize">
+                      {company.leadStatus?.status === 'none' ? 'New' : company.leadStatus?.status || 'New'}
+                    </span>
+                  </div>
+                </div>
+
+                {company.targetLists && company.targetLists.length > 0 && (
+                  <div className="pt-2 border-t border-gray-50">
+                    <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Target Lists</span>
+                    <div className="flex flex-wrap gap-2">
+                      {company.targetLists.map(tl => (
+                        <span key={tl._id} className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-medium border border-indigo-100">
+                          {tl.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {company.fileId && (
+                  <div className="pt-2 border-t border-gray-50">
+                    <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Source File</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      {company.fileId.originalName || company.fileId.fileName}
+                    </span>
                   </div>
                 )}
               </div>

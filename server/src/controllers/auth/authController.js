@@ -1,5 +1,7 @@
 const User = require("../../models/user.model");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const { sendOTPEmail } = require("../../utils/emailService");
 
 
 const {
@@ -195,10 +197,94 @@ const updatePassword = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User with this email does not exist" });
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Set expiration to 15 minutes
+    const otpExpires = new Date();
+    otpExpires.setMinutes(otpExpires.getMinutes() + 15);
+
+    user.resetPasswordOTP = otp;
+    user.resetPasswordOTPExpires = otpExpires;
+    await user.save();
+
+    const emailSent = await sendOTPEmail(user.email, user.name || "User", otp);
+    
+    if (!emailSent) {
+      user.resetPasswordOTP = undefined;
+      user.resetPasswordOTPExpires = undefined;
+      await user.save();
+      return res.status(500).json({ message: "Failed to send OTP email" });
+    }
+
+    res.status(200).json({ message: "OTP sent successfully to email" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    
+    const user = await User.findOne({ 
+      email, 
+      resetPasswordOTP: otp,
+      resetPasswordOTPExpires: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    res.status(200).json({ message: "OTP verified successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    
+    const user = await User.findOne({ 
+      email, 
+      resetPasswordOTP: otp,
+      resetPasswordOTPExpires: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordOTPExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
   meController,
-  updatePassword
+  updatePassword,
+  forgotPassword,
+  verifyOTP,
+  resetPassword
 };

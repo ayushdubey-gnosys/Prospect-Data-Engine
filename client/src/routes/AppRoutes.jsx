@@ -7,6 +7,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 
 import LoginPage from '../features/auth/pages/LoginPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
+import ForgotPasswordPage from '../features/auth/pages/ForgotPasswordPage';
 import DashboardPage from '../features/dashboard/pages/DashboardPage';
 import CompaniesPage from '../features/companies/pages/CompaniesPage';
 import FileDetailsPage from '../features/files/pages/FileDetailsPage';
@@ -25,6 +26,7 @@ const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route
         path="/register"
         element={

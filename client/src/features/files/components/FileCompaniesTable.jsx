@@ -6,19 +6,8 @@ import { openMailComposer } from '../../../utils/mailUtils';
 import { useAuth } from '../../../hooks/useAuth';
 import CompanyDetailsModal from '../../companies/components/CompanyDetailsModal';
 import CompanyNameHoverCards from '../../companies/components/CompanyNameHoverCards';
-
-const getLeadStatusIcon = (status) => {
-  switch (status) {
-    case 'in_progress':
-      return <Clock className="w-4 h-4 text-blue-500" />;
-    case 'converted':
-      return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-    case 'dead':
-      return <XCircle className="w-4 h-4 text-red-500" />;
-    default:
-      return <Circle className="w-4 h-4 text-gray-200" />;
-  }
-};
+import { getLeadStatusIcon } from '../../../utils/statusColors';
+import StatusLegendIndicator from '../../../components/ui/StatusLegendIndicator';
 
 
 
@@ -269,6 +258,7 @@ const FileCompaniesTable = ({ data, isLoading, emptyMessage }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100">
       <Table columns={columns} data={data} isLoading={isLoading} emptyMessage={emptyMessage} />
+      <StatusLegendIndicator />
         <CompanyDetailsModal
           isOpen={isModalOpen}
           onClose={handleCloseModal}

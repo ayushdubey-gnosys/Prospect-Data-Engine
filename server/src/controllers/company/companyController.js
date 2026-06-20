@@ -171,9 +171,20 @@ const getCompany = async (req, res) => {
   try {
     const company = await Company.findById(req.params.id)
       .populate("tags")
-      .populate("leadStatus.updatedBy", "name email");
+      .populate("leadStatus.updatedBy", "name email")
+      .populate("fileId", "originalName fileName");
 
-    res.json(company);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    const TargetList = require("../../models/targetList.model");
+    const targetLists = await TargetList.find({ companies: company._id }, "name");
+
+    const companyObj = company.toObject();
+    companyObj.targetLists = targetLists;
+
+    res.json(companyObj);
   } catch (error) {
     res.status(500).json({
       message: error.message,

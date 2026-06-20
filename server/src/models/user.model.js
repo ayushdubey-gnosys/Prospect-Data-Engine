@@ -30,6 +30,14 @@ const userSchema = new mongoose.Schema(
       enum: ["superadmin","admin", "sales", "marketing", "cold_mail"],
       default: "sales",
     },
+
+    resetPasswordOTP: {
+      type: String,
+    },
+    
+    resetPasswordOTPExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

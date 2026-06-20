@@ -15,6 +15,8 @@ import ExportConfigModal from '../../../components/ui/ExportConfigModal';
 import CreateTargetListModal from '../../targetLists/components/CreateTargetListModal';
 import { toast } from 'react-toastify';
 import { openMailComposer } from '../../../utils/mailUtils';
+import { getLeadStatusIcon } from '../../../utils/statusColors';
+import StatusLegendIndicator from '../../../components/ui/StatusLegendIndicator';
 
 const fetchCompanies = async (searchParams, page = 1, limit = 10) => {
   const query = new URLSearchParams();
@@ -236,14 +238,6 @@ const CompaniesPage = () => {
   // =========================
   // Table Columns
   // =========================
-  const getLeadStatusIcon = (status) => {
-    switch (status) {
-      case 'in_progress': return <Clock className="w-4 h-4 text-blue-500" />;
-      case 'converted': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case 'dead': return <XCircle className="w-4 h-4 text-red-500" />;
-      default: return <Circle className="w-4 h-4 text-gray-200" />;
-    }
-  };
 
   const columns = [
     ...(role === 'admin' || role === 'sales'
@@ -814,6 +808,8 @@ const CompaniesPage = () => {
             </div>
           </div>
         )}
+
+        <StatusLegendIndicator />
       </div>
 
       {/* =========================
