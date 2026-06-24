@@ -83,8 +83,8 @@ const LoginPage = () => {
 
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-              <Database className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden p-2">
+              <img src="/img.png" alt="Gnosys Digital Logo" className="w-full h-full object-contain filter brightness-0 invert" />
             </div>
 
             <div>
@@ -93,7 +93,7 @@ const LoginPage = () => {
               </h1>
 
               <p className="text-sm text-white/70">
-                Dwarkadhish Group - Prospect Data Engine
+                Gnosys Digital - Prospect Data Engine
               </p>  
             </div>
           </div>
@@ -118,8 +118,7 @@ const LoginPage = () => {
 
           {/* Bottom */}
           <div className="flex items-center gap-2 text-sm text-white/60">
-
-            <span>© 2026 Dwarakadhish Group </span>
+            <span>© 2026 Gnosys Digital </span>
           </div>
 
         </div>

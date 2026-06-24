@@ -48,7 +48,7 @@ const sendAssignmentEmail = async (salesmanEmail, salesmanName, targetListName, 
           <!-- Footer -->
           <div style="background-color: #f1f5f9; padding: 20px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0; font-size: 13px; color: #64748b;">Regards,<br/><strong style="color: #475569; font-size: 14px; display: inline-block; margin-top: 4px;">PDE - Prospect Engine Team </strong></p>
-            <p style="margin: 8px 0 0 0; font-size: 11px; color: #94a3b8;"> Dwarkadhish Group </p>
+            <p style="margin: 8px 0 0 0; font-size: 11px; color: #94a3b8;"> Gnosys Digital </p>
           </div>
         </div>
       `,
@@ -107,7 +107,7 @@ const sendOTPEmail = async (userEmail, userName, otp) => {
           <!-- Footer -->
           <div style="background-color: #f1f5f9; padding: 20px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0; font-size: 13px; color: #64748b;">Regards,<br/><strong style="color: #475569; font-size: 14px; display: inline-block; margin-top: 4px;">PDE - Prospect Engine Team </strong></p>
-            <p style="margin: 8px 0 0 0; font-size: 11px; color: #94a3b8;"> Dwarkadhish Group </p>
+            <p style="margin: 8px 0 0 0; font-size: 11px; color: #94a3b8;"> Gnosys Digital </p>
           </div>
         </div>
       `,

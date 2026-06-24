@@ -44,20 +44,22 @@ const Navbar = () => {
       <div className="flex items-center space-x-6">
 
         {/* User Operator Identity Box - Semi-Bold Contrast */}
-        <div className="flex items-center space-x-3 border-r border-slate-200 pr-6">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm">
-            <UserIcon className="h-4 w-4" />
-          </div>
+        {isAuthenticated && (
+          <div className="flex items-center space-x-3 border-r border-slate-200 pr-6">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm">
+              <UserIcon className="h-4 w-4" />
+            </div>
 
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-slate-900 leading-tight">
-              {user?.name || 'Operator Identity'}
-            </span>
-            <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mt-1">
-              {user?.role || 'Access Guest'}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-slate-900 leading-tight">
+                {user?.name || 'Operator Identity'}
+              </span>
+              <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mt-1">
+                {user?.role || 'Access Guest'}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Action Trigger: Disconnect or Sign In */}
         {isAuthenticated ? (

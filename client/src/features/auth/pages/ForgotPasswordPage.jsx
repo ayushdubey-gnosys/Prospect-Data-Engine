@@ -88,12 +88,12 @@ const ForgotPasswordPage = () => {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 flex flex-col justify-between h-full p-14 text-white">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-              <Database className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden p-2">
+              <img src="/img.png" alt="Gnosys Digital Logo" className="w-full h-full object-contain filter brightness-0 invert" />
             </div>
             <div>
               <h1 className="text-2xl font-semibold">PDE</h1>
-              <p className="text-sm text-white/70">Dwarkadhish Group - Prospect Data Engine</p>
+              <p className="text-sm text-white/70">Gnosys Digital - Prospect Data Engine</p>
             </div>
           </div>
           <div className="max-w-xl space-y-6">
@@ -109,7 +109,7 @@ const ForgotPasswordPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm text-white/60">
-            <span>© 2026 Dwarakadhish Group</span>
+            <span>© 2026 Gnosys Digital</span>
           </div>
         </div>
       </div>
