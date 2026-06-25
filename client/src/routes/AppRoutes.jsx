@@ -23,6 +23,7 @@ import TargetListDetailsPage from '../features/targetLists/pages/TargetListDetai
 import LandingPage from '../pages/LandingPage';
 
 const AppRoutes = () => {
+  const { user } = useAuth();
   return (
     <Routes>
       {/* Public Routes */}
@@ -39,8 +40,8 @@ const AppRoutes = () => {
 
       {/* Main Layout Route - Public so unauthenticated users see the sidebar */}
       <Route path="/" element={<DashboardLayout />}>
-        {/* Show Landing Page on the index route */}
-        <Route index element={<LandingPage />} />
+        {/* Show AboutPage if logged in, otherwise Landing Page */}
+        <Route index element={user ? <AboutPage /> : <LandingPage />} />
         
         {/* Protected Inner Routes */}
         <Route path="dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />

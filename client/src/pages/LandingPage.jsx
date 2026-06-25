@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Database, Search, Shield, Zap, ArrowRight, BarChart3, Layers, Video, FileDown } from 'lucide-react';
 import Footer from '../layouts/Footer';
-import heroImage from '../assets/PDE Home.jfif';
 import heroVideo from '../assets/PDE 01 .mp4';
 
 const FeatureCard = ({ icon: Icon, title, description }) => (
@@ -21,64 +20,51 @@ const LandingPage = () => {
   return (
     <div className="min-h-full bg-slate-50 flex flex-col items-center">
       
-      {/* Split Hero Section */}
-      <section className="w-full max-w-7xl mx-auto px-6 py-12 lg:py-24 flex flex-col lg:flex-row items-center justify-between gap-12">
-        {/* Left Side: 40% Area */}
-        <div className="w-full lg:w-[40%] flex flex-col items-start text-left z-10">
-          <div className="inline-flex items-center space-x-2 bg-indigo-50 border border-indigo-100 text-indigo-700 px-3.5 py-1.5 rounded-full font-medium text-xs sm:text-sm mb-6 shadow-sm">
-            <Zap className="h-4 w-4 text-indigo-600 fill-indigo-600 animate-pulse" />
-            <span>Next-Gen Data Prospecting</span>
-          </div>
-          
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight mb-6 leading-[1.15]">
-            Unlock the <br className="hidden lg:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
-              Industrial Data
-            </span> <br className="hidden lg:block" />
-            Engine.
-          </h1>
-          
-          <p className="text-base sm:text-lg text-slate-600 mb-8 leading-relaxed max-w-xl">
-            The ultimate centralized platform for consolidating, analyzing, and transforming your industrial prospect lists into actionable business intelligence.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto gap-4">
-            <button 
-              onClick={() => navigate('/login')}
-              className="w-full sm:w-auto px-7 py-3.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md shadow-indigo-200 hover:shadow-lg flex items-center justify-center text-sm"
-            >
-              Access Platform
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </button>
-            <button 
-              onClick={() => navigate('/about')}
-              className="w-full sm:w-auto px-7 py-3.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl border border-slate-200 transition-all duration-200 text-sm shadow-sm flex items-center justify-center"
-            >
-              Learn More
-            </button>
-          </div>
+      {/* Centered Professional Hero Section */}
+      <section className="w-full max-w-5xl mx-auto px-6 py-20 lg:py-32 flex flex-col items-center text-center relative z-10">
+        {/* Subtle background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-gradient-to-tr from-indigo-500/10 via-blue-500/10 to-purple-500/10 blur-[100px] rounded-full pointer-events-none -z-10"></div>
 
-          <div className="mt-10 pt-6 border-t border-slate-200/80 w-full flex items-center justify-between text-slate-500 text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              Real-Time Sync Ready
-            </div>
-            <span>99.9% Pipeline Accuracy</span>
-          </div>
+        <div className="inline-flex items-center space-x-2 bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full font-medium text-xs sm:text-sm mb-8 shadow-sm">
+          <Zap className="h-4 w-4 text-indigo-600 fill-indigo-600 animate-pulse" />
+          <span>Centralized Prospect Data Engine</span>
+        </div>
+        
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight mb-8 leading-[1.12]">
+          Unlock the{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+            Industrial Data
+          </span>{' '}
+          Engine.
+        </h1>
+        
+        <p className="text-base sm:text-xl text-slate-600 mb-12 leading-relaxed max-w-2xl mx-auto">
+          The ultimate centralized platform for consolidating, analyzing, and transforming your industrial prospect matrices into high-accuracy business intelligence.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row items-center justify-center w-full sm:w-auto gap-4 mb-16">
+          <button 
+            onClick={() => navigate('/login')}
+            className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center text-sm sm:text-base"
+          >
+            Access Platform
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </button>
+          <button 
+            onClick={() => navigate('/about')}
+            className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl border border-slate-200 transition-all duration-200 text-sm sm:text-base shadow-sm hover:shadow flex items-center justify-center"
+          >
+            Learn More
+          </button>
         </div>
 
-        {/* Right Side: 60% Area Image */}
-        <div className="w-full lg:w-[60%] flex items-center justify-center relative">
-          {/* Glowing background aura */}
-          <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur-2xl opacity-20 -z-10 animate-pulse"></div>
-          
-          <div className="relative rounded-2xl overflow-hidden border-2 border-slate-200/80 shadow-2xl shadow-indigo-950/10 bg-slate-900 group">
-            <img 
-              src={heroImage} 
-              alt="Prospect Data Engine Dashboard" 
-              className="w-full h-auto object-cover transform group-hover:scale-[1.01] transition-transform duration-500"
-            />
+        <div className="pt-8 border-t border-slate-200/80 w-full max-w-3xl flex flex-wrap items-center justify-center sm:justify-between gap-6 text-slate-500 text-xs sm:text-sm">
+          <div className="flex items-center gap-2 font-semibold text-slate-700">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+            Real-Time Node Sync
           </div>
+          <div className="font-medium text-slate-600">50M+ Verified Records</div>
+          <div className="font-semibold text-indigo-600">99.9% Pipeline Accuracy</div>
         </div>
       </section>
 
@@ -108,7 +94,6 @@ const LandingPage = () => {
               muted
               loop
               playsInline
-              poster={heroImage}
               className="w-full h-full object-cover rounded-3xl relative z-10 pointer-events-none"
             >
               <source src={heroVideo} type="video/mp4" />

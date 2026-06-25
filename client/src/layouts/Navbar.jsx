@@ -77,15 +77,17 @@ const Navbar = () => {
         )}
 
         <div className="flex items-center space-x-3">
-          <button
-            onClick={() => navigate('/about')}
-            className="
-              text-sm font-semibold text-slate-600 hover:text-slate-900
-              px-3 py-1.5 transition-colors duration-150
-            "
-          >
-            About PDE
-          </button>
+          {!isAuthenticated && (
+            <button
+              onClick={() => navigate('/about')}
+              className="
+                text-sm font-semibold text-slate-600 hover:text-slate-900
+                px-3 py-1.5 transition-colors duration-150
+              "
+            >
+              About PDE
+            </button>
+          )}
           
           {/* Action Trigger: Disconnect or Sign In */}
           {isAuthenticated ? (

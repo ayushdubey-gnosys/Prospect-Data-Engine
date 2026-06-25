@@ -37,6 +37,9 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
         city: company.city || "",
         country: company.country || "",
         industry: company.industry || "",
+        companyOwnerName: company.companyOwnerName || "",
+        turnover: company.turnover || "",
+        source: company.source || "manual",
         description: company.description || "",
         socialMedia: {
           facebook: Array.isArray(company.socialMedia?.facebook) ? company.socialMedia.facebook : [],
@@ -477,6 +480,48 @@ const CompanyDetailsModal = ({ isOpen, onClose, companyId, onEditTags }) => {
                   <input type="text" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" />
                 ) : (
                   <span className="text-sm font-semibold text-gray-700 capitalize">{company.country || "-"}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Business Details Card */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div className="p-3 bg-gray-50/40 rounded-lg border border-gray-50">
+                <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">Company Owner Name</span>
+                {isEditing ? (
+                  <input type="text" value={formData.companyOwnerName || ""} onChange={e => setFormData({ ...formData, companyOwnerName: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" placeholder="Owner / Founder Name" />
+                ) : (
+                  <span className="text-sm font-semibold text-gray-700">{company.companyOwnerName || "-"}</span>
+                )}
+              </div>
+              <div className="p-3 bg-gray-50/40 rounded-lg border border-gray-50">
+                <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">Industry</span>
+                {isEditing ? (
+                  <input type="text" value={formData.industry || ""} onChange={e => setFormData({ ...formData, industry: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" placeholder="Industry Sector" />
+                ) : (
+                  <span className="text-sm font-semibold text-gray-700">{company.industry || "-"}</span>
+                )}
+              </div>
+              <div className="p-3 bg-gray-50/40 rounded-lg border border-gray-50">
+                <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">Turnover</span>
+                {isEditing ? (
+                  <input type="number" value={formData.turnover || ""} onChange={e => setFormData({ ...formData, turnover: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500" placeholder="Annual Turnover" />
+                ) : (
+                  <span className="text-sm font-semibold text-gray-700">{company.turnover || "-"}</span>
+                )}
+              </div>
+              <div className="p-3 bg-gray-50/40 rounded-lg border border-gray-50">
+                <span className="block text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">Source</span>
+                {isEditing ? (
+                  <select value={formData.source || "manual"} onChange={e => setFormData({ ...formData, source: e.target.value })} className="border rounded p-1.5 text-sm w-full outline-none focus:border-indigo-500">
+                    <option value="manual">Manual</option>
+                    <option value="excel">Excel</option>
+                    <option value="csv">CSV</option>
+                    <option value="google_sheet">Google Sheet</option>
+                    <option value="mca">MCA</option>
+                  </select>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-700 capitalize">{company.source || "manual"}</span>
                 )}
               </div>
             </div>
