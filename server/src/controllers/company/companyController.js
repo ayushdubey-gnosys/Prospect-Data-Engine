@@ -24,26 +24,30 @@ const createCompany = async (req, res) => {
       }
     }
 
-    // Auto-create and assign industry tag if industry is present
-    if (companyData.industry && companyData.industry.trim()) {
-      const trimmed = companyData.industry.trim();
-      const esc = trimmed.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-      let tag = await Tag.findOne({
-        name: { $regex: new RegExp("^" + esc + "$", "i") },
-      });
-      if (!tag) {
-        tag = await Tag.create({ name: trimmed });
-      }
+    // Resolve tags from request body if they are passed as array of strings
+    if (companyData.tags && Array.isArray(companyData.tags)) {
+      const tagIds = [];
+      for (const tagName of companyData.tags) {
+        const trimmedName = tagName.trim();
+        if (!trimmedName) continue;
 
-      // Sync industry case with the tag name to avoid duplicates
-      companyData.industry = tag.name;
+        let tag = await Tag.findOne({
+          name: {
+            $regex: new RegExp(
+              "^" + trimmedName.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$",
+              "i",
+            ),
+          },
+        });
 
-      if (!companyData.tags) {
-        companyData.tags = [];
+        if (!tag) {
+          tag = await Tag.create({ name: trimmedName });
+        }
+        tagIds.push(tag._id);
       }
-      if (!companyData.tags.includes(tag._id)) {
-        companyData.tags.push(tag._id);
-      }
+      companyData.tags = tagIds;
+    } else {
+      companyData.tags = [];
     }
 
     const company = await Company.create(companyData);
@@ -87,56 +91,6 @@ const getCompanies = async (req, res) => {
         filters.tags = null;
       }
     }
-
-
-    // --- Dynamic Auto Industry Tagging for ALL matching companies ---
-    // Scan for companies matching filters that have an industry but NO tags
-    const untaggedCompanies = await Company.find({
-      ...filters,
-      industry: { $nin: [null, ""] },
-      $or: [{ tags: { $exists: false } }, { tags: { $size: 0 } }],
-    });
-
-    if (untaggedCompanies.length > 0) {
-      const industriesToTag = [
-        ...new Set(
-          untaggedCompanies
-            .map((c) =>
-              c.industry && typeof c.industry === "string"
-                ? c.industry.trim()
-                : "",
-            )
-            .filter(Boolean),
-        ),
-      ];
-      const tagMap = {};
-
-      for (const ind of industriesToTag) {
-        const esc = ind.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-        let tag = await Tag.findOne({
-          name: { $regex: new RegExp("^" + esc + "$", "i") },
-        });
-        if (!tag) {
-          tag = await Tag.create({ name: ind });
-        }
-        tagMap[ind.toLowerCase()] = tag._id;
-      }
-
-      const bulkOps = untaggedCompanies.map((company) => {
-        const tagId = tagMap[company.industry.trim().toLowerCase()];
-        return {
-          updateOne: {
-            filter: { _id: company._id },
-            update: { $addToSet: { tags: tagId } },
-          },
-        };
-      });
-
-      if (bulkOps.length > 0) {
-        await Company.bulkWrite(bulkOps);
-      }
-    }
-    // ----------------------------------------------------------------
 
     const total = await Company.countDocuments(filters);
 
@@ -233,32 +187,28 @@ const updateCompany = async (req, res) => {
       };
     }
 
-    // Auto-create and assign industry tag if industry is updated/present
-    if (updateData.industry && updateData.industry.trim()) {
-      const trimmed = updateData.industry.trim();
-      const esc = trimmed.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-      let tag = await Tag.findOne({
-        name: { $regex: new RegExp("^" + esc + "$", "i") },
-      });
-      if (!tag) {
-        tag = await Tag.create({ name: trimmed });
-      }
+    // Resolve tags from request body if they are passed as array of strings
+    if (updateData.tags && Array.isArray(updateData.tags)) {
+      const tagIds = [];
+      for (const tagName of updateData.tags) {
+        const trimmedName = tagName.trim();
+        if (!trimmedName) continue;
 
-      // Sync industry case with the tag name to avoid duplicates
-      updateData.industry = tag.name;
+        let tag = await Tag.findOne({
+          name: {
+            $regex: new RegExp(
+              "^" + trimmedName.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + "$",
+              "i",
+            ),
+          },
+        });
 
-      // Handle tags array if it exists or not
-      if (!updateData.tags) {
-        updateData.tags = existingCompany.tags || [];
+        if (!tag) {
+          tag = await Tag.create({ name: trimmedName });
+        }
+        tagIds.push(tag._id);
       }
-      
-      // Ensure the tag string is converted to string for comparison or handled properly
-      const tagIdStr = tag._id.toString();
-      const hasTag = updateData.tags.some(t => t.toString() === tagIdStr);
-      
-      if (!hasTag) {
-        updateData.tags.push(tag._id);
-      }
+      updateData.tags = tagIds;
     }
 
     const company = await Company.findByIdAndUpdate(req.params.id, updateData, {

@@ -29,16 +29,31 @@ const Navbar = () => {
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm select-none">
 
       {/* Semi-Bold System Navigation Trace */}
-      <div className="flex items-center space-x-3 text-sm">
-        <Terminal className="h-4 w-4 text-slate-800" />
-        <span className="font-semibold text-slate-900 tracking-wider uppercase text-xs">
-          Industrial Data Node
-        </span>
-        <span className="text-slate-300 font-semibold">/</span>
-        <span className="bg-slate-900 text-white font-mono font-semibold px-2 py-0.5 rounded text-xs tracking-wide">
-          {currentPath}
-        </span>
-      </div>
+      {isAuthenticated ? (
+        <div className="flex items-center space-x-3 text-sm">
+          <Terminal className="h-4 w-4 text-slate-800" />
+          <span className="font-semibold text-slate-900 tracking-wider uppercase text-xs">
+            Industrial Data Node
+          </span>
+          <span className="text-slate-300 font-semibold">/</span>
+          <span className="bg-slate-900 text-white font-mono font-semibold px-2 py-0.5 rounded text-xs tracking-wide">
+            {currentPath}
+          </span>
+        </div>
+      ) : (
+        <div 
+          onClick={() => navigate('/')}
+          className="flex flex-col items-start cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <span className="font-bold text-slate-900 tracking-wider uppercase text-lg">
+            Prospect Data Engine
+          </span>
+          <div className="flex items-center space-x-1 text-[10px] text-slate-500 self-end -mt-0.5">
+            <Terminal className="h-3 w-3" />
+            <span className="font-semibold tracking-wide">by Gnosys digital</span>
+          </div>
+        </div>
+      )}
 
         {/* Operator Credentials & Actions */}
       <div className="flex items-center space-x-6">
@@ -61,35 +76,47 @@ const Navbar = () => {
           </div>
         )}
 
-        {/* Action Trigger: Disconnect or Sign In */}
-        {isAuthenticated ? (
+        <div className="flex items-center space-x-3">
           <button
-            onClick={handleLogout}
+            onClick={() => navigate('/about')}
             className="
-              flex items-center text-sm font-semibold text-slate-700 
-              hover:text-red-700 bg-slate-50 hover:bg-red-50 
-              border border-slate-200 hover:border-red-200 
-              rounded-lg px-3 py-1.5 transition-all duration-150 
-              focus:outline-none focus:ring-2 focus:ring-red-500
+              text-sm font-semibold text-slate-600 hover:text-slate-900
+              px-3 py-1.5 transition-colors duration-150
             "
           >
-            <LogOut className="h-4 w-4 mr-2 text-slate-500 shrink-0" />
-            Disconnect
+            About PDE
           </button>
-        ) : (
-          <button
-            onClick={() => navigate('/login')}
-            className="
-              flex items-center text-sm font-semibold text-slate-700 
-              hover:text-blue-700 bg-slate-50 hover:bg-blue-50 
-              border border-slate-200 hover:border-blue-200 
-              rounded-lg px-4 py-1.5 transition-all duration-150 
-              focus:outline-none focus:ring-2 focus:ring-blue-500
-            "
-          >
-            Sign In
-          </button>
-        )}
+          
+          {/* Action Trigger: Disconnect or Sign In */}
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="
+                flex items-center text-sm font-semibold text-slate-700 
+                hover:text-red-700 bg-slate-50 hover:bg-red-50 
+                border border-slate-200 hover:border-red-200 
+                rounded-lg px-3 py-1.5 transition-all duration-150 
+                focus:outline-none focus:ring-2 focus:ring-red-500
+              "
+            >
+              <LogOut className="h-4 w-4 mr-2 text-slate-500 shrink-0" />
+              Disconnect
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="
+                flex items-center text-sm font-semibold text-slate-700 
+                hover:text-blue-700 bg-slate-50 hover:bg-blue-50 
+                border border-slate-200 hover:border-blue-200 
+                rounded-lg px-4 py-1.5 transition-all duration-150 
+                focus:outline-none focus:ring-2 focus:ring-blue-500
+              "
+            >
+              Sign In
+            </button>
+          )}
+        </div>
 
       </div>
     </header>

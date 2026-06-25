@@ -20,6 +20,7 @@ import ProfilePage from '../features/profile/pages/ProfilePage';
 import AboutPage from '../features/dashboard/pages/AboutPage';
 import TargetListsPage from '../features/targetLists/pages/TargetListsPage';
 import TargetListDetailsPage from '../features/targetLists/pages/TargetListDetailsPage';
+import LandingPage from '../pages/LandingPage';
 
 const AppRoutes = () => {
   return (
@@ -38,8 +39,8 @@ const AppRoutes = () => {
 
       {/* Main Layout Route - Public so unauthenticated users see the sidebar */}
       <Route path="/" element={<DashboardLayout />}>
-        {/* Always show About Page on the index route */}
-        <Route index element={<AboutPage />} />
+        {/* Show Landing Page on the index route */}
+        <Route index element={<LandingPage />} />
         
         {/* Protected Inner Routes */}
         <Route path="dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />

@@ -15,6 +15,7 @@ import {
   Layers3,
   Target,
 } from "lucide-react";
+import Footer from "../../../layouts/Footer";
 
 const AboutPage = () => {
   const { isAuthenticated } = useAuth();
@@ -387,17 +388,7 @@ const AboutPage = () => {
 
       </div>
 
-      {/* Footer text */}
-      <div className="text-center pb-8 pt-4 flex flex-col items-center justify-center">
-        <p className="text-sm font-medium text-gray-500 tracking-wide mb-2">
-          Developed by
-        </p>
-        <div className="flex items-center gap-2">
-          <img src="/img.png" alt="Gnosys Digital Logo" className="h-6 w-auto opacity-80" />
-          <span className="text-sm font-semibold text-gray-600">Gnosys Digital</span>
-        </div>
-      </div>
-
+      <Footer />
     </div>
   );
 };

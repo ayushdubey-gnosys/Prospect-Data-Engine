@@ -323,9 +323,58 @@ const getRegenerateHistory = async (req, res) => {
   }
 };
 
+const deleteExportHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ExportHistory = require("../../models/exportHistory.model");
+    const RegenerateHistory = require("../../models/regenerateHistory.model");
+    const fs = require("fs");
+    const path = require("path");
+
+    const record = await ExportHistory.findById(id);
+    if (!record) {
+      return res.status(404).json({ success: false, message: "Export history record not found" });
+    }
+
+    // Delete primary file from exports directory if exists
+    if (record.fileName) {
+      const primaryPath = path.join(process.cwd(), "exports", record.fileName);
+      if (fs.existsSync(primaryPath)) {
+        try {
+          fs.unlinkSync(primaryPath);
+        } catch (fileErr) {
+          console.error("Error deleting primary export file:", fileErr);
+        }
+      }
+    }
+
+    // Find and delete all regeneration histories and their files
+    const regenerations = await RegenerateHistory.find({ originalExport: id });
+    for (const regen of regenerations) {
+      if (regen.filePath && fs.existsSync(regen.filePath)) {
+        try {
+          fs.unlinkSync(regen.filePath);
+        } catch (fileErr) {
+          console.error("Error deleting regeneration file:", fileErr);
+        }
+      }
+    }
+    await RegenerateHistory.deleteMany({ originalExport: id });
+
+    // Delete main record
+    await ExportHistory.findByIdAndDelete(id);
+
+    res.json({ success: true, message: "Export history and files deleted successfully" });
+  } catch (error) {
+    console.error("deleteExportHistory error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   exportCompanies,
   getExportHistory,
   regenerateExport,
   getRegenerateHistory,
+  deleteExportHistory,
 };

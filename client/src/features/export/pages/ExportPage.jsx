@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Download, FileDown, Calendar, User, Tag, Search, Filter, History, RefreshCw } from 'lucide-react';
+import { Download, FileDown, Calendar, User, Tag, Search, Filter, History, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../../api/axios';
 import Button from '../../../components/ui/Button';
 import Table from '../../../components/ui/Table';
 import ExportConfigModal from '../../../components/ui/ExportConfigModal';
 import RegenerateHistoryModal from '../../../components/ui/RegenerateHistoryModal';
+import { useAuth } from '../../../hooks/useAuth';
 
 const ExportPage = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [filters, setFilters] = useState({
     country: '',
     city: '',
@@ -26,6 +30,9 @@ const ExportPage = () => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historyModalExportId, setHistoryModalExportId] = useState(null);
   const [historyModalExportData, setHistoryModalExportData] = useState(null);
+
+  const [historyToDelete, setHistoryToDelete] = useState(null);
+  const [isDeletingHistory, setIsDeletingHistory] = useState(false);
 
   // Fetch users for filter
   const { data: usersList = [] } = useQuery({
@@ -215,6 +222,23 @@ const ExportPage = () => {
     });
   };
 
+  const confirmDeleteHistory = async () => {
+    if (!historyToDelete) return;
+
+    try {
+      setIsDeletingHistory(true);
+      await api.delete(`/export/history/${historyToDelete._id}`);
+      toast.success("Export history deleted successfully");
+      setHistoryToDelete(null);
+      refetchHistory();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to delete export history");
+    } finally {
+      setIsDeletingHistory(false);
+    }
+  };
+
   const renderFilters = (exportFilters) => {
     if (!exportFilters || Object.keys(exportFilters).length === 0) {
       return <span className="text-gray-400 text-xs">No filters (All Data)</span>;
@@ -311,6 +335,17 @@ const ExportPage = () => {
               </span>
             )}
           </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => setHistoryToDelete(row)}
+              className="inline-flex items-center px-3 py-1.5 border border-red-200 text-xs font-medium rounded-lg shadow-sm text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors h-9"
+              title="Delete Export History"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5 text-red-500" />
+              Delete
+            </button>
+          )}
         </div>
       )
     }
@@ -573,6 +608,54 @@ const ExportPage = () => {
         exportId={historyModalExportId}
         exportData={historyModalExportData}
       />
+
+      {/* Delete Confirmation Modal */}
+      {historyToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-red-50 rounded-full text-red-600">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Delete Export History</h3>
+                <p className="text-sm text-slate-500 mt-0.5">This action cannot be undone.</p>
+              </div>
+            </div>
+            
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              Are you sure you want to permanently delete the export record <span className="font-semibold text-slate-900">"{historyToDelete.fileName}"</span> and the generated file on the server?
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setHistoryToDelete(null)}
+                disabled={isDeletingHistory}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteHistory}
+                disabled={isDeletingHistory}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm shadow-red-200 transition-all disabled:opacity-50"
+              >
+                {isDeletingHistory ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Confirm Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 
 import api from "../../../api/axios";
 import { queryClient } from "../../../api/queryClient";
@@ -58,6 +58,7 @@ const companySchema = z.object({
   ]),
 
   contacts: z.array(contactSchema).optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 const CreateCompanyModal = ({
@@ -85,6 +86,74 @@ const CreateCompanyModal = ({
     name: "contacts",
   });
 
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Fetch all existing tags from backend
+  const { data: tagsData } = useQuery({
+    queryKey: ["tags"],
+    queryFn: () => api.get("/tag").then((res) => res.data),
+    enabled: isOpen,
+  });
+
+  const allTags = tagsData?.tags || tagsData || [];
+
+  // Reset tags when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedTags([]);
+      setSearchText("");
+      setIsDropdownOpen(false);
+    }
+  }, [isOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filter tags based on search input
+  const filteredTags = allTags.filter((tag) => {
+    const matchesSearch = tag.name.toLowerCase().includes(searchText.toLowerCase());
+    const isAlreadySelected = selectedTags.some(
+      (name) => name.toLowerCase() === tag.name.toLowerCase()
+    );
+    return matchesSearch && !isAlreadySelected;
+  });
+
+  // Check if current search matches an existing tag exactly
+  const hasExactMatch = allTags.some(
+    (tag) => tag.name.toLowerCase() === searchText.trim().toLowerCase()
+  );
+
+  const handleAddTag = (tagName) => {
+    const trimmed = tagName.trim();
+    if (!trimmed) return;
+    
+    // Check for duplicates case-insensitively
+    if (selectedTags.some((name) => name.toLowerCase() === trimmed.toLowerCase())) {
+      setSearchText("");
+      setIsDropdownOpen(false);
+      return;
+    }
+
+    setSelectedTags([...selectedTags, trimmed]);
+    setSearchText("");
+    setIsDropdownOpen(false);
+  };
+
+  const handleRemoveTag = (tagName) => {
+    setSelectedTags(selectedTags.filter((name) => name !== tagName));
+  };
+
   const createMutation = useMutation({
     mutationFn: (data) =>
       api.post("/company", data),
@@ -99,6 +168,7 @@ const CreateCompanyModal = ({
       );
 
       reset();
+      setSelectedTags([]);
 
       onClose();
     },
@@ -122,6 +192,7 @@ const CreateCompanyModal = ({
         payload[key] = value;
       }
     }
+    payload.tags = selectedTags;
 
     createMutation.mutate(payload);
   };
@@ -202,14 +273,98 @@ const CreateCompanyModal = ({
           />
         </div>
 
-        {/* Owner */}
-        <div className="grid grid-cols-1 gap-4">
+        {/* Owner + Tags */}
+        <div className="grid grid-cols-2 gap-4">
           <Input
             label="Company Owner Name"
             placeholder="Enter owner/founder name"
             {...register("companyOwnerName")}
             error={errors.companyOwnerName?.message}
           />
+
+          <div className="relative animate-fadeIn" ref={dropdownRef}>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              Tags
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Type tag name..."
+                value={searchText}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setIsDropdownOpen(true);
+                }}
+                onFocus={() => setIsDropdownOpen(true)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 text-sm bg-white h-10"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && searchText.trim()) {
+                    e.preventDefault();
+                    if (filteredTags.length > 0) {
+                      handleAddTag(filteredTags[0].name);
+                    } else if (!hasExactMatch) {
+                      handleAddTag(searchText);
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            {/* Custom Dropdown list */}
+            {isDropdownOpen && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                {filteredTags.map((tag) => (
+                  <button
+                    key={tag._id}
+                    type="button"
+                    onClick={() => handleAddTag(tag.name)}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-50 last:border-0"
+                  >
+                    <span>{tag.name}</span>
+                  </button>
+                ))}
+
+                {/* Create On-The-Fly Option */}
+                {searchText.trim() && !hasExactMatch && (
+                  <button
+                    type="button"
+                    onClick={() => handleAddTag(searchText)}
+                    className="w-full text-left px-3 py-2 text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center gap-2 font-medium"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Create "{searchText.trim()}"</span>
+                  </button>
+                )}
+
+                {filteredTags.length === 0 && (!searchText.trim() || hasExactMatch) && (
+                  <div className="p-3 text-xs text-gray-500 text-center">
+                    No matching tags.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Selected Tags list */}
+            {selectedTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2 p-2 border border-gray-200 bg-gray-50 rounded-lg max-h-24 overflow-y-auto">
+                {selectedTags.map((name) => (
+                  <span
+                    key={name}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-full text-xs font-semibold"
+                  >
+                    <span>{name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(name)}
+                      className="hover:bg-indigo-100 p-0.5 rounded-full text-indigo-500 hover:text-indigo-700 transition"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Turnover + Source */}
