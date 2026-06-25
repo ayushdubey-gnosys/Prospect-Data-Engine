@@ -555,186 +555,189 @@ const CompaniesPage = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* =========================
-          Header
-      ========================== */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Companies
-          </h1>
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] min-h-[550px] space-y-4">
+      {/* Top Fixed Controls Section */}
+      <div className="shrink-0 space-y-4">
+        {/* =========================
+            Header
+        ========================== */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Companies
+            </h1>
 
-          <p className="text-sm text-gray-500 mt-1">
-            Manage your centralized company database.
-          </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Manage your centralized company database.
+            </p>
+          </div>
+
+          <div className="flex gap-3 shrink-0">
+            {(role === 'admin' || role === 'marketing') && (
+              <Button
+                onClick={handleExport}
+                variant="secondary"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export Excel
+              </Button>
+            )}
+
+            {role === 'admin' && (
+              <Button
+                onClick={() => setIsTargetListModalOpen(true)}
+                variant="secondary"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Target List
+              </Button>
+            )}
+
+            {(role === 'admin' || role === 'sales') && (
+              <Button
+                onClick={() => setIsModalOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Company
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="flex gap-3 shrink-0">
-          {(role === 'admin' || role === 'marketing') && (
-            <Button
-              onClick={handleExport}
-              variant="secondary"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export Excel
-            </Button>
-          )}
-
-          {role === 'admin' && (
-            <Button
-              onClick={() => setIsTargetListModalOpen(true)}
-              variant="secondary"
-            >
-              <Target className="w-4 h-4 mr-2" />
-              Target List
-            </Button>
-          )}
-
-          {(role === 'admin' || role === 'sales') && (
-            <Button
-              onClick={() => setIsModalOpen(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Company
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
-        {/* Top Controls: Search and Limit */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="relative flex-1 max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
+          {/* Top Controls: Search and Limit */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-between">
+            <div className="relative flex-1 max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Search companies by name..."
+                value={filters.search}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              />
             </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="Search companies by name..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            />
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-sm font-medium text-gray-700">Rows per page:</span>
+              <select
+                className="border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer"
+                value={limitPerPage}
+                onChange={(e) => {
+                  setLimitPerPage(Number(e.target.value));
+                  setPage(1);
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={150}>150</option>
+              </select>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-sm font-medium text-gray-700">Rows per page:</span>
-            <select
-              className="border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer"
-              value={limitPerPage}
-              onChange={(e) => {
-                setLimitPerPage(Number(e.target.value));
-                setPage(1);
-              }}
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 items-end">
+            {/* Tag */}
+            <div className="w-full sm:w-auto flex-1 min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tag</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+                value={filters.tag}
+                onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
+              >
+                <option value="">All Tags</option>
+                {tagsList.map((t) => <option key={t._id} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+
+            {/* Country */}
+            <div className="w-full sm:w-auto flex-1 min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+                value={filters.country}
+                onChange={(e) => setFilters({ ...filters, country: e.target.value, city: '', industry: '' })}
+              >
+                <option value="">All Countries</option>
+                {countriesList.map((country) => <option key={country} value={country}>{country}</option>)}
+              </select>
+            </div>
+
+            {/* City */}
+            <div className="w-full sm:w-auto flex-1 min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+                value={filters.city}
+                onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+              >
+                <option value="">All Cities</option>
+                {citiesList.map((city) => <option key={city} value={city}>{city}</option>)}
+              </select>
+            </div>
+
+            {/* Industry */}
+            <div className="w-full sm:w-auto flex-1 min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+                value={filters.industry}
+                onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
+              >
+                <option value="">All Industries</option>
+                {industriesList.map((industry) => <option key={industry} value={industry}>{industry}</option>)}
+              </select>
+            </div>
+
+            {/* Reset Button */}
+            <Button
+              type="button"
+              onClick={() => setFilters({ search: '', city: '', industry: '', country: '', tag: '' })}
+              variant="secondary"
+              className="w-full sm:w-auto shrink-0"
             >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={150}>150</option>
-            </select>
+              Reset
+            </Button>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-end">
-          {/* Tag */}
-          <div className="w-full sm:w-auto flex-1 min-w-[150px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tag</label>
-            <select
-              className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
-              value={filters.tag}
-              onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
-            >
-              <option value="">All Tags</option>
-              {tagsList.map((t) => <option key={t._id} value={t.name}>{t.name}</option>)}
-            </select>
+        {/* =========================
+            Bulk Selection Banner
+        ========================== */}
+        {(role === 'admin' || role === 'sales') && selectedIds.length > 0 && (
+          <div className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-100 rounded-xl shadow-sm animate-pulse-subtle">
+            <div className="flex items-center gap-2 text-indigo-950 font-semibold text-sm">
+              <span>{selectedIds.length} {selectedIds.length === 1 ? "company" : "companies"} selected</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                onClick={() => handleOpenTagAssignment(selectedIds, [])}
+                className="bg-indigo-600 hover:bg-indigo-700 focus-visible:ring-indigo-600"
+              >
+                <Tag className="w-4 h-4 mr-2" /> Assign Tags
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedIds([])}
+                className="border-indigo-200 text-indigo-700 hover:bg-indigo-100/50"
+              >
+                Deselect All
+              </Button>
+            </div>
           </div>
-
-          {/* Country */}
-          <div className="w-full sm:w-auto flex-1 min-w-[150px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-            <select
-              className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
-              value={filters.country}
-              onChange={(e) => setFilters({ ...filters, country: e.target.value, city: '', industry: '' })}
-            >
-              <option value="">All Countries</option>
-              {countriesList.map((country) => <option key={country} value={country}>{country}</option>)}
-            </select>
-          </div>
-
-          {/* City */}
-          <div className="w-full sm:w-auto flex-1 min-w-[150px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-            <select
-              className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
-              value={filters.city}
-              onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-            >
-              <option value="">All Cities</option>
-              {citiesList.map((city) => <option key={city} value={city}>{city}</option>)}
-            </select>
-          </div>
-
-          {/* Industry */}
-          <div className="w-full sm:w-auto flex-1 min-w-[150px]">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
-            <select
-              className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
-              value={filters.industry}
-              onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
-            >
-              <option value="">All Industries</option>
-              {industriesList.map((industry) => <option key={industry} value={industry}>{industry}</option>)}
-            </select>
-          </div>
-
-          {/* Reset Button */}
-          <Button
-            type="button"
-            onClick={() => setFilters({ search: '', city: '', industry: '', country: '', tag: '' })}
-            variant="secondary"
-            className="w-full sm:w-auto shrink-0"
-          >
-            Reset
-          </Button>
-        </div>
+        )}
       </div>
-
-      {/* =========================
-          Bulk Selection Banner
-      ========================== */}
-      {(role === 'admin' || role === 'sales') && selectedIds.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-indigo-50 border border-indigo-100 rounded-xl shadow-sm animate-pulse-subtle">
-          <div className="flex items-center gap-2 text-indigo-950 font-semibold text-sm">
-            <span>{selectedIds.length} {selectedIds.length === 1 ? "company" : "companies"} selected</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              size="sm"
-              onClick={() => handleOpenTagAssignment(selectedIds, [])}
-              className="bg-indigo-600 hover:bg-indigo-700 focus-visible:ring-indigo-600"
-            >
-              <Tag className="w-4 h-4 mr-2" /> Assign Tags
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setSelectedIds([])}
-              className="border-indigo-200 text-indigo-700 hover:bg-indigo-100/50"
-            >
-              Deselect All
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* =========================
           Companies Table
       ========================== */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
         <Table
           columns={columns}
           data={companies}
@@ -744,7 +747,7 @@ const CompaniesPage = () => {
 
         {/* Pagination Footer */}
         {total > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-t border-gray-100">
+          <div className="shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <div className="text-xs sm:text-sm text-gray-500 font-medium">
                 Showing <span className="font-semibold text-gray-700">{limit === 'all' ? 1 : Math.min((page - 1) * limit + 1, total)}</span> to{" "}
@@ -809,7 +812,9 @@ const CompaniesPage = () => {
           </div>
         )}
 
-        <StatusLegendIndicator />
+        <div className="shrink-0">
+          <StatusLegendIndicator />
+        </div>
       </div>
 
       {/* =========================

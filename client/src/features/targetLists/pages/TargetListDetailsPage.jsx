@@ -271,8 +271,9 @@ const TargetListDetailsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] min-h-[550px] space-y-4">
+      {/* Top Fixed Section */}
+      <div className="shrink-0 space-y-4">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col xl:flex-row items-start justify-between gap-6 w-full">
           
           {/* Left Side: Title */}
@@ -326,7 +327,7 @@ const TargetListDetailsPage = () => {
               <span>Priority: <span className="font-semibold">{targetList?.priority || 'Medium'}</span></span>
             </div>
 
-            {/* Filters (Full text wrap without truncation) */}
+            {/* Filters */}
             <div className="w-full mt-1">
               <div className="flex items-start gap-2 bg-green-50 text-green-800 px-3 py-2.5 rounded-lg border border-green-200 shadow-sm">
                 <Search className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
@@ -349,59 +350,59 @@ const TargetListDetailsPage = () => {
               Repopulate
             </Button>
           </div>
-          
         </div>
+
+        {statsData && (
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div 
+              onClick={() => setFilterStat('')}
+              className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === '' ? 'ring-2 ring-zinc-400 border-transparent' : 'border-gray-100'}`}
+            >
+              <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Total Targets</span>
+              <span className="text-2xl font-bold text-gray-900">{statsData.totalTargets}</span>
+            </div>
+            <div 
+              onClick={() => setFilterStat('assigned')}
+              className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'assigned' ? 'ring-2 ring-blue-600 border-transparent' : 'border-gray-100'}`}
+            >
+              <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Assigned Leads</span>
+              <span className="text-2xl font-bold text-blue-600">{statsData.assignedLeads}</span>
+            </div>
+            <div 
+              onClick={() => setFilterStat('unassigned')}
+              className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'unassigned' ? 'ring-2 ring-orange-500 border-transparent' : 'border-gray-100'}`}
+            >
+              <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Unassigned</span>
+              <span className="text-2xl font-bold text-orange-500">{statsData.unassignedLeads}</span>
+            </div>
+            <div 
+              onClick={() => setFilterStat('active_followups')}
+              className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'active_followups' ? 'ring-2 ring-purple-600 border-transparent' : 'border-gray-100'}`}
+            >
+              <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Active Follow-ups</span>
+              <span className="text-2xl font-bold text-purple-600">{statsData.activeFollowUps}</span>
+            </div>
+            <div 
+              onClick={() => setFilterStat('won')}
+              className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'won' ? 'ring-2 ring-green-500 border-transparent' : 'border-gray-100'}`}
+            >
+              <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Won Opps</span>
+              <span className="text-2xl font-bold text-green-500">{statsData.wonOpportunities}</span>
+            </div>
+            <div 
+              onClick={() => setFilterStat('lost')}
+              className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'lost' ? 'ring-2 ring-red-500 border-transparent' : 'border-gray-100'}`}
+            >
+              <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Lost Opps</span>
+              <span className="text-2xl font-bold text-red-500">{statsData.lostOpportunities}</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {statsData && (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
-          <div 
-            onClick={() => setFilterStat('')}
-            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === '' ? 'ring-2 ring-zinc-400 border-transparent' : 'border-gray-100'}`}
-          >
-            <span className="text-gray-500 text-xs font-semibold  uppercase tracking-wider mb-1">Total Targets</span>
-            <span className="text-2xl font-bold text-gray-900">{statsData.totalTargets}</span>
-          </div>
-          <div 
-            onClick={() => setFilterStat('assigned')}
-            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'assigned' ? 'ring-2 ring-blue-600 border-transparent' : 'border-gray-100'}`}
-          >
-            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Assigned Leads</span>
-            <span className="text-2xl font-bold text-blue-600">{statsData.assignedLeads}</span>
-          </div>
-          <div 
-            onClick={() => setFilterStat('unassigned')}
-            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'unassigned' ? 'ring-2 ring-orange-500 border-transparent' : 'border-gray-100'}`}
-          >
-            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Unassigned</span>
-            <span className="text-2xl font-bold text-orange-500">{statsData.unassignedLeads}</span>
-          </div>
-          <div 
-            onClick={() => setFilterStat('active_followups')}
-            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'active_followups' ? 'ring-2 ring-purple-600 border-transparent' : 'border-gray-100'}`}
-          >
-            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Active Follow-ups</span>
-            <span className="text-2xl font-bold text-purple-600">{statsData.activeFollowUps}</span>
-          </div>
-          <div 
-            onClick={() => setFilterStat('won')}
-            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'won' ? 'ring-2 ring-green-500 border-transparent' : 'border-gray-100'}`}
-          >
-            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Won Opps</span>
-            <span className="text-2xl font-bold text-green-500">{statsData.wonOpportunities}</span>
-          </div>
-          <div 
-            onClick={() => setFilterStat('lost')}
-            className={`bg-white rounded-xl shadow-sm border p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-shadow ${filterStat === 'lost' ? 'ring-2 ring-red-500 border-transparent' : 'border-gray-100'}`}
-          >
-            <span className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Lost Opps</span>
-            <span className="text-2xl font-bold text-red-500">{statsData.lostOpportunities}</span>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
+      {/* Table Section */}
+      <div className="flex-1 min-h-0 flex flex-col bg-white p-4 rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
+        <div className="shrink-0 flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-sm font-medium text-gray-700">Rows per page:</span>
             <select
@@ -431,12 +432,12 @@ const TargetListDetailsPage = () => {
             <p className="mt-1">Try clicking 'Repopulate' to run the filters again.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative w-full">
             <Table columns={columns} data={companies} isLoading={isLoading} />
             
             {/* Pagination controls */}
             {totalPages > 1 && (
-              <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 bg-gray-50/50">
+              <div className="shrink-0 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 bg-gray-50/50">
                 <div className="text-sm text-gray-700 font-medium">
                   Showing <span className="font-bold text-gray-900">{((page - 1) * limitPerPage) + 1}</span> to <span className="font-bold text-gray-900">{Math.min(page * limitPerPage, total)}</span> of <span className="font-bold text-gray-900">{total}</span>
                 </div>
@@ -454,7 +455,9 @@ const TargetListDetailsPage = () => {
               </div>
             )}
             
-            <StatusLegendIndicator />
+            <div className="shrink-0">
+              <StatusLegendIndicator />
+            </div>
           </div>
         )}
       </div>

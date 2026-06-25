@@ -119,29 +119,30 @@ const FileDetailsPage = () => {
   };
 
   return (
-    <div className="space-y-6 w-full">
-      <div>
-        <h1 className="text-2xl font-bold">File Details</h1>
-        <p className="text-sm text-gray-500 mt-1">Browse companies from this uploaded file.</p>
-      </div>
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] min-h-[550px] space-y-4 w-full">
+      {/* Top Fixed Section */}
+      <div className="shrink-0 space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold">File Details</h1>
+          <p className="text-sm text-gray-500 mt-1">Browse companies from this uploaded file.</p>
+        </div>
 
-      <div className="w-full">
-        <FilterSidebar
-          cities={cities}
-          industries={industries}
-          countries={countries}
-          tagsList={tagsList}
-          filters={filters}
-          setFilters={setFilters}
-          onReset={handleReset}
-          onExport={handleExport}
-          isExporting={isExporting}
-          canExport={canExport}
-        />
-      </div>
+        <div className="w-full">
+          <FilterSidebar
+            cities={cities}
+            industries={industries}
+            countries={countries}
+            tagsList={tagsList}
+            filters={filters}
+            setFilters={setFilters}
+            onReset={handleReset}
+            onExport={handleExport}
+            isExporting={isExporting}
+            canExport={canExport}
+          />
+        </div>
 
-      <div className="w-full relative">
-        <div className="  flex items-center justify-end mb-3">
+        <div className="flex items-center justify-end">
           <label className="text-sm text-gray-600 mr-2">Rows per page:</label>
           <select
             value={filters.limit}
@@ -154,22 +155,25 @@ const FileDetailsPage = () => {
             <option value={200}>200</option>
           </select>
         </div>
+      </div>
 
+      {/* Table Card Wrapper */}
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative w-full">
         <FileCompaniesTable data={data?.data || []} isLoading={isLoading} emptyMessage="No companies found for this file." />
 
-        <div className="flex items-center justify-between mt-4 px-2">
+        <div className="shrink-0 flex items-center justify-between p-4 bg-gray-50/50 border-t border-gray-100">
           <div className="text-sm text-gray-600">Total: {data?.total || 0}</div>
           <div className="flex items-center gap-2">
             <button
-              className="px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200 disabled:opacity-50"
+              className="px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200 disabled:opacity-50 transition shadow-sm"
               disabled={filters.page <= 1}
               onClick={() => setFilters({ ...filters, page: Math.max(1, filters.page - 1) })}
             >
               Prev
             </button>
-            <div className="px-3 py-1 text-sm">Page {filters.page}</div>
+            <div className="px-3 py-1 text-sm font-medium">Page {filters.page}</div>
             <button
-              className="px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200 disabled:opacity-50"
+              className="px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200 disabled:opacity-50 transition shadow-sm"
               disabled={data && filters.page * filters.limit >= (data.total || 0)}
               onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
             >

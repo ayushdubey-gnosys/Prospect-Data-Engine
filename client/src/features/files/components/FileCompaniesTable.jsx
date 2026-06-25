@@ -256,15 +256,17 @@ const FileCompaniesTable = ({ data, isLoading, emptyMessage }) => {
   const columns = getColumns(user, handleOpenCompany);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative w-full">
       <Table columns={columns} data={data} isLoading={isLoading} emptyMessage={emptyMessage} />
-      <StatusLegendIndicator />
-        <CompanyDetailsModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          companyId={selectedCompanyId}
-          onEditTags={() => {}}
-        />
+      <div className="shrink-0">
+        <StatusLegendIndicator />
+      </div>
+      <CompanyDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        companyId={selectedCompanyId}
+        onEditTags={() => {}}
+      />
     </div>
   );
 };
