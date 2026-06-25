@@ -591,7 +591,7 @@ const CompaniesPage = () => {
             </Button>
           )}
 
-          {role === 'admin' && (
+          {(role === 'admin' || role === 'sales') && (
             <Button
               onClick={() => setIsModalOpen(true)}
             >

@@ -20,7 +20,7 @@ router.get("/stats", protect, getDashboardStats);
 router.get("/charts", protect, getDashboardCharts);
 
 router.post("/bulk-tag", protect, authorize("admin", "sales"), bulkTagCompanies);
-router.post("/", protect, authorize("admin"), createCompany);
+router.post("/", protect, authorize("admin", "sales"), createCompany);
 
 router.get("/", protect, getCompanies);
 

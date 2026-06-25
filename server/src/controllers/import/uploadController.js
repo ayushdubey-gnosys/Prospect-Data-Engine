@@ -215,28 +215,8 @@ const mapRowToCompany = (row) => {
   };
 
   // =======================================
-  // Employee / Contact Data
+  // Employee / Contact Data (strictly contact number only)
   // =======================================
-
-  const employeeName = get([
-    "employee name",
-    "employee",
-    "staff name",
-    "contact person",
-    "person name",
-    "representative",
-    "employee fullname",
-    "contact name",
-  ]);
-
-  const employeePosition = get([
-    "employee position",
-    "designation",
-    "position",
-    "job title",
-    "role",
-    "employee role",
-  ]);
 
   const employeePhone = get([
     "employee contact",
@@ -246,6 +226,22 @@ const mapRowToCompany = (row) => {
     "employee contact number",
     "employee contact no",
     "employee contact no.",
+    "alternate contact",
+    "alternate phone",
+    "alternate mobile",
+    "alternate no",
+    "alternate number",
+    "secondary contact",
+    "secondary phone",
+    "secondary mobile",
+    "other contact",
+    "other phone",
+    "other mobile",
+    "contact 2",
+    "phone 2",
+    "mobile 2",
+    "tel 2",
+    "contact no 2",
     "contact no",
     "contact no.",
     "contact number",
@@ -254,33 +250,14 @@ const mapRowToCompany = (row) => {
     "employee telephone",
   ]);
 
-  const employeeEmail = get([
-    "employee email",
-    "employee mail",
-    "contact email",
-    "person email",
-    "staff email",
-  ]);
-
-  // =======================================
-  // Contacts
-  // =======================================
-
-  if (
-    employeeName ||
-    employeePosition ||
-    employeePhone ||
-    employeeEmail
-  ) {
-    company.contacts = [
-      {
-        name: employeeName || null,
-        position: employeePosition || null,
-        contactNumber: employeePhone || null,
-        email: employeeEmail || null,
-      },
-    ];
-  }
+  company.contacts = [
+    {
+      name: null,
+      position: null,
+      contactNumber: (employeePhone && employeePhone !== company.phone) ? employeePhone : "",
+      email: null,
+    },
+  ];
 
   // =======================================
   // Remove Empty Fields

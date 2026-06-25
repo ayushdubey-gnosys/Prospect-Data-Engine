@@ -213,30 +213,8 @@ const mapRowToCompany = (row) => {
   };
 
   // =======================================
-  // 2. Extract Employee Contact Fields (skip columns consumed by company)
+  // 2. Extract Employee Contact Fields (strictly contact number only)
   // =======================================
-  const employeeName = getExcluding([
-    "employee name",
-    "employee",
-    "staff name",
-    "contact person",
-    "person name",
-    "representative",
-    "employee fullname",
-    "contact name",
-    "name",
-    "person",
-  ]);
-
-  const employeePosition = getExcluding([
-    "employee position",
-    "designation",
-    "position",
-    "job title",
-    "role",
-    "employee role",
-  ]);
-
   const employeePhone = getExcluding([
     "employee contact",
     "employee phone",
@@ -245,6 +223,22 @@ const mapRowToCompany = (row) => {
     "employee contact number",
     "employee contact no",
     "employee contact no.",
+    "alternate contact",
+    "alternate phone",
+    "alternate mobile",
+    "alternate no",
+    "alternate number",
+    "secondary contact",
+    "secondary phone",
+    "secondary mobile",
+    "other contact",
+    "other phone",
+    "other mobile",
+    "contact 2",
+    "phone 2",
+    "mobile 2",
+    "tel 2",
+    "contact no 2",
     "contact no",
     "contact no.",
     "contact number",
@@ -253,38 +247,19 @@ const mapRowToCompany = (row) => {
     "employee telephone",
     "phone",
     "mobile",
+    "telephone",
+    "tel",
+    "contact",
   ]);
 
-  const employeeEmail = getExcluding([
-    "employee email",
-    "employee mail",
-    "contact email",
-    "person email",
-    "staff email",
-    "email",
-    "mail",
-  ]);
-
-  // Only create employee contact if at least one field has a DIFFERENT value than company fields
-  const hasDifferentName = employeeName && employeeName !== company.company_name;
-  const hasDifferentEmail = employeeEmail && employeeEmail !== company.email;
-  const hasDifferentPhone = employeePhone && employeePhone !== company.phone;
-
-  if (
-    hasDifferentName ||
-    hasDifferentEmail ||
-    hasDifferentPhone ||
-    employeePosition
-  ) {
-    company.contacts = [
-      {
-        name: employeeName || null,
-        position: employeePosition || null,
-        contactNumber: (hasDifferentPhone ? employeePhone : null),
-        email: (hasDifferentEmail ? employeeEmail : null),
-      },
-    ];
-  }
+  company.contacts = [
+    {
+      name: null,
+      position: null,
+      contactNumber: employeePhone || "",
+      email: null,
+    },
+  ];
 
   Object.keys(company).forEach((key) => {
     if (
