@@ -117,10 +117,10 @@ const ForgotPasswordPage = () => {
       {/* RIGHT SECTION */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 sm:px-10 lg:px-16 bg-white">
         <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-11 h-11 rounded-2xl bg-black text-white flex items-center justify-center">
-              <Database className="w-5 h-5" />
+          {/* Brand Header */}
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-11 h-11 rounded-2xl bg-black text-white flex items-center justify-center overflow-hidden p-2">
+              <img src="/img.png" alt="PDE Logo" className="w-full h-full object-contain filter brightness-0 invert" />
             </div>
             <div>
               <h1 className="text-xl font-semibold text-gray-900">PDE</h1>
