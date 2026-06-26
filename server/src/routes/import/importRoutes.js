@@ -1,10 +1,12 @@
 const express = require("express");
 
 const { importCSV, getHistory } = require("../../controllers/import/importController");
-const { uploadHandler, confirmImportHandler, cancelImportHandler } = require("../../controllers/import/uploadController");
+const { uploadHandler, confirmImportHandler, cancelImportHandler, sseEventsHandler } = require("../../controllers/import/uploadController");
 const { protect, authorize } = require("../../middleware/authMiddleware");
 
 const router = express.Router();
+
+router.get("/events", protect, authorize("admin", "sales"), sseEventsHandler);
 
 router.post("/csv", protect, authorize("admin", "sales"), importCSV);
 

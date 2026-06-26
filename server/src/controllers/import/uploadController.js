@@ -4,6 +4,7 @@ const multer = require("multer");
 const { Worker } = require("worker_threads");
 
 const fileService = require("../../services/fileService");
+const workerPool = require("../../workers/workerPool");
 const companyService = require("../../services/companyService");
 
 const UploadedFile = require("../../models/uploadedFile.model");
@@ -340,33 +341,46 @@ const uploadHandler = [
       }
 
       // =======================================
-      // Parse file to get duplicate count
+      // Streaming fast-scan for row & duplicate counts (Constant RAM)
       // =======================================
-      const rows = await fileService.parseFile(req.file.path, req.file.mimetype);
-      
-      const companies = rows
-        .map((row) => mapRowToCompany(row))
-        .filter((c) => Object.keys(c).length > 1 && c.company_name);
+      let totalRecordsCount = 0;
+      let duplicateCount = 0;
+      let scanBatch = [];
+      const seenFileKeys = new Set();
+      let mimetype = req.file.mimetype;
+      if (req.file.originalname.endsWith(".xlsx") || req.file.originalname.endsWith(".xls")) {
+        mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      }
 
-      const uniqueCompanies = [];
-      const pairSet = new Set();
-
-      companies.forEach((c) => {
-        const companyName = c.company_name && String(c.company_name).toLowerCase().trim();
-
-        if (companyName) {
-          const key = companyName;
-          if (pairSet.has(key)) {
-            return; 
-          }
-          pairSet.add(key);
+      for await (const rawRow of fileService.streamFileRows(req.file.path, mimetype)) {
+        const company = mapRowToCompany(rawRow);
+        if (!company || Object.keys(company).length <= 1 || !company.company_name) {
+          continue;
         }
-        uniqueCompanies.push(c);
-      });
 
-      // Check against DB
-      const dupCheck = await companyService.checkDuplicateData(uniqueCompanies);
-      const duplicateCount = dupCheck.duplicateCount + (companies.length - uniqueCompanies.length);
+        totalRecordsCount++;
+        const key = company.companyNameNormalized || (company.company_name ? String(company.company_name).toLowerCase().trim() : null);
+        if (key && seenFileKeys.has(key)) {
+          duplicateCount++;
+          continue;
+        }
+        if (key) {
+          seenFileKeys.add(key);
+          scanBatch.push(company);
+        }
+
+        if (scanBatch.length >= 5000) {
+          const dupCheck = await companyService.checkDuplicateData(scanBatch);
+          duplicateCount += dupCheck.duplicateCount;
+          scanBatch = [];
+        }
+      }
+
+      if (scanBatch.length > 0) {
+        const dupCheck = await companyService.checkDuplicateData(scanBatch);
+        duplicateCount += dupCheck.duplicateCount;
+        scanBatch = [];
+      }
 
       // =======================================
       // Create Initial Upload History record (Pending)
@@ -376,7 +390,7 @@ const uploadHandler = [
         fileName: req.file.filename,
         originalName: req.file.originalname,
         sourceType: path.extname(req.file.originalname).replace(".", ""),
-        totalRecords: companies.length, 
+        totalRecords: totalRecordsCount, 
         uploadedBy: req.user ? req.user._id : null,
         uploadPath: req.file.path,
       });
@@ -393,7 +407,7 @@ const uploadHandler = [
         success: true,
         message: "File uploaded successfully. Awaiting confirmation.",
         file: uploadedDoc,
-        totalRecords: companies.length,
+        totalRecords: totalRecordsCount,
         duplicateCount: duplicateCount,
         fileId: uploadedDoc._id
       });
@@ -405,7 +419,7 @@ const uploadHandler = [
 ];
 
 // =======================================
-// Confirm Import Handler (Spawns worker)
+// Confirm Import Handler (Enqueues job into bounded WorkerPool)
 // =======================================
 const confirmImportHandler = async (req, res, next) => {
   try {
@@ -420,43 +434,16 @@ const confirmImportHandler = async (req, res, next) => {
       return res.status(400).json({ message: "File is not in pending status" });
     }
 
-    // Spawn Worker Thread for Processing
-    const workerPath = path.resolve(__dirname, "../../workers/importWorker.js");
-    console.log(`[MAIN THREAD] Spawning worker thread for file upload pipeline: ${uploadedDoc.originalName}`);
-
-    // Since we're not inside the multer middleware, we need to infer mimetype from extension
     let mimetype = "text/csv";
-    if (uploadedDoc.uploadPath.endsWith(".xlsx") || uploadedDoc.uploadPath.endsWith(".xls")) {
+    if (uploadedDoc.uploadPath && (uploadedDoc.uploadPath.endsWith(".xlsx") || uploadedDoc.uploadPath.endsWith(".xls"))) {
       mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     }
 
-    const worker = new Worker(workerPath, {
-      workerData: {
-        filePath: uploadedDoc.uploadPath,
-        fileId: uploadedDoc._id.toString(),
-        MONGO_URI: process.env.MONGO_URI,
-        mimetype: mimetype,
-      },
-    });
-
-    // Main Thread listeners (Fail-safe logging and backup error recovery)
-    worker.on("message", (msg) => {
-      console.log(`[MAIN THREAD] Worker message from file ${uploadedDoc.originalName}:`, msg);
-    });
-
-    worker.on("error", (err) => {
-      console.error(`[MAIN THREAD] Worker thread crashed for file ${uploadedDoc.originalName}:`, err);
-      UploadedFile.findByIdAndUpdate(uploadedDoc._id, {
-        status: "failed",
-        errorMessage: err.message || "Background worker encountered an unexpected execution error.",
-        progress: 100,
-      }).catch((dbErr) => {
-        console.error(`[MAIN THREAD] Failed to log worker error to database:`, dbErr);
-      });
-    });
-
-    worker.on("exit", (code) => {
-      console.log(`[MAIN THREAD] Worker thread for file ${uploadedDoc.originalName} finished with exit code ${code}`);
+    workerPool.addJob({
+      fileId: uploadedDoc._id.toString(),
+      filePath: uploadedDoc.uploadPath,
+      mimetype: mimetype,
+      originalName: uploadedDoc.originalName || uploadedDoc.fileName
     });
 
     return res.status(200).json({
@@ -499,8 +486,23 @@ const cancelImportHandler = async (req, res, next) => {
   }
 };
 
+// =======================================
+// SSE Real-Time Event Stream Handler
+// =======================================
+const sseEventsHandler = (req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no"
+  });
+  res.write("data: {\"connected\": true}\n\n");
+  workerPool.addSSEClient(res);
+};
+
 module.exports = {
   uploadHandler,
   confirmImportHandler,
-  cancelImportHandler
+  cancelImportHandler,
+  sseEventsHandler
 };

@@ -318,190 +318,241 @@ const mapRowToCompany = (row) => {
   return company;
 };
 
+// Helper for formatting ETA seconds into readable string (e.g., "18m" or "45s")
+const formatETA = (seconds) => {
+  if (!seconds || seconds <= 0 || !isFinite(seconds)) return "0s";
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  return `${mins}m ${secs > 0 ? `${secs}s` : ""}`.trim();
+};
+
 // =======================================
-// Worker Main Thread Execution
+// Worker Streaming Main Execution
 // =======================================
 const run = async () => {
   let dbConnection = null;
+  const startTime = Date.now();
+
   try {
-    console.log(`[WORKER] Starting background import task for File ID: ${fileId}`);
-    
-    // 1. Establish database connection for the worker
+    console.log(`[Worker Started] File ID: ${fileId} | Worker PID: ${process.pid}`);
+
     dbConnection = await mongoose.connect(MONGO_URI);
-    console.log(`[WORKER] Connected to MongoDB for file: ${fileId}`);
+    const uploadedDoc = await UploadedFile.findById(fileId);
+    if (!uploadedDoc) {
+      throw new Error(`UploadedFile document not found: ${fileId}`);
+    }
 
-    // Update status to processing
-    await UploadedFile.findByIdAndUpdate(fileId, {
-      status: "processing",
-      progress: 2,
-    });
-
-    // 2. Parse File
     if (!fs.existsSync(filePath)) {
       throw new Error(`Physical file not found at path: ${filePath}`);
     }
 
-    console.log(`[WORKER] Parsing file at path: ${filePath}`);
-    console.time("parseFile");
-    const rows = await fileService.parseFile(filePath, mimetype);
-    console.timeEnd("parseFile");
-    console.log(`[WORKER] Parsed ${rows.length} total rows from file.`);
+    // Configurable chunk size
+    const CHUNK_SIZE = parseInt(process.env.IMPORT_CHUNK_SIZE) || 1000;
+    const totalRecords = uploadedDoc.totalRecords || 0;
+    const estimatedTotalChunks = totalRecords > 0 ? Math.ceil(totalRecords / CHUNK_SIZE) : 1;
 
-    // 3. Map Companies and Filter out invalid/empty ones
-    const companies = rows
-      .map((row) => mapRowToCompany(row))
-      .filter((c) => Object.keys(c).length > 1 && c.company_name);
+    // Resume capability: check last completed offset
+    const startOffset = uploadedDoc.processedRecords || 0;
+    let processedSoFar = startOffset;
+    let totalInserted = uploadedDoc.insertedRecords || 0;
+    let totalUpdated = uploadedDoc.updatedRecords || 0;
+    let totalSkippedDuplicates = uploadedDoc.skippedDuplicates || 0;
+    let currentChunkIndex = Math.floor(startOffset / CHUNK_SIZE);
 
-    await UploadedFile.findByIdAndUpdate(fileId, {
-      totalRecords: companies.length, // Update strictly to valid companies
-      progress: 5,
-    });
-
-    // 4. In-Memory Deduplication (Only consider duplicates when BOTH city and email match)
-    const uniqueCompanies = [];
-    const pairSet = new Set();
-    let inMemoryDuplicatesSkipped = 0;
-
-    companies.forEach((c) => {
-      const companyName = c.company_name && String(c.company_name).toLowerCase().trim();
-
-      if (companyName) {
-        const key = companyName;
-        if (pairSet.has(key)) {
-          inMemoryDuplicatesSkipped++;
-          return; // Skip duplicate in-file when company name already present
-        }
-        pairSet.add(key);
-      }
-
-      uniqueCompanies.push(c);
-    });
-
-    console.log(`[WORKER] Unique companies to process: ${uniqueCompanies.length} (${inMemoryDuplicatesSkipped} in-memory duplicates skipped)`);
-
-    await UploadedFile.findByIdAndUpdate(fileId, {
-      progress: 10,
-    });
-
-    // If no valid companies found, complete immediately
-    if (uniqueCompanies.length === 0) {
-      await UploadedFile.findByIdAndUpdate(fileId, {
-        status: "completed",
-        progress: 100,
-        processedRecords: 0,
-        skippedDuplicates: inMemoryDuplicatesSkipped,
-      });
-      console.log(`[WORKER] Completed task. No companies found to import.`);
-      parentPort.postMessage({ success: true, inserted: 0, updated: 0 });
-      return;
+    if (startOffset > 0) {
+      console.log(`[Resume] Resuming import from checkpoint offset: ${startOffset} rows`);
     }
 
-    // 5. Chunked Processing & DB insertions
-    const CHUNK_SIZE = 5000;
-    let totalInserted = 0;
-    let totalUpdated = 0;
-    let totalSkippedDuplicates = inMemoryDuplicatesSkipped;
-    let processedSoFar = 0;
+    await UploadedFile.findByIdAndUpdate(fileId, {
+      status: "processing",
+      progress: Math.max(1, uploadedDoc.progress || 1)
+    });
 
-    for (let i = 0; i < uniqueCompanies.length; i += CHUNK_SIZE) {
-      const chunk = uniqueCompanies.slice(i, i + CHUNK_SIZE);
+    let batch = [];
+    let rowScanIndex = 0;
+    const localSeenKeys = new Set(); // Fast in-memory intra-file dedup tracking
 
-      // Check duplicates for this chunk based on city+email
-      console.time("duplicateCheck");
-      const dupCheck = await companyService.checkDuplicateData(chunk);
-      console.timeEnd("duplicateCheck");
-
-      // Filter out duplicate records (existing city+email pairs)
-      let chunkToInsert = chunk;
-      if (dupCheck.duplicateCount > 0) {
-        const dupSet = new Set(
-          dupCheck.duplicates
-            .filter((d) => d.company_name)
-            .map((d) => String(d.company_name).toLowerCase().trim())
-        );
-
-        chunkToInsert = chunk.filter((c) => {
-          const companyName = c.company_name && String(c.company_name).toLowerCase().trim();
-          if (companyName) {
-            const key = companyName;
-            return !dupSet.has(key);
-          }
-          // If company name is missing, allow insertion (per business rules)
-          return true;
-        });
+    // Stream file rows with constant memory footprint
+    for await (const rawRow of fileService.streamFileRows(filePath, mimetype)) {
+      const company = mapRowToCompany(rawRow);
+      if (!company || Object.keys(company).length <= 1 || !company.company_name) {
+        continue;
       }
 
-      // Bulk insert non-duplicate records for this chunk
-      if (chunkToInsert.length > 0) {
-        console.time("bulkInsert");
-        const result = await companyService.bulkInsertCompanies(
-          chunkToInsert,
-          fileId
-        );
-        console.timeEnd("bulkInsert");
-        totalInserted += result.inserted || 0;
-        totalUpdated += result.updated || 0;
+      // If resuming, skip rows already completed before crash
+      if (rowScanIndex < startOffset) {
+        rowScanIndex++;
+        if (company.duplicateKey) localSeenKeys.add(company.duplicateKey);
+        continue;
       }
 
-      totalSkippedDuplicates += dupCheck.duplicateCount;
-      processedSoFar += chunk.length;
+      rowScanIndex++;
+      batch.push(company);
 
-      // Calculate progress percentage from 10% to 95%
-      const progressPercent = Math.min(
-        95,
-        10 + Math.round((processedSoFar / uniqueCompanies.length) * 85)
-      );
+      // Process batch when CHUNK_SIZE is reached
+      if (batch.length >= CHUNK_SIZE) {
+        currentChunkIndex++;
+        const { inserted, updated, skipped } = await processBatchChunk(batch, fileId, localSeenKeys);
+        
+        totalInserted += inserted;
+        totalUpdated += updated;
+        totalSkippedDuplicates += skipped;
+        processedSoFar += batch.length;
 
-      // Reduce UploadedFile progress updates: Update every 5 chunks or every 10% increment
-      // For simplicity, update on every 5th chunk or if progress reaches 95
-      const chunkIndex = i / CHUNK_SIZE;
-      if (chunkIndex % 5 === 0 || progressPercent === 95 || processedSoFar === uniqueCompanies.length) {
+        const progressPercent = totalRecords > 0 
+          ? Math.min(99, Math.round((processedSoFar / totalRecords) * 100))
+          : Math.min(99, currentChunkIndex);
+
+        const elapsedSec = (Date.now() - startTime) / 1000;
+        const rowsPerSec = elapsedSec > 0 ? Math.round((processedSoFar - startOffset) / elapsedSec) : 0;
+        const remainingRows = Math.max(0, totalRecords - processedSoFar);
+        const etaSec = rowsPerSec > 0 ? Math.round(remainingRows / rowsPerSec) : 0;
+        const etaFormatted = formatETA(etaSec);
+
+        // Update DB checkpoint and broadcast live progress
         await UploadedFile.findByIdAndUpdate(fileId, {
           processedRecords: processedSoFar,
+          insertedRecords: totalInserted,
+          updatedRecords: totalUpdated,
           skippedDuplicates: totalSkippedDuplicates,
           progress: progressPercent,
+          speed: rowsPerSec,
+          eta: etaSec,
+          lastCheckpoint: processedSoFar
         });
-      }
 
-      console.log(
-        `[WORKER] Chunk parsed: ${processedSoFar}/${uniqueCompanies.length} (${progressPercent}%) - Inserted: ${totalInserted}, Updated: ${totalUpdated}`
-      );
+        parentPort.postMessage({
+          type: "progress",
+          progress: progressPercent,
+          processedRecords: processedSoFar,
+          insertedRecords: totalInserted,
+          updatedRecords: totalUpdated,
+          skippedDuplicates: totalSkippedDuplicates,
+          speed: rowsPerSec,
+          eta: etaSec
+        });
+
+        console.log(`[Chunk ${currentChunkIndex}/${estimatedTotalChunks}] Inserted ${inserted} | Skipped ${skipped} | Progress ${progressPercent}% | ETA ${etaFormatted} | Speed ${rowsPerSec} rows/sec`);
+
+        // Free memory immediately
+        batch = [];
+      }
     }
 
-    // 6. Complete and set status to completed
+    // Process remaining trailing batch
+    if (batch.length > 0) {
+      currentChunkIndex++;
+      const { inserted, updated, skipped } = await processBatchChunk(batch, fileId, localSeenKeys);
+      
+      totalInserted += inserted;
+      totalUpdated += updated;
+      totalSkippedDuplicates += skipped;
+      processedSoFar += batch.length;
+      batch = [];
+    }
+
+    // Final completion update
     await UploadedFile.findByIdAndUpdate(fileId, {
       status: "completed",
       progress: 100,
       processedRecords: processedSoFar,
+      insertedRecords: totalInserted,
+      updatedRecords: totalUpdated,
       skippedDuplicates: totalSkippedDuplicates,
+      speed: 0,
+      eta: 0,
+      lastCheckpoint: processedSoFar
     });
 
-    console.log(`[WORKER] File successfully imported! Total Inserted: ${totalInserted}, Total Updated: ${totalUpdated}, Skipped: ${totalSkippedDuplicates}`);
+    parentPort.postMessage({
+      type: "progress",
+      progress: 100,
+      processedRecords: processedSoFar,
+      insertedRecords: totalInserted,
+      updatedRecords: totalUpdated,
+      skippedDuplicates: totalSkippedDuplicates,
+      speed: 0,
+      eta: 0
+    });
+
+    console.log(`[Completed] File ID: ${fileId} | Total Processed: ${processedSoFar} | Inserted: ${totalInserted} | Skipped Duplicates: ${totalSkippedDuplicates}`);
     parentPort.postMessage({
       success: true,
       inserted: totalInserted,
       updated: totalUpdated,
-      skippedDuplicates: totalSkippedDuplicates,
+      skippedDuplicates: totalSkippedDuplicates
     });
-  } catch (error) {
-    console.error(`[WORKER ERROR]:`, error);
+
+  } catch (err) {
+    console.error(`[Error] Worker failed for File ID: ${fileId}:`, err);
     try {
       await UploadedFile.findByIdAndUpdate(fileId, {
         status: "failed",
-        errorMessage: error.message || "An unexpected error occurred during processing.",
-        progress: 100,
+        errorMessage: err.message || "An unexpected error occurred during processing."
       });
     } catch (dbErr) {
-      console.error(`[WORKER] Failed to write error status to DB:`, dbErr);
+      console.error("[Error] Failed to write failure status to DB:", dbErr);
     }
-    parentPort.postMessage({ success: false, error: error.message });
+    parentPort.postMessage({ success: false, error: err.message });
   } finally {
     if (dbConnection) {
       await mongoose.connection.close();
-      console.log("[WORKER] Database connection closed.");
     }
+    console.log("[Worker Exit] Thread execution finished.");
     process.exit(0);
   }
 };
+
+// Helper function to process individual chunks while preserving existing duplicate business logic
+async function processBatchChunk(chunk, fileId, localSeenKeys) {
+  let skippedCount = 0;
+
+  // 1. Local fast in-memory dedup within chunk
+  const uniqueInChunk = [];
+  for (const c of chunk) {
+    if (c.duplicateKey && localSeenKeys.has(c.duplicateKey)) {
+      skippedCount++;
+      continue;
+    }
+    if (c.duplicateKey) localSeenKeys.add(c.duplicateKey);
+    uniqueInChunk.push(c);
+  }
+
+  if (uniqueInChunk.length === 0) {
+    return { inserted: 0, updated: 0, skipped: skippedCount };
+  }
+
+  // 2. Database covered duplicate check
+  const dupCheck = await companyService.checkDuplicateData(uniqueInChunk);
+  let chunkToInsert = uniqueInChunk;
+
+  if (dupCheck.duplicateCount > 0) {
+    const dupSet = new Set(
+      dupCheck.duplicates
+        .filter((d) => d.company_name)
+        .map((d) => String(d.company_name).toLowerCase().trim())
+    );
+
+    chunkToInsert = uniqueInChunk.filter((c) => {
+      const name = c.company_name && String(c.company_name).toLowerCase().trim();
+      return !name || !dupSet.has(name);
+    });
+  }
+
+  const dbSkipped = uniqueInChunk.length - chunkToInsert.length;
+  skippedCount += dbSkipped;
+
+  let insertedCount = 0;
+  let updatedCount = 0;
+
+  if (chunkToInsert.length > 0) {
+    const writeRes = await companyService.bulkInsertCompanies(chunkToInsert, fileId);
+    insertedCount = writeRes.inserted || 0;
+    updatedCount = writeRes.updated || 0;
+  }
+
+  return { inserted: insertedCount, updated: updatedCount, skipped: skippedCount };
+}
 
 run();

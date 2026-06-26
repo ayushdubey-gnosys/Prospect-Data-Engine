@@ -15,12 +15,17 @@ const uploadedFileSchema = new mongoose.Schema(
     uploadedAt: { type: Date, default: Date.now },
     status: {
       type: String,
-      enum: ["pending", "processing", "completed", "failed"],
+      enum: ["pending", "queued", "processing", "completed", "failed", "paused"],
       default: "pending",
     },
     processedRecords: { type: Number, default: 0 },
+    insertedRecords: { type: Number, default: 0 },
+    updatedRecords: { type: Number, default: 0 },
     skippedDuplicates: { type: Number, default: 0 },
     progress: { type: Number, default: 0 },
+    speed: { type: Number, default: 0 }, // rows/sec
+    eta: { type: Number, default: 0 }, // estimated seconds remaining
+    lastCheckpoint: { type: Number, default: 0 }, // last processed row offset
     errorMessage: { type: String, default: null },
   },
   { timestamps: true },

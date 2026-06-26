@@ -38,11 +38,50 @@ const ImportPage = () => {
   const historyTotalPages = historyResponse?.totalPages || 1;
 
   React.useEffect(() => {
-    const active = history.some((row) => row.status === 'pending' || row.status === 'processing');
+    const active = history.some((row) => row.status === 'pending' || row.status === 'queued' || row.status === 'processing');
     if (active !== hasActiveImports) {
       setHasActiveImports(active);
     }
   }, [history, hasActiveImports]);
+
+  React.useEffect(() => {
+    let eventSource = null;
+    if (hasActiveImports) {
+      const sseUrl = `${api.defaults.baseURL}/import/events`;
+      eventSource = new EventSource(sseUrl, { withCredentials: true });
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.fileId) {
+            queryClient.setQueryData(['importHistory', historyPage, historyLimit, historyUser], (oldData) => {
+              if (!oldData || !oldData.history) return oldData;
+              return {
+                ...oldData,
+                history: oldData.history.map((row) => {
+                  if (row._id === data.fileId) {
+                    return {
+                      ...row,
+                      ...data
+                    };
+                  }
+                  return row;
+                })
+              };
+            });
+            if (data.status === 'completed' || data.status === 'failed') {
+              queryClient.invalidateQueries({ queryKey: ['importHistory'] });
+              queryClient.invalidateQueries({ queryKey: ['files'] });
+            }
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      };
+    }
+    return () => {
+      if (eventSource) eventSource.close();
+    };
+  }, [hasActiveImports, historyPage, historyLimit, historyUser, queryClient]);
 
   const confirmMutation = useMutation({
     mutationFn: (fileId) => api.post(`/import/confirm/${fileId}`),
@@ -152,15 +191,35 @@ const ImportPage = () => {
       accessor: 'totalRecords',
       cell: (row) => {
         if (row.status === 'pending') return <span className="text-amber-600 font-medium text-xs animate-pulse">Pending...</span>;
-        if (row.status === 'processing') return <span className="text-blue-600 font-medium text-xs animate-pulse">Importing ({row.progress || 0}%)</span>;
+        if (row.status === 'queued') return <span className="text-indigo-600 font-medium text-xs animate-pulse">Queued in Pool...</span>;
+        if (row.status === 'processing') {
+          const prog = row.progress || 0;
+          const spd = row.speed ? `${row.speed} rows/s` : 'Calculating...';
+          const etaSec = row.eta || 0;
+          let etaStr = etaSec > 60 ? `${Math.round(etaSec/60)}m left` : `${etaSec}s left`;
+          return (
+            <div className="flex flex-col text-xs w-40">
+              <div className="flex justify-between font-semibold text-blue-700 mb-1">
+                <span>{prog}%</span>
+                <span>{spd}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
+                <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${prog}%` }}></div>
+              </div>
+              <span className="text-gray-500 text-[10px]">{row.processedRecords || 0} / {row.totalRecords || 0} ({etaStr})</span>
+            </div>
+          );
+        }
         
         const total = row.totalRecords || 0;
-        const imported = total; // show total imported as the visible count
+        const inserted = row.insertedRecords !== undefined ? row.insertedRecords : (row.processedRecords || total);
+        const skipped = row.skippedDuplicates || 0;
 
         return (
           <div className="flex flex-col text-xs">
-            <span className="font-semibold text-gray-800">Imported: {imported}</span>
-            <span className="text-gray-500">Total in File: {total}</span>
+            <span className="font-semibold text-green-700">Inserted: {inserted}</span>
+            <span className="text-gray-500">Duplicates: {skipped}</span>
+            <span className="text-gray-400 text-[10px]">Total: {total}</span>
           </div>
         );
       },
@@ -172,6 +231,14 @@ const ImportPage = () => {
           return (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
               <AlertCircle className="w-3 h-3 mr-1" /> Pending
+            </span>
+          );
+        }
+        if (row.status === 'queued') {
+          return (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700">
+              <div className="animate-pulse h-2 w-2 bg-indigo-500 rounded-full mr-1.5"></div>
+              Queued
             </span>
           );
         }

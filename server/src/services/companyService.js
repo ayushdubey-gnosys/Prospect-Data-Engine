@@ -77,16 +77,22 @@ const bulkInsertCompanies = async (
         // by the worker. Here we prepare cleaned documents for insertion.
         return cleanedDoc;
       });
-      // Insert chunk documents directly
+      // Insert chunk documents using high-performance MongoDB bulkWrite
       if (ops.length > 0) {
+        const bulkOps = ops.map((doc) => ({
+          insertOne: {
+            document: doc,
+          },
+        }));
         try {
-          const insertResult = await Company.insertMany(ops, { ordered: false });
-          totalInserted += insertResult.length || 0;
+          const writeResult = await Company.bulkWrite(bulkOps, { ordered: false });
+          totalInserted += writeResult.insertedCount || 0;
         } catch (err) {
-          // insertMany may throw for some duplicates or constraints; log and continue
-          console.error('insertMany error (continuing):', err.message || err);
-          if (err.result && err.result.nInserted) {
-            totalInserted += err.result.nInserted;
+          console.error('bulkWrite error (continuing):', err.message || err);
+          if (err.result && err.result.insertedCount) {
+            totalInserted += err.result.insertedCount;
+          } else if (err.insertedCount) {
+            totalInserted += err.insertedCount;
           }
         }
       }
@@ -390,10 +396,10 @@ const checkDuplicateData = async (companies) => {
 
     if (duplicateKeys.length === 0) continue;
 
-    // Use $in query to find existing duplicates fast using the duplicateKey index
+    // Use covered index scan to find existing duplicates with zero disk I/O
     const existingRecords = await Company.find(
       { duplicateKey: { $in: duplicateKeys } }, 
-      { duplicateKey: 1, company_name: 1, city: 1, email: 1 }
+      { duplicateKey: 1, company_name: 1, city: 1, email: 1, _id: 0 }
     ).lean();
 
     const existingPairSet = new Set(

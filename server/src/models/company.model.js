@@ -213,8 +213,8 @@ companySchema.index({ fileId: 1, phone: 1 });
 
 companySchema.index({ fileId: 1, city: 1 });
 
-// Index for high-performance duplicate checking
-companySchema.index({ duplicateKey: 1 });
+// Index for high-performance covered duplicate checking
+companySchema.index({ duplicateKey: 1, company_name: 1, city: 1, email: 1 });
 companySchema.index({ companyNameNormalized: 1, emailNormalized: 1, cityNormalized: 1 });
 
 companySchema.index({ fileId: 1, industry: 1 });
