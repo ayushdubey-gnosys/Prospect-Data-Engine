@@ -26,39 +26,47 @@ const Navbar = () => {
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm select-none">
+    <header className={`flex shrink-0 items-center justify-between border-b transition-all select-none ${!isAuthenticated ? 'h-20 px-8 sm:px-14 lg:px-20 sticky top-0 z-50 bg-white/85 backdrop-blur-md border-slate-200/80 shadow-sm' : 'h-16 px-8 sm:px-14 lg:px-20 bg-white border-slate-200 shadow-sm'}`}>
 
-      {/* Semi-Bold System Navigation Trace */}
+      {/* Brand Logo & Navigation Trace */}
       {isAuthenticated ? (
-        <div className="flex items-center space-x-3 text-sm">
-          <Terminal className="h-4 w-4 text-slate-800" />
-          <span className="font-semibold text-slate-900 tracking-wider uppercase text-xs">
-            Industrial Data Node
-          </span>
-          <span className="text-slate-300 font-semibold">/</span>
-          <span className="bg-slate-900 text-white font-mono font-semibold px-2 py-0.5 rounded text-xs tracking-wide">
-            {currentPath}
-          </span>
+        <div 
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 text-sm cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <img src="/img.png" alt="PDE Logo" className="h-8 w-auto object-contain" />
+          <div className="flex items-center space-x-2">
+            <span className="font-bold text-slate-900 text-sm tracking-tight">
+              Prospect Data Engine
+            </span>
+            <span className="text-slate-300 font-semibold">/</span>
+            <span className="bg-slate-900 text-white font-mono font-semibold px-2 py-0.5 rounded text-xs tracking-wide">
+              {currentPath}
+            </span>
+          </div>
         </div>
       ) : (
         <div 
           onClick={() => navigate('/')}
-          className="flex flex-col items-start cursor-pointer hover:opacity-80 transition-opacity"
+          className="flex items-center gap-3 cursor-pointer group"
         >
-          <span className="font-bold text-slate-900 tracking-wider uppercase text-lg">
-            Prospect Data Engine
-          </span>
-          <div className="flex items-center space-x-1 text-[10px] text-slate-500 self-end -mt-0.5">
-            <Terminal className="h-3 w-3" />
-            <span className="font-semibold tracking-wide">by Gnosys digital</span>
+          <img src="/img.png" alt="PDE Logo" className="h-10 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-200" />
+          <div className="flex flex-col justify-center -space-y-0.5">
+            <span className="font-extrabold text-slate-900 text-lg tracking-tight">
+              Prospect Data Engine
+            </span>
+            <div className="flex items-center gap-1 text-[11px] font-medium text-slate-500 tracking-wide">
+              <Terminal className="h-3 w-3 text-indigo-600" />
+              <span>by Gnosys digital</span>
+            </div>
           </div>
         </div>
       )}
 
-        {/* Operator Credentials & Actions */}
+      {/* Operator Credentials & Actions */}
       <div className="flex items-center space-x-6">
 
-        {/* User Operator Identity Box - Semi-Bold Contrast */}
+        {/* User Operator Identity Box */}
         {isAuthenticated && (
           <div className="flex items-center space-x-3 border-r border-slate-200 pr-6">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm">
@@ -77,20 +85,22 @@ const Navbar = () => {
         )}
 
         <div className="flex items-center space-x-3">
-          {!isAuthenticated && (
-            <button
-              onClick={() => navigate('/about')}
-              className="
-                text-sm font-semibold text-slate-600 hover:text-slate-900
-                px-3 py-1.5 transition-colors duration-150
-              "
-            >
-              About PDE
-            </button>
-          )}
-          
-          {/* Action Trigger: Disconnect or Sign In */}
-          {isAuthenticated ? (
+          {!isAuthenticated ? (
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/about')}
+                className="text-sm font-semibold text-slate-600 hover:text-indigo-600 px-3 py-2 transition-colors cursor-pointer"
+              >
+                About PDE
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-semibold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+              >
+                Sign In
+              </button>
+            </div>
+          ) : (
             <button
               onClick={handleLogout}
               className="
@@ -98,24 +108,11 @@ const Navbar = () => {
                 hover:text-red-700 bg-slate-50 hover:bg-red-50 
                 border border-slate-200 hover:border-red-200 
                 rounded-lg px-3 py-1.5 transition-all duration-150 
-                focus:outline-none focus:ring-2 focus:ring-red-500
+                focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer
               "
             >
               <LogOut className="h-4 w-4 mr-2 text-slate-500 shrink-0" />
               Disconnect
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate('/login')}
-              className="
-                flex items-center text-sm font-semibold text-slate-700 
-                hover:text-blue-700 bg-slate-50 hover:bg-blue-50 
-                border border-slate-200 hover:border-blue-200 
-                rounded-lg px-4 py-1.5 transition-all duration-150 
-                focus:outline-none focus:ring-2 focus:ring-blue-500
-              "
-            >
-              Sign In
             </button>
           )}
         </div>

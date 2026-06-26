@@ -41,16 +41,14 @@ const Sidebar = () => {
       {/* Top Brands & Navigation */}
       <div>
         {/* Brand Header - Clean Compact Height */}
-        <NavLink to="/" className="h-16 px-5 flex items-center border-b border-[#1f2937] bg-[#0b0f19] cursor-pointer hover:bg-[#111827] transition-colors">
+        <NavLink to="/" className="h-16 px-5 flex items-center bg-[#0b0f19] cursor-pointer hover:bg-[#111827] transition-colors">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-md shadow-blue-900/40">
-              <Layers className="w-4 h-4 text-white" />
-            </div>
+            <img src="/img.png" alt="PDE Logo" className="w-8 h-8 object-contain drop-shadow" />
             <div>
-              <h1 className="text-[14px] font-semibold text-slate-100 tracking-wider uppercase">
-                Prospect Engine
+              <h1 className="text-[13.5px] font-bold text-slate-100 tracking-tight leading-none">
+                Prospect Data Engine
               </h1>
-              <p className="text-[10px] font-medium text-slate-500 tracking-wide mt-0.5">
+              <p className="text-[10px] font-medium text-slate-500 tracking-wide mt-1">
                 Centralized Data Hub
               </p>
             </div>
