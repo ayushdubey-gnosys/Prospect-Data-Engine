@@ -341,74 +341,40 @@ const uploadHandler = [
       }
 
       // =======================================
-      // Streaming fast-scan for row & duplicate counts (Constant RAM)
+      // Instant Upload Response (< 2 seconds, zero main-thread pre-scan)
       // =======================================
-      let totalRecordsCount = 0;
-      let duplicateCount = 0;
-      let scanBatch = [];
-      const seenFileKeys = new Set();
       let mimetype = req.file.mimetype;
-      if (req.file.originalname.endsWith(".xlsx") || req.file.originalname.endsWith(".xls")) {
+      if (req.file.originalname && (req.file.originalname.endsWith(".xlsx") || req.file.originalname.endsWith(".xls"))) {
         mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
       }
-
-      for await (const rawRow of fileService.streamFileRows(req.file.path, mimetype)) {
-        const company = mapRowToCompany(rawRow);
-        if (!company || Object.keys(company).length <= 1 || !company.company_name) {
-          continue;
-        }
-
-        totalRecordsCount++;
-        const key = company.companyNameNormalized || (company.company_name ? String(company.company_name).toLowerCase().trim() : null);
-        if (key && seenFileKeys.has(key)) {
-          duplicateCount++;
-          continue;
-        }
-        if (key) {
-          seenFileKeys.add(key);
-          scanBatch.push(company);
-        }
-
-        if (scanBatch.length >= 5000) {
-          const dupCheck = await companyService.checkDuplicateData(scanBatch);
-          duplicateCount += dupCheck.duplicateCount;
-          scanBatch = [];
-        }
-      }
-
-      if (scanBatch.length > 0) {
-        const dupCheck = await companyService.checkDuplicateData(scanBatch);
-        duplicateCount += dupCheck.duplicateCount;
-        scanBatch = [];
-      }
-
-      // =======================================
-      // Create Initial Upload History record (Pending)
-      // =======================================
 
       const uploadedDoc = await fileService.saveUploadedFile({
         fileName: req.file.filename,
         originalName: req.file.originalname,
         sourceType: path.extname(req.file.originalname).replace(".", ""),
-        totalRecords: totalRecordsCount, 
+        totalRecords: 0, 
         uploadedBy: req.user ? req.user._id : null,
         uploadPath: req.file.path,
       });
 
-      uploadedDoc.status = "pending";
+      uploadedDoc.status = "queued";
       uploadedDoc.progress = 0;
       await uploadedDoc.save();
 
-      // =======================================
-      // Return Success Response Instantly (Waiting for confirm)
-      // =======================================
+      // Enqueue job immediately into CPU bounded WorkerPool
+      workerPool.addJob({
+        fileId: uploadedDoc._id.toString(),
+        filePath: uploadedDoc.uploadPath,
+        mimetype: mimetype,
+        originalName: uploadedDoc.originalName || uploadedDoc.fileName
+      });
 
       return res.status(200).json({
         success: true,
-        message: "File uploaded successfully. Awaiting confirmation.",
+        message: "File uploaded and queued successfully.",
         file: uploadedDoc,
-        totalRecords: totalRecordsCount,
-        duplicateCount: duplicateCount,
+        totalRecords: 0,
+        duplicateCount: 0,
         fileId: uploadedDoc._id
       });
     } catch (error) {
@@ -419,7 +385,7 @@ const uploadHandler = [
 ];
 
 // =======================================
-// Confirm Import Handler (Enqueues job into bounded WorkerPool)
+// Confirm Import Handler (Idempotent for frontend auto-confirm compatibility)
 // =======================================
 const confirmImportHandler = async (req, res, next) => {
   try {
@@ -430,14 +396,24 @@ const confirmImportHandler = async (req, res, next) => {
       return res.status(404).json({ message: "File not found" });
     }
 
+    if (uploadedDoc.status === "queued" || uploadedDoc.status === "processing" || uploadedDoc.status === "completed") {
+      return res.status(200).json({
+        success: true,
+        message: "Import process already queued/started.",
+      });
+    }
+
     if (uploadedDoc.status !== "pending") {
-      return res.status(400).json({ message: "File is not in pending status" });
+      return res.status(400).json({ message: "File cannot be started from current status." });
     }
 
     let mimetype = "text/csv";
     if (uploadedDoc.uploadPath && (uploadedDoc.uploadPath.endsWith(".xlsx") || uploadedDoc.uploadPath.endsWith(".xls"))) {
       mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     }
+
+    uploadedDoc.status = "queued";
+    await uploadedDoc.save();
 
     workerPool.addJob({
       fileId: uploadedDoc._id.toString(),

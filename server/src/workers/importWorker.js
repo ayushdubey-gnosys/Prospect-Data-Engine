@@ -348,9 +348,11 @@ const run = async () => {
     }
 
     // Configurable chunk size
-    const CHUNK_SIZE = parseInt(process.env.IMPORT_CHUNK_SIZE) || 1000;
-    const totalRecords = uploadedDoc.totalRecords || 0;
-    const estimatedTotalChunks = totalRecords > 0 ? Math.ceil(totalRecords / CHUNK_SIZE) : 1;
+    const CHUNK_SIZE = parseInt(process.env.IMPORT_CHUNK_SIZE) || 2000;
+    const fileSize = fs.statSync(filePath).size || 1000;
+    const estBytesPerRow = (mimetype && mimetype.includes("sheet")) ? 40 : 80;
+    const estimatedTotalRecords = uploadedDoc.totalRecords > 0 ? uploadedDoc.totalRecords : Math.max(1000, Math.round(fileSize / estBytesPerRow));
+    const estimatedTotalChunks = Math.ceil(estimatedTotalRecords / CHUNK_SIZE);
 
     // Resume capability: check last completed offset
     const startOffset = uploadedDoc.processedRecords || 0;
@@ -366,6 +368,7 @@ const run = async () => {
 
     await UploadedFile.findByIdAndUpdate(fileId, {
       status: "processing",
+      totalRecords: estimatedTotalRecords,
       progress: Math.max(1, uploadedDoc.progress || 1)
     });
 
@@ -400,18 +403,17 @@ const run = async () => {
         totalSkippedDuplicates += skipped;
         processedSoFar += batch.length;
 
-        const progressPercent = totalRecords > 0 
-          ? Math.min(99, Math.round((processedSoFar / totalRecords) * 100))
-          : Math.min(99, currentChunkIndex);
+        const progressPercent = Math.min(98, Math.round((processedSoFar / Math.max(processedSoFar + 100, estimatedTotalRecords)) * 100));
 
         const elapsedSec = (Date.now() - startTime) / 1000;
         const rowsPerSec = elapsedSec > 0 ? Math.round((processedSoFar - startOffset) / elapsedSec) : 0;
-        const remainingRows = Math.max(0, totalRecords - processedSoFar);
+        const remainingRows = Math.max(0, estimatedTotalRecords - processedSoFar);
         const etaSec = rowsPerSec > 0 ? Math.round(remainingRows / rowsPerSec) : 0;
         const etaFormatted = formatETA(etaSec);
 
         // Update DB checkpoint and broadcast live progress
         await UploadedFile.findByIdAndUpdate(fileId, {
+          totalRecords: Math.max(estimatedTotalRecords, processedSoFar),
           processedRecords: processedSoFar,
           insertedRecords: totalInserted,
           updatedRecords: totalUpdated,
@@ -425,6 +427,7 @@ const run = async () => {
         parentPort.postMessage({
           type: "progress",
           progress: progressPercent,
+          totalRecords: Math.max(estimatedTotalRecords, processedSoFar),
           processedRecords: processedSoFar,
           insertedRecords: totalInserted,
           updatedRecords: totalUpdated,
@@ -456,6 +459,7 @@ const run = async () => {
     await UploadedFile.findByIdAndUpdate(fileId, {
       status: "completed",
       progress: 100,
+      totalRecords: processedSoFar, // Exact total record count
       processedRecords: processedSoFar,
       insertedRecords: totalInserted,
       updatedRecords: totalUpdated,
@@ -468,6 +472,7 @@ const run = async () => {
     parentPort.postMessage({
       type: "progress",
       progress: 100,
+      totalRecords: processedSoFar,
       processedRecords: processedSoFar,
       insertedRecords: totalInserted,
       updatedRecords: totalUpdated,
