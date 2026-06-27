@@ -21,9 +21,20 @@ import AboutPage from '../features/dashboard/pages/AboutPage';
 import TargetListsPage from '../features/targetLists/pages/TargetListsPage';
 import TargetListDetailsPage from '../features/targetLists/pages/TargetListDetailsPage';
 import LandingPage from '../pages/LandingPage';
+import NotFound from '../pages/NotFound';
+import Spinner from '../components/ui/Spinner';
 
 const AppRoutes = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-900">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -101,7 +112,7 @@ const AppRoutes = () => {
       </Route>
 
       {/* Catch-all route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
