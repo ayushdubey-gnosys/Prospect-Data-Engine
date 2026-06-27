@@ -166,12 +166,12 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
     <div className="fixed inset-0 z-50 overflow-hidden pointer-events-none">
       <div className="absolute inset-0 bg-black/20 pointer-events-auto transition-opacity" onClick={onClose} />
       <div 
-        className="absolute inset-y-0 right-0 bg-white shadow-2xl flex flex-col pointer-events-auto transform transition-transform duration-300"
-        style={{ width: `${drawerWidth}px`, transitionProperty: isResizing ? 'none' : 'transform' }}
+        className="absolute inset-y-0 right-0 bg-white shadow-2xl flex flex-col pointer-events-auto transform transition-transform duration-300 max-w-full w-full sm:w-auto"
+        style={{ width: `min(100vw, ${drawerWidth}px)`, transitionProperty: isResizing ? 'none' : 'transform' }}
       >
         {/* Resize Handle */}
         <div 
-          className="absolute inset-y-0 left-0 w-1.5 cursor-col-resize hover:bg-blue-500/50 active:bg-blue-500 z-50 transition-colors"
+          className="hidden sm:block absolute inset-y-0 left-0 w-1.5 cursor-col-resize hover:bg-blue-500/50 active:bg-blue-500 z-50 transition-colors"
           onMouseDown={(e) => {
              e.preventDefault();
              setIsResizing(true);
@@ -382,7 +382,7 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
         {/* Action Footer - Unified Form */}
         <div className="bg-gray-50/50 border-t border-gray-200 p-4 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
           
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex flex-col sm:flex-row gap-2 mb-2">
             <div className="flex-1">
                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Status</label>
                <select 
@@ -414,7 +414,7 @@ const CompanyTimelineDrawer = ({ isOpen, onClose, companyId, targetListId, targe
 
           <div className="space-y-2 mb-2">
              {newStatus === "Won" && (
-               <div className="grid grid-cols-2 gap-2">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                  <div className="flex flex-col">
                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Deal Value</label>
                    <input type="number" placeholder="e.g. 50000" value={dealValue} onChange={(e) => setDealValue(e.target.value)} className="w-full text-[13px] border border-gray-300 rounded-md px-2.5 py-1.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-colors shadow-sm" />

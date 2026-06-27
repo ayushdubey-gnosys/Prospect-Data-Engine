@@ -555,7 +555,7 @@ const CompaniesPage = () => {
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6.5rem)] min-h-[550px] space-y-4">
+    <div className="flex flex-col h-auto lg:h-[calc(100vh-6.5rem)] min-h-[calc(100vh-6.5rem)] space-y-4">
       {/* Top Fixed Controls Section */}
       <div className="shrink-0 space-y-4">
         {/* =========================
@@ -572,13 +572,14 @@ const CompaniesPage = () => {
             </p>
           </div>
 
-          <div className="flex gap-3 shrink-0">
+          <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
             {(role === 'admin' || role === 'marketing') && (
               <Button
                 onClick={handleExport}
                 variant="secondary"
+                className="flex-1 sm:flex-none justify-center whitespace-nowrap text-xs sm:text-sm px-2.5 py-2"
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 shrink-0" />
                 Export Excel
               </Button>
             )}
@@ -587,8 +588,9 @@ const CompaniesPage = () => {
               <Button
                 onClick={() => setIsTargetListModalOpen(true)}
                 variant="secondary"
+                className="flex-1 sm:flex-none justify-center whitespace-nowrap text-xs sm:text-sm px-2.5 py-2"
               >
-                <Target className="w-4 h-4 mr-2" />
+                <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 shrink-0" />
                 Target List
               </Button>
             )}
@@ -596,34 +598,35 @@ const CompaniesPage = () => {
             {(role === 'admin' || role === 'sales') && (
               <Button
                 onClick={() => setIsModalOpen(true)}
+                className="w-full sm:w-auto sm:flex-none justify-center whitespace-nowrap text-xs sm:text-sm px-3 py-2"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 shrink-0" />
                 Add Company
               </Button>
             )}
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
+        <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
           {/* Top Controls: Search and Limit */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between">
             <div className="relative flex-1 max-w-md">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-gray-400" />
               </div>
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm"
                 placeholder="Search companies by name..."
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               />
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-sm font-medium text-gray-700">Rows per page:</span>
+            <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
+              <span className="text-xs sm:text-sm font-medium text-gray-700">Rows per page:</span>
               <select
-                className="border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer"
+                className="border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer"
                 value={limitPerPage}
                 onChange={(e) => {
                   setLimitPerPage(Number(e.target.value));
@@ -640,12 +643,12 @@ const CompaniesPage = () => {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-4 items-end">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 sm:gap-4 items-end">
             {/* Tag */}
-            <div className="w-full sm:w-auto flex-1 min-w-[150px]">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tag</label>
+            <div className="col-span-1 sm:w-auto flex-1 min-w-[130px]">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Tag</label>
               <select
-                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-xs sm:text-sm"
                 value={filters.tag}
                 onChange={(e) => setFilters({ ...filters, tag: e.target.value })}
               >
@@ -655,10 +658,10 @@ const CompaniesPage = () => {
             </div>
 
             {/* Country */}
-            <div className="w-full sm:w-auto flex-1 min-w-[150px]">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+            <div className="col-span-1 sm:w-auto flex-1 min-w-[130px]">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Country</label>
               <select
-                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-xs sm:text-sm"
                 value={filters.country}
                 onChange={(e) => setFilters({ ...filters, country: e.target.value, city: '', industry: '' })}
               >
@@ -668,10 +671,10 @@ const CompaniesPage = () => {
             </div>
 
             {/* City */}
-            <div className="w-full sm:w-auto flex-1 min-w-[150px]">
-              <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+            <div className="col-span-1 sm:w-auto flex-1 min-w-[130px]">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">City</label>
               <select
-                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-xs sm:text-sm"
                 value={filters.city}
                 onChange={(e) => setFilters({ ...filters, city: e.target.value })}
               >
@@ -681,10 +684,10 @@ const CompaniesPage = () => {
             </div>
 
             {/* Industry */}
-            <div className="w-full sm:w-auto flex-1 min-w-[150px]">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+            <div className="col-span-1 sm:w-auto flex-1 min-w-[130px]">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Industry</label>
               <select
-                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-sm"
+                className="w-full border border-gray-300 rounded-lg p-2 outline-none focus:border-indigo-500 text-xs sm:text-sm"
                 value={filters.industry}
                 onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
               >
@@ -698,7 +701,7 @@ const CompaniesPage = () => {
               type="button"
               onClick={() => setFilters({ search: '', city: '', industry: '', country: '', tag: '' })}
               variant="secondary"
-              className="w-full sm:w-auto shrink-0"
+              className="col-span-2 sm:col-span-1 w-full sm:w-auto shrink-0 py-2 text-xs sm:text-sm"
             >
               Reset
             </Button>
@@ -737,7 +740,7 @@ const CompaniesPage = () => {
       {/* =========================
           Companies Table
       ========================== */}
-      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
+      <div className="flex-1 min-h-[550px] lg:min-h-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
         <Table
           columns={columns}
           data={companies}

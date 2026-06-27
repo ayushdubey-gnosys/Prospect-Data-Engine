@@ -1,12 +1,12 @@
 import React from 'react';
-import { LogOut, User as UserIcon, Terminal } from 'lucide-react';
+import { LogOut, User as UserIcon, Terminal, Menu } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import api from '../api/axios';
 import { queryClient } from '../api/queryClient';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-const Navbar = () => {
+const Navbar = ({ onToggleSidebar, showMenuButton }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,49 +26,60 @@ const Navbar = () => {
   };
 
   return (
-    <header className={`absolute top-0 left-0 right-0 z-50 flex shrink-0 items-center justify-between transition-all select-none bg-white/75 backdrop-blur-xl ${!isAuthenticated ? 'h-20 px-8 sm:px-14 lg:px-20' : 'h-16 px-8 sm:px-14 lg:px-20'}`}>
+    <header className={`absolute top-0 left-0 right-0 z-50 flex shrink-0 items-center justify-between transition-all select-none bg-white/80 backdrop-blur-xl border-b border-slate-100/60 ${!isAuthenticated ? 'min-h-[4.5rem] py-2 sm:py-0 px-3 sm:px-8 lg:px-16 xl:px-20' : 'min-h-[4rem] py-1.5 sm:py-0 px-3 sm:px-8 lg:px-16 xl:px-20'}`}>
 
       {/* Brand Logo & Navigation Trace */}
       {isAuthenticated ? (
-        <div 
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-sm cursor-pointer hover:opacity-80 transition-opacity"
-        >
-          <img src="/img.png" alt="PDE Logo" className="h-8 w-auto object-contain" />
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-900 text-sm tracking-tight">
-              Prospect Data Engine
-            </span>
-            <span className="text-slate-400 font-semibold">/</span>
-            <span className="bg-slate-900 text-white font-mono font-semibold px-2 py-0.5 rounded text-xs tracking-wide">
-              {currentPath}
-            </span>
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 mr-2">
+          {showMenuButton && onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className="lg:hidden p-1.5 -ml-1 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              aria-label="Toggle Sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          )}
+          <div 
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-1.5 sm:gap-2 text-sm cursor-pointer hover:opacity-80 transition-opacity min-w-0"
+          >
+            <img src="/img.png" alt="PDE Logo" className="h-6 sm:h-8 w-auto object-contain shrink-0" />
+            <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
+              <span className="font-bold text-slate-900 text-xs sm:text-sm tracking-tight truncate">
+                Prospect Data Engine
+              </span>
+              <span className="text-slate-400 font-semibold shrink-0 hidden sm:inline">/</span>
+              <span className="bg-slate-900 text-white font-mono font-semibold px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs tracking-wide shrink-0 truncate max-w-[100px] sm:max-w-none">
+                {currentPath}
+              </span>
+            </div>
           </div>
         </div>
       ) : (
         <div 
           onClick={() => navigate('/')}
-          className="flex items-center gap-3 cursor-pointer group"
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 mr-1 shrink"
         >
-          <img src="/img.png" alt="PDE Logo" className="h-10 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-200" />
-          <div className="flex flex-col justify-center -space-y-0.5">
-            <span className="font-extrabold text-slate-900 text-lg tracking-tight">
+          <img src="/img.png" alt="PDE Logo" className="h-7 sm:h-9 md:h-10 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-200 shrink-0" />
+          <div className="flex flex-col justify-center -space-y-0.5 min-w-0">
+            <span className="font-extrabold text-slate-900 text-xs sm:text-base md:text-lg tracking-tight truncate">
               Prospect Data Engine
             </span>
-            <div className="flex items-center gap-1 text-[11px] font-medium text-slate-500 tracking-wide">
-              <Terminal className="h-3 w-3 text-indigo-600" />
-              <span>by Gnosys digital</span>
+            <div className="flex items-center gap-1 text-[9px] sm:text-[11px] font-medium text-slate-500 tracking-wide truncate">
+              <Terminal className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-indigo-600 shrink-0" />
+              <span className="truncate">by Gnosys digital</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Operator Credentials & Actions */}
-      <div className="flex items-center space-x-6">
+      <div className="flex items-center space-x-2 sm:space-x-6 shrink-0">
 
         {/* User Operator Identity Box */}
         {isAuthenticated && (
-          <div className="flex items-center space-x-3 border-r border-slate-200 pr-6">
+          <div className="hidden md:flex items-center space-x-3 border-r border-slate-200 pr-6">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm">
               <UserIcon className="h-4 w-4" />
             </div>
@@ -84,18 +95,18 @@ const Navbar = () => {
           </div>
         )}
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           {!isAuthenticated ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 sm:gap-4">
               <button
                 onClick={() => navigate('/about')}
-                className="text-sm font-semibold text-slate-600 hover:text-indigo-600 px-3 py-2 transition-colors cursor-pointer"
+                className="text-[11px] sm:text-sm font-semibold text-slate-600 hover:text-indigo-600 px-2 sm:px-3 py-1.5 sm:py-2 transition-colors cursor-pointer whitespace-nowrap"
               >
                 About PDE
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-semibold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-semibold text-[11px] sm:text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer whitespace-nowrap"
               >
                 Sign In
               </button>
@@ -104,15 +115,16 @@ const Navbar = () => {
             <button
               onClick={handleLogout}
               className="
-                flex items-center text-sm font-semibold text-slate-700 
+                flex items-center text-xs sm:text-sm font-semibold text-slate-700 
                 hover:text-red-700 bg-slate-50 hover:bg-red-50 
                 border border-slate-200 hover:border-red-200 
-                rounded-lg px-3 py-1.5 transition-all duration-150 
-                focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer
+                rounded-lg px-2.5 sm:px-3 py-1.5 transition-all duration-150 
+                focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer whitespace-nowrap shrink-0
               "
+              title="Disconnect"
             >
-              <LogOut className="h-4 w-4 mr-2 text-slate-500 shrink-0" />
-              Disconnect
+              <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-slate-500 shrink-0" />
+              <span>Disconnect</span>
             </button>
           )}
         </div>

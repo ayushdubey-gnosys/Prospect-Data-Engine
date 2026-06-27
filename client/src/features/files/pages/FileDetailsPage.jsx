@@ -119,7 +119,7 @@ const FileDetailsPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6.5rem)] min-h-[550px] space-y-4 w-full">
+    <div className="flex flex-col h-auto lg:h-[calc(100vh-6.5rem)] min-h-[calc(100vh-6.5rem)] space-y-4 w-full">
       {/* Top Fixed Section */}
       <div className="shrink-0 space-y-4">
         <div>
@@ -158,7 +158,7 @@ const FileDetailsPage = () => {
       </div>
 
       {/* Table Card Wrapper */}
-      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative w-full">
+      <div className="flex-1 min-h-[550px] lg:min-h-0 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative w-full">
         <FileCompaniesTable data={data?.data || []} isLoading={isLoading} emptyMessage="No companies found for this file." />
 
         <div className="shrink-0 flex items-center justify-between p-4 bg-gray-50/50 border-t border-gray-100">

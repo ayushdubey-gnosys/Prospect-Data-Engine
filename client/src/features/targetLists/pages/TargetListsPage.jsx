@@ -118,7 +118,7 @@ const TargetListsPage = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200">
         {/* Search Bar */}
-        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50 rounded-t-2xl">
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-between bg-slate-50/50 rounded-t-2xl">
           <div className="relative flex-1 w-full max-w-md group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input
@@ -126,19 +126,19 @@ const TargetListsPage = () => {
               placeholder="Search target lists by name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
             />
           </div>
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-4 shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-600">Rows:</span>
+              <span className="text-xs sm:text-sm font-medium text-slate-600">Rows:</span>
               <select
                 value={limitPerPage}
                 onChange={(e) => {
                   setLimitPerPage(Number(e.target.value));
                   setPage(1);
                 }}
-                className="pl-3 pr-8 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-sm"
+                className="pl-2.5 pr-6 py-1.5 border border-slate-200 rounded-lg text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-sm"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -146,31 +146,31 @@ const TargetListsPage = () => {
                 <option value={100}>100</option>
               </select>
             </div>
-            <div className="text-sm px-4 py-1.5 bg-white rounded-lg border border-slate-200 text-slate-600 font-semibold shadow-sm">
+            <div className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 bg-white rounded-lg border border-slate-200 text-slate-600 font-semibold shadow-sm">
               <span className="text-blue-600">{totalCount}</span> {totalCount === 1 ? 'list' : 'lists'} found
             </div>
           </div>
         </div>
 
         {isAdmin && (
-          <div className="flex flex-wrap gap-4 items-end bg-slate-50/30 p-4 border-b border-slate-100">
-            <div className="flex-1 min-w-[150px]">
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Created By (Admin)</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 items-end bg-slate-50/30 p-3 sm:p-4 border-b border-slate-100">
+            <div className="w-full">
+              <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wider">Created By (Admin)</label>
               <select
                 value={createdByAdmin}
                 onChange={(e) => setCreatedByAdmin(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
               >
                 <option value="">All Admins</option>
                 {admins.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
               </select>
             </div>
-            <div className="flex-1 min-w-[150px]">
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Assigned Role</label>
+            <div className="w-full">
+              <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wider">Assigned Role</label>
               <select
                 value={assignedRole}
                 onChange={(e) => { setAssignedRole(e.target.value); setAssignedUserId(''); }}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
               >
                 <option value="">All Roles</option>
                 <option value="sales">Sales</option>
@@ -179,12 +179,12 @@ const TargetListsPage = () => {
                 <option value="admin">Admin</option>
               </select>
             </div>
-            <div className="flex-1 min-w-[150px]">
-              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Assigned User</label>
+            <div className="w-full">
+              <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wider">Assigned User</label>
               <select
                 value={assignedUserId}
                 onChange={(e) => setAssignedUserId(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white shadow-sm"
                 disabled={!assignedRole}
               >
                 <option value="">All Users</option>
@@ -218,8 +218,8 @@ const TargetListsPage = () => {
             )}
           </div>
         ) : (
-          <div className="w-full max-md:overflow-x-auto pb-12">
-            <table className="w-full text-left text-sm text-slate-600">
+          <div className="w-full overflow-x-auto pb-12 custom-scrollbar">
+            <table className="w-full min-w-[750px] text-left text-sm text-slate-600">
               <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200 text-[11px] uppercase tracking-wider font-bold">
                 <tr>
                   <th className="py-4 px-6 w-1/4">List Details</th>
@@ -314,7 +314,7 @@ const TargetListsPage = () => {
                       </td>
                     )}
                     <td className="py-5 px-6 text-right">
-                      <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200" onClick={e => e.stopPropagation()}>
                         {isAdmin && (
                           <button
                             onClick={() => {

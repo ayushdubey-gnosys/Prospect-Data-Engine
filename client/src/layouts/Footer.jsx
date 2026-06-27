@@ -4,7 +4,7 @@ import { Terminal, Shield, Cpu, Database, ExternalLink } from 'lucide-react';
 const Footer = () => {
   return (
     <footer className="w-full bg-slate-900 text-slate-300 border-t border-slate-800/80 pt-16 pb-12 mt-auto select-none">
-      <div className="max-w-7xl mx-auto px-8 sm:px-14 lg:px-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-14 lg:px-20">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-14 border-b border-slate-800/80">
           
           {/* Col 1: Brand Info */}

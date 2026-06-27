@@ -111,64 +111,65 @@ const LandingPage = () => {
             className="w-full h-full object-cover object-center opacity-95 sm:opacity-100"
           />
           {/* Frosted white gradient fading from the right side towards left */}
-          <div className="absolute inset-y-0 right-0 w-full lg:w-4/5 bg-gradient-to-l from-white/70 via-white/45 to-transparent" />
+          <div className="absolute inset-0 bg-white/85 sm:bg-transparent" />
+          <div className="absolute inset-y-0 right-0 w-full lg:w-4/5 bg-gradient-to-l from-white via-white/80 to-transparent sm:from-white/70 sm:via-white/45 sm:to-transparent" />
         </div>
 
-        <div className="w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10 flex-1 flex flex-col justify-between pt-24 pb-10 sm:pt-28 sm:pb-16">
-          <div className="space-y-6 max-w-3xl ml-auto text-right flex flex-col items-end my-auto py-8">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 leading-[1.08]">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-10 lg:px-12 relative z-10 flex-1 flex flex-col justify-between pt-24 pb-8 sm:pt-28 sm:pb-16">
+          <div className="space-y-5 sm:space-y-6 max-w-3xl mx-auto sm:ml-auto text-left sm:text-right flex flex-col items-start sm:items-end my-auto py-6 sm:py-8">
+            <h1 className="text-3xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 leading-[1.12] sm:leading-[1.08]">
               The Single Source of Truth for{' '}
               <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
                 Outbound Prospecting.
               </span>
             </h1>
 
-            <p className="text-slate-700 text-lg sm:text-xl leading-relaxed font-medium max-w-2xl">
+            <p className="text-slate-700 text-base sm:text-xl leading-relaxed font-medium max-w-2xl">
               Stop managing scattered Excel spreadsheets and chaotic Drive folders. PDE consolidates multi-user company datasets into one unified database, rapidly scans files to eliminate duplicates automatically, and powers assigned Target List campaigns.
             </p>
 
-            <div className="flex flex-wrap items-center justify-end gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-start sm:justify-end gap-3 sm:gap-4 pt-2 w-full sm:w-auto">
               <button
                 onClick={handleAuthRedirect}
-                className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-base rounded-2xl shadow-md shadow-indigo-600/15 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3 cursor-pointer"
+                className="px-6 sm:px-8 py-3.5 sm:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm sm:text-base rounded-2xl shadow-md shadow-indigo-600/15 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3 cursor-pointer w-full sm:w-auto"
               >
                 <span>{isAuthenticated ? 'Open Centralized Dashboard' : 'Get Started with PDE'}</span>
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               </button>
               <a
                 href="#necessity"
-                className="px-8 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-base rounded-2xl shadow-sm transition-all duration-200 flex items-center gap-2"
+                className="px-6 sm:px-8 py-3.5 sm:py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-sm sm:text-base rounded-2xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 <span>Explore Working</span>
-                <ChevronRight className="h-5 w-5 text-slate-500" />
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500 shrink-0" />
               </a>
             </div>
           </div>
 
           {/* True Sleek Glassmorphism Telemetry Highlights Ribbon */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-slate-200/80 text-xs text-left">
-            <div className="bg-white/45 backdrop-blur-xl p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
-              <div className="text-xl font-semibold text-slate-900 font-mono">Multi-User</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 font-medium">Central DB Consolidation</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 pt-6 sm:pt-8 border-t border-slate-200/80 text-xs text-left">
+            <div className="bg-white/60 sm:bg-white/45 backdrop-blur-xl p-3.5 sm:p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
+              <div className="text-base sm:text-xl font-semibold text-slate-900 font-mono">Multi-User</div>
+              <div className="text-[10px] sm:text-[11px] text-slate-600 mt-0.5 font-medium">Central DB Consolidation</div>
             </div>
-            <div className="bg-white/45 backdrop-blur-xl p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
-              <div className="text-xl font-semibold text-slate-900 font-mono">Rapid Scan</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 font-medium">Full File Scan Dedup</div>
+            <div className="bg-white/60 sm:bg-white/45 backdrop-blur-xl p-3.5 sm:p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
+              <div className="text-base sm:text-xl font-semibold text-slate-900 font-mono">Rapid Scan</div>
+              <div className="text-[10px] sm:text-[11px] text-slate-600 mt-0.5 font-medium">Full File Scan Dedup</div>
             </div>
-            <div className="bg-white/45 backdrop-blur-xl p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
-              <div className="text-xl font-semibold text-slate-900 font-mono">100% Unique</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 font-medium">Zero Duplicate Records</div>
+            <div className="bg-white/60 sm:bg-white/45 backdrop-blur-xl p-3.5 sm:p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
+              <div className="text-base sm:text-xl font-semibold text-slate-900 font-mono">100% Unique</div>
+              <div className="text-[10px] sm:text-[11px] text-slate-600 mt-0.5 font-medium">Zero Duplicate Records</div>
             </div>
-            <div className="bg-white/45 backdrop-blur-xl p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
-              <div className="text-xl font-semibold text-slate-900 font-mono">Regen Engine</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 font-medium">1-Click Filter History</div>
+            <div className="bg-white/60 sm:bg-white/45 backdrop-blur-xl p-3.5 sm:p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
+              <div className="text-base sm:text-xl font-semibold text-slate-900 font-mono">Regen Engine</div>
+              <div className="text-[10px] sm:text-[11px] text-slate-600 mt-0.5 font-medium">1-Click Filter History</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* CONTENT INNER CONTAINER FOR SECTIONS 2-6 */}
-      <div className="w-full max-w-7xl mx-auto space-y-16 sm:space-y-24 py-16 sm:py-24 px-8 sm:px-14 lg:px-20 flex-1">
+      <div className="w-full max-w-7xl mx-auto space-y-16 sm:space-y-24 py-12 sm:py-24 px-4 sm:px-14 lg:px-20 flex-1">
 
       {/* ======================================= */}
       {/* SECTION 2: WHY GROWING TEAMS NEED PDE */}
@@ -436,10 +437,10 @@ const LandingPage = () => {
           <div className="pt-4 relative z-10 space-y-6">
             <button
               onClick={handleAuthRedirect}
-              className="px-10 py-5 bg-white hover:bg-slate-100 text-slate-900 font-semibold text-base sm:text-lg rounded-2xl shadow-xl shadow-white/10 transition-all duration-200 hover:-translate-y-0.5 inline-flex items-center gap-3 cursor-pointer"
+              className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-white hover:bg-slate-100 text-slate-900 font-semibold text-sm sm:text-lg rounded-2xl shadow-xl shadow-white/10 transition-all duration-200 hover:-translate-y-0.5 inline-flex items-center justify-center gap-3 cursor-pointer"
             >
               <span>{isAuthenticated ? 'Open Workspace Dashboard' : 'Enter PDE Workspace Now'}</span>
-              <ArrowRight className="h-5 w-5 text-indigo-600" />
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 shrink-0" />
             </button>
             <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 font-medium pt-2">
               <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Instant Floor Setup</span>

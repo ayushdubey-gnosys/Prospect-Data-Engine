@@ -34,22 +34,22 @@ const NotFound = () => {
         src={notFoundImage}
         alt="404 Page Not Found"
         onLoad={() => setImageLoaded(true)}
-        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${
+        className={`absolute inset-0 w-full h-full object-contain md:object-cover object-center transition-opacity duration-700 ${
           imageLoaded ? 'opacity-100' : 'opacity-0'
         }`}
       />
 
-      {/* Back to Home Button placed below main image text on right side */}
+      {/* Back to Home Button placed below main image text on right side for desktop, bottom center for mobile */}
       <div
-        className={`absolute top-[73%] left-[68%] -translate-x-1/2 z-[9999] transition-all duration-700 ${
+        className={`absolute bottom-12 left-1/2 -translate-x-1/2 md:bottom-auto md:top-[73%] md:left-[68%] md:-translate-x-1/2 z-[9999] transition-all duration-700 ${
           imageLoaded ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
       >
         <button
           onClick={handleBackHome}
-          className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-transparent hover:bg-white/10 text-white font-semibold text-base sm:text-lg shadow-[0_10px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md border border-white/30 hover:border-white/50 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+          className="group inline-flex items-center justify-center gap-2.5 sm:gap-3 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/10 sm:bg-transparent hover:bg-white/15 text-white font-semibold text-sm sm:text-lg shadow-[0_10px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md border border-white/30 hover:border-white/50 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer whitespace-nowrap"
         >
-          <Home className="w-5 h-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
+          <Home className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 group-hover:-translate-y-0.5 shrink-0" />
           <span>Back to Home</span>
         </button>
       </div>

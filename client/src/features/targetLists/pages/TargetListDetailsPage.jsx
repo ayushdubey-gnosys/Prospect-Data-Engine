@@ -271,7 +271,7 @@ const TargetListDetailsPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6.5rem)] min-h-[550px] space-y-4">
+    <div className="flex flex-col h-auto lg:h-[calc(100vh-6.5rem)] min-h-[calc(100vh-6.5rem)] space-y-4">
       {/* Top Fixed Section */}
       <div className="shrink-0 space-y-4">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col xl:flex-row items-start justify-between gap-6 w-full">
@@ -401,7 +401,7 @@ const TargetListDetailsPage = () => {
       </div>
 
       {/* Table Section */}
-      <div className="flex-1 min-h-0 flex flex-col bg-white p-4 rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
+      <div className="flex-1 min-h-[550px] lg:min-h-0 flex flex-col bg-white p-4 rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
         <div className="shrink-0 flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-sm font-medium text-gray-700">Rows per page:</span>
