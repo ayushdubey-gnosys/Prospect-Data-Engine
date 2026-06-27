@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Home } from 'lucide-react';
+import { Home, Loader2 } from 'lucide-react';
 import notFoundImage from '../assets/PNF404.png';
 
 const NotFound = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const handleBackHome = () => {
     if (isAuthenticated) {
@@ -17,16 +18,33 @@ const NotFound = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#030712] select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-[#030712] select-none flex items-center justify-center">
+      {/* Loading Spinner displayed until image fully loads */}
+      {!imageLoaded && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#030712] z-[10000] gap-4">
+          <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+          <span className="text-white/70 text-sm md:text-base font-medium tracking-wide animate-pulse">
+            Loading...
+          </span>
+        </div>
+      )}
+
       {/* Full Screen Background Image */}
       <img
         src={notFoundImage}
         alt="404 Page Not Found"
-        className="absolute inset-0 w-full h-full object-cover object-center"
+        onLoad={() => setImageLoaded(true)}
+        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${
+          imageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
       />
 
       {/* Back to Home Button placed below main image text on right side */}
-      <div className="absolute top-[73%] left-[68%] -translate-x-1/2 z-[9999]">
+      <div
+        className={`absolute top-[73%] left-[68%] -translate-x-1/2 z-[9999] transition-all duration-700 ${
+          imageLoaded ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+      >
         <button
           onClick={handleBackHome}
           className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-transparent hover:bg-white/10 text-white font-semibold text-base sm:text-lg shadow-[0_10px_35px_rgba(0,0,0,0.7)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md border border-white/30 hover:border-white/50 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
