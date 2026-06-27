@@ -26,6 +26,7 @@ const uploadedFileSchema = new mongoose.Schema(
     speed: { type: Number, default: 0 }, // rows/sec
     eta: { type: Number, default: 0 }, // estimated seconds remaining
     lastCheckpoint: { type: Number, default: 0 }, // last processed row offset
+    lastFailedBatch: { type: Number, default: null },
     errorMessage: { type: String, default: null },
   },
   { timestamps: true },

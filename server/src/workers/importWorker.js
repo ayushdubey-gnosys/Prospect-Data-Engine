@@ -348,7 +348,8 @@ const run = async () => {
     }
 
     // Configurable chunk size
-    const CHUNK_SIZE = parseInt(process.env.IMPORT_CHUNK_SIZE) || 2000;
+    const IMPORT_CHUNK_SIZE = parseInt(process.env.IMPORT_CHUNK_SIZE) || 2000;
+    const CHUNK_SIZE = IMPORT_CHUNK_SIZE;
     const fileSize = fs.statSync(filePath).size || 1000;
     const estBytesPerRow = (mimetype && mimetype.includes("sheet")) ? 40 : 80;
     const estimatedTotalRecords = uploadedDoc.totalRecords > 0 ? uploadedDoc.totalRecords : Math.max(1000, Math.round(fileSize / estBytesPerRow));
@@ -391,12 +392,19 @@ const run = async () => {
       }
 
       rowScanIndex++;
+      company._rowNumber = rowScanIndex;
       batch.push(company);
 
       // Process batch when CHUNK_SIZE is reached
       if (batch.length >= CHUNK_SIZE) {
         currentChunkIndex++;
-        const { inserted, updated, skipped } = await processBatchChunk(batch, fileId, localSeenKeys);
+        const startRow = processedSoFar + 1;
+        const endRow = processedSoFar + batch.length;
+        const { inserted, updated, skipped } = await processBatchChunk(batch, fileId, localSeenKeys, {
+          batchNumber: currentChunkIndex,
+          startRow,
+          endRow
+        });
         
         totalInserted += inserted;
         totalUpdated += updated;
@@ -436,7 +444,7 @@ const run = async () => {
           eta: etaSec
         });
 
-        console.log(`[Chunk ${currentChunkIndex}/${estimatedTotalChunks}] Inserted ${inserted} | Skipped ${skipped} | Progress ${progressPercent}% | ETA ${etaFormatted} | Speed ${rowsPerSec} rows/sec`);
+        console.log(`\nBatch ${currentChunkIndex}/${estimatedTotalChunks}\nRows ${startRow}-${endRow}\nInserted ${inserted}\nSkipped ${skipped}\nProgress ${progressPercent}%\nSpeed ${rowsPerSec} rows/sec\nETA ${etaFormatted}\n`);
 
         // Free memory immediately
         batch = [];
@@ -446,12 +454,25 @@ const run = async () => {
     // Process remaining trailing batch
     if (batch.length > 0) {
       currentChunkIndex++;
-      const { inserted, updated, skipped } = await processBatchChunk(batch, fileId, localSeenKeys);
+      const startRow = processedSoFar + 1;
+      const endRow = processedSoFar + batch.length;
+      const { inserted, updated, skipped } = await processBatchChunk(batch, fileId, localSeenKeys, {
+        batchNumber: currentChunkIndex,
+        startRow,
+        endRow
+      });
       
       totalInserted += inserted;
       totalUpdated += updated;
       totalSkippedDuplicates += skipped;
       processedSoFar += batch.length;
+
+      const progressPercent = Math.min(100, Math.round((processedSoFar / Math.max(processedSoFar, estimatedTotalRecords)) * 100));
+      const elapsedSec = (Date.now() - startTime) / 1000;
+      const rowsPerSec = elapsedSec > 0 ? Math.round((processedSoFar - startOffset) / elapsedSec) : 0;
+      const etaFormatted = "0s";
+
+      console.log(`\nBatch ${currentChunkIndex}/${estimatedTotalChunks}\nRows ${startRow}-${endRow}\nInserted ${inserted}\nSkipped ${skipped}\nProgress ${progressPercent}%\nSpeed ${rowsPerSec} rows/sec\nETA ${etaFormatted}\n`);
       batch = [];
     }
 
@@ -510,7 +531,7 @@ const run = async () => {
 };
 
 // Helper function to process individual chunks while preserving existing duplicate business logic
-async function processBatchChunk(chunk, fileId, localSeenKeys) {
+async function processBatchChunk(chunk, fileId, localSeenKeys, options = {}) {
   let skippedCount = 0;
 
   // 1. Local fast in-memory dedup within chunk
@@ -552,7 +573,10 @@ async function processBatchChunk(chunk, fileId, localSeenKeys) {
   let updatedCount = 0;
 
   if (chunkToInsert.length > 0) {
-    const writeRes = await companyService.bulkInsertCompanies(chunkToInsert, fileId);
+    const writeRes = await companyService.bulkInsertCompanies(chunkToInsert, fileId, {
+      ...options,
+      skippedDuplicates: skippedCount
+    });
     insertedCount = writeRes.inserted || 0;
     updatedCount = writeRes.updated || 0;
   }

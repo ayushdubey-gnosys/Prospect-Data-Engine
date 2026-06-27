@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
 const Company = require("../models/company.model");
+const ImportFailure = require("../models/importFailure.model");
+const FailedBatch = require("../models/failedBatch.model");
+const UploadedFile = require("../models/uploadedFile.model");
 
 // ==========================================
 // BULK INSERT COMPANIES
@@ -7,7 +10,8 @@ const Company = require("../models/company.model");
 
 const bulkInsertCompanies = async (
   companies,
-  fileId
+  fileId,
+  options = {}
 ) => {
   try {
     // ==============================
@@ -48,12 +52,12 @@ const bulkInsertCompanies = async (
     // Process in Chunks
     // ==============================
 
-    const CHUNK_SIZE = 1000;
+    const INSERT_BATCH_SIZE = parseInt(process.env.INSERT_BATCH_SIZE) || 1000;
     let totalInserted = 0;
     let totalUpdated = 0;
 
-    for (let i = 0; i < validCompanies.length; i += CHUNK_SIZE) {
-      const chunk = validCompanies.slice(i, i + CHUNK_SIZE);
+    for (let i = 0; i < validCompanies.length; i += INSERT_BATCH_SIZE) {
+      const chunk = validCompanies.slice(i, i + INSERT_BATCH_SIZE);
 
       const ops = chunk.map((c) => {
         // Clean Undefined Values
@@ -61,6 +65,7 @@ const bulkInsertCompanies = async (
 
         Object.keys(c).forEach((key) => {
           if (
+            key !== "_rowNumber" &&
             c[key] !== undefined &&
             c[key] !== null &&
             c[key] !== ""
@@ -88,11 +93,55 @@ const bulkInsertCompanies = async (
           const writeResult = await Company.bulkWrite(bulkOps, { ordered: false });
           totalInserted += writeResult.insertedCount || 0;
         } catch (err) {
-          console.error('bulkWrite error (continuing):', err.message || err);
-          if (err.result && err.result.insertedCount) {
-            totalInserted += err.result.insertedCount;
-          } else if (err.insertedCount) {
-            totalInserted += err.insertedCount;
+          const insertedBeforeFailure = (err.result && err.result.insertedCount) || err.insertedCount || 0;
+          totalInserted += insertedBeforeFailure;
+
+          const writeErrors = err.writeErrors || (err.result && typeof err.result.getWriteErrors === "function" ? err.result.getWriteErrors() : (err.result && err.result.writeErrors ? err.result.writeErrors : []));
+          const mongoErrorCode = err.code || (writeErrors[0] && writeErrors[0].code) || null;
+          const mongoErrorMessage = err.message || (writeErrors[0] && (writeErrors[0].errmsg || writeErrors[0].message)) || "Bulk write error";
+
+          console.log(`\n[FAILED BATCH]\nFile: ${fileId}\nBatch: ${options.batchNumber || 1}\nRows: ${options.startRow || 0}-${options.endRow || 0}\nInserted: ${insertedBeforeFailure}\nSkipped: ${options.skippedDuplicates || 0}\nReason: ${mongoErrorMessage}\nTimestamp: ${new Date().toISOString()}\n`);
+          console.log(`\nFAILED Batch ${options.batchNumber || 1}\nRows ${options.startRow || 0}-${options.endRow || 0}\nReason ${mongoErrorMessage}\nMongo Code ${mongoErrorCode}\nCheckpoint Saved\n`);
+
+          try {
+            await FailedBatch.create({
+              fileId,
+              batchNumber: options.batchNumber || 1,
+              startRow: options.startRow || 0,
+              endRow: options.endRow || 0,
+              recordsInBatch: chunk.length,
+              insertedBeforeFailure,
+              skippedDuplicates: options.skippedDuplicates || 0,
+              mongoErrorMessage,
+              mongoErrorCode
+            });
+
+            await UploadedFile.findByIdAndUpdate(fileId, {
+              lastFailedBatch: options.batchNumber || 1,
+              errorMessage: mongoErrorMessage
+            });
+          } catch (logErr) {
+            console.error("Error logging failed batch:", logErr.message);
+          }
+
+          if (writeErrors && writeErrors.length > 0) {
+            const failureDocs = writeErrors.map((we) => {
+              const failedOp = chunk[we.index || 0] || {};
+              return {
+                fileId,
+                batchNumber: options.batchNumber || 1,
+                rowNumber: failedOp._rowNumber || (options.startRow ? options.startRow + (we.index || 0) : 0),
+                companyName: failedOp.company_name || null,
+                duplicateKey: failedOp.duplicateKey || null,
+                error: we.errmsg || we.message || String(we),
+                errorCode: we.code || null
+              };
+            });
+            try {
+              await ImportFailure.insertMany(failureDocs, { ordered: false });
+            } catch (failInsertErr) {
+              console.error("Failed to insert into ImportFailures:", failInsertErr.message);
+            }
           }
         }
       }
@@ -378,11 +427,11 @@ const checkDuplicateData = async (companies) => {
   // Process in chunks to avoid too-large queries
   // ==============================
 
-  const CHUNK_SIZE = 5000;
+  const DUPLICATE_BATCH_SIZE = parseInt(process.env.DUPLICATE_BATCH_SIZE) || 5000;
   const duplicates = [];
 
-  for (let i = 0; i < validCompanies.length; i += CHUNK_SIZE) {
-    const chunk = validCompanies.slice(i, i + CHUNK_SIZE);
+  for (let i = 0; i < validCompanies.length; i += DUPLICATE_BATCH_SIZE) {
+    const chunk = validCompanies.slice(i, i + DUPLICATE_BATCH_SIZE);
 
     // Collect all duplicateKeys from this chunk
     const duplicateKeys = [];
