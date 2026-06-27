@@ -111,10 +111,10 @@ const LandingPage = () => {
             className="w-full h-full object-cover object-center opacity-95 sm:opacity-100"
           />
           {/* Frosted white gradient fading from the right side towards left */}
-          <div className="absolute inset-y-0 right-0 w-full lg:w-4/5 bg-gradient-to-l from-white via-white/92 to-transparent" />
+          <div className="absolute inset-y-0 right-0 w-full lg:w-4/5 bg-gradient-to-l from-white/70 via-white/45 to-transparent" />
         </div>
 
-        <div className="w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10 flex-1 flex flex-col justify-between py-10 sm:py-16">
+        <div className="w-full max-w-[1920px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10 flex-1 flex flex-col justify-between pt-24 pb-10 sm:pt-28 sm:pb-16">
           <div className="space-y-6 max-w-3xl ml-auto text-right flex flex-col items-end my-auto py-8">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 leading-[1.08]">
               The Single Source of Truth for{' '}
@@ -123,7 +123,7 @@ const LandingPage = () => {
               </span>
             </h1>
 
-            <p className="text-slate-600 text-lg sm:text-xl leading-relaxed font-normal max-w-2xl">
+            <p className="text-slate-700 text-lg sm:text-xl leading-relaxed font-medium max-w-2xl">
               Stop managing scattered Excel spreadsheets and chaotic Drive folders. PDE consolidates multi-user company datasets into one unified database, rapidly scans files to eliminate duplicates automatically, and powers assigned Target List campaigns.
             </p>
 
@@ -147,21 +147,21 @@ const LandingPage = () => {
 
           {/* True Sleek Glassmorphism Telemetry Highlights Ribbon */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-slate-200/80 text-xs text-left">
-            <div className="bg-white/45 backdrop-blur-lg p-4.5 rounded-2xl border border-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:bg-white/70 transition-all duration-200">
+            <div className="bg-white/45 backdrop-blur-xl p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
               <div className="text-xl font-semibold text-slate-900 font-mono">Multi-User</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 font-normal">Central DB Consolidation</div>
+              <div className="text-[11px] text-slate-600 mt-0.5 font-medium">Central DB Consolidation</div>
             </div>
-            <div className="bg-white/45 backdrop-blur-lg p-4.5 rounded-2xl border border-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:bg-white/70 transition-all duration-200">
-              <div className="text-xl font-semibold text-indigo-700 font-mono">Rapid Scan</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 font-normal">Full File Scan Dedup</div>
+            <div className="bg-white/45 backdrop-blur-xl p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
+              <div className="text-xl font-semibold text-slate-900 font-mono">Rapid Scan</div>
+              <div className="text-[11px] text-slate-600 mt-0.5 font-medium">Full File Scan Dedup</div>
             </div>
-            <div className="bg-white/45 backdrop-blur-lg p-4.5 rounded-2xl border border-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:bg-white/70 transition-all duration-200">
-              <div className="text-xl font-semibold text-blue-700 font-mono">100% Unique</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 font-normal">Zero Duplicate Records</div>
+            <div className="bg-white/45 backdrop-blur-xl p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
+              <div className="text-xl font-semibold text-slate-900 font-mono">100% Unique</div>
+              <div className="text-[11px] text-slate-600 mt-0.5 font-medium">Zero Duplicate Records</div>
             </div>
-            <div className="bg-white/45 backdrop-blur-lg p-4.5 rounded-2xl border border-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:bg-white/70 transition-all duration-200">
-              <div className="text-xl font-semibold text-emerald-700 font-mono">Regen Engine</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 font-normal">1-Click Filter History</div>
+            <div className="bg-white/45 backdrop-blur-xl p-4.5 rounded-2xl shadow-lg hover:bg-white/65 transition-all duration-200">
+              <div className="text-xl font-semibold text-slate-900 font-mono">Regen Engine</div>
+              <div className="text-[11px] text-slate-600 mt-0.5 font-medium">1-Click Filter History</div>
             </div>
           </div>
         </div>

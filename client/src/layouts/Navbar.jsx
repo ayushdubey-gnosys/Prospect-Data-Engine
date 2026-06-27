@@ -26,7 +26,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className={`flex shrink-0 items-center justify-between border-b transition-all select-none ${!isAuthenticated ? 'h-20 px-8 sm:px-14 lg:px-20 sticky top-0 z-50 bg-white/85 backdrop-blur-md border-slate-200/80 shadow-sm' : 'h-16 px-8 sm:px-14 lg:px-20 bg-white border-slate-200 shadow-sm'}`}>
+    <header className={`absolute top-0 left-0 right-0 z-50 flex shrink-0 items-center justify-between transition-all select-none bg-white/75 backdrop-blur-xl ${!isAuthenticated ? 'h-20 px-8 sm:px-14 lg:px-20' : 'h-16 px-8 sm:px-14 lg:px-20'}`}>
 
       {/* Brand Logo & Navigation Trace */}
       {isAuthenticated ? (
@@ -39,7 +39,7 @@ const Navbar = () => {
             <span className="font-bold text-slate-900 text-sm tracking-tight">
               Prospect Data Engine
             </span>
-            <span className="text-slate-300 font-semibold">/</span>
+            <span className="text-slate-400 font-semibold">/</span>
             <span className="bg-slate-900 text-white font-mono font-semibold px-2 py-0.5 rounded text-xs tracking-wide">
               {currentPath}
             </span>

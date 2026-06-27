@@ -12,9 +12,9 @@ const DashboardLayout = () => {
   return (
     <div className="flex h-screen w-full bg-gray-50 overflow-hidden font-sans text-gray-900">
       {isAuthenticated && <Sidebar />}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden relative">
         <Navbar />
-        <main className={`flex-1 overflow-x-hidden overflow-y-auto ${isFullWidth ? 'p-0 bg-white' : 'bg-gray-50 p-6'}`}>
+        <main className={`flex-1 overflow-x-hidden overflow-y-auto no-scrollbar ${isFullWidth ? 'p-0 bg-white' : 'bg-gray-50 p-6 pt-22'}`}>
           <Outlet />
         </main>
       </div>
