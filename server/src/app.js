@@ -15,6 +15,7 @@ const userRoutes = require("./routes/user/userRoutes");
 const targetListRoutes = require("./routes/targetList/targetListRoutes");
 const activityRoutes = require("./routes/activity/activityRoutes");
 const followUpRoutes = require("./routes/followUp/followUpRoutes");
+const notificationRoutes = require("./routes/notification/notificationRoutes");
 
 const errorMiddleware = require("./middleware/errorMiddleware");
 
@@ -99,6 +100,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/target-lists", targetListRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/follow-ups", followUpRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 
 // ======================

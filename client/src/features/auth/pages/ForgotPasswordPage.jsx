@@ -172,6 +172,14 @@ const ForgotPasswordPage = () => {
                 <p className="text-gray-500 mt-2 text-sm leading-relaxed">
                   We sent a code to <span className="font-semibold text-gray-900">{email}</span>.
                 </p>
+                <div className="mt-4 p-3.5 bg-blue-50/80 border border-blue-200 rounded-xl flex gap-3 items-start text-left">
+                  <div className="w-5 h-5 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                    i
+                  </div>
+                  <p className="text-xs text-blue-900 leading-relaxed font-medium">
+                    A one-time verification code has been sent to your email address. If it does not appear in your inbox within a few moments, please ensure you check your <span className="font-semibold underline">Spam or Junk folder</span>.
+                  </p>
+                </div>
               </div>
               <form onSubmit={handleOtpSubmit((data) => verifyOtpMutation.mutate(data))} className="space-y-5">
                 <div>

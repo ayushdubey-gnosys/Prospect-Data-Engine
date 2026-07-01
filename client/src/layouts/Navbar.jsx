@@ -5,6 +5,7 @@ import api from '../api/axios';
 import { queryClient } from '../api/queryClient';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import NotificationBell from '../components/notifications/NotificationBell';
 
 const Navbar = ({ onToggleSidebar, showMenuButton }) => {
   const { user, isAuthenticated } = useAuth();
@@ -112,8 +113,10 @@ const Navbar = ({ onToggleSidebar, showMenuButton }) => {
               </button>
             </div>
           ) : (
-            <button
-              onClick={handleLogout}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <NotificationBell />
+              <button
+                onClick={handleLogout}
               className="
                 flex items-center text-xs sm:text-sm font-semibold text-slate-700 
                 hover:text-red-700 bg-slate-50 hover:bg-red-50 
@@ -126,6 +129,7 @@ const Navbar = ({ onToggleSidebar, showMenuButton }) => {
               <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-slate-500 shrink-0" />
               <span>Disconnect</span>
             </button>
+            </div>
           )}
         </div>
 

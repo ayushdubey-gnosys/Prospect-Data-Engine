@@ -206,6 +206,24 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "User with this email does not exist" });
     }
 
+    // Enforce 15-minute window rate limit (max 4 attempts)
+    const now = new Date();
+    const windowMs = 15 * 60 * 1000; // 15 minutes
+
+    if (!user.otpWindowStart || now.getTime() - new Date(user.otpWindowStart).getTime() > windowMs) {
+      user.otpAttemptsCount = 0;
+      user.otpWindowStart = now;
+    }
+
+    if (user.otpAttemptsCount >= 4) {
+      const remainingMins = Math.ceil((windowMs - (now.getTime() - new Date(user.otpWindowStart).getTime())) / 60000);
+      return res.status(429).json({
+        message: `Rate limit exceeded. You can only request up to 4 OTPs every 15 minutes. Please try again after ${Math.max(1, remainingMins)} minute(s).`,
+      });
+    }
+
+    user.otpAttemptsCount += 1;
+
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     

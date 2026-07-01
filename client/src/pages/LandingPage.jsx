@@ -115,8 +115,8 @@ const LandingPage = () => {
           <div className="absolute inset-y-0 right-0 w-full lg:w-4/5 bg-gradient-to-l from-white via-white/80 to-transparent sm:from-white/70 sm:via-white/45 sm:to-transparent" />
         </div>
 
-        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-10 lg:px-12 relative z-10 flex-1 flex flex-col justify-between pt-24 pb-8 sm:pt-28 sm:pb-16">
-          <div className="space-y-5 sm:space-y-6 max-w-3xl mx-auto sm:ml-auto text-left sm:text-right flex flex-col items-start sm:items-end my-auto py-6 sm:py-8">
+        <div className="w-full max-w-[1920px] mx-auto pl-4 sm:pl-10 lg:pl-12 pr-3 sm:pr-5 lg:pr-8 xl:pr-10 relative z-10 flex-1 flex flex-col justify-between pt-24 pb-8 sm:pt-28 sm:pb-16">
+          <div className="space-y-5 sm:space-y-6 max-w-3xl lg:max-w-4xl ml-auto mr-0 text-left sm:text-right flex flex-col items-start sm:items-end my-auto py-6 sm:py-8">
             <h1 className="text-3xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-slate-900 leading-[1.12] sm:leading-[1.08]">
               The Single Source of Truth for{' '}
               <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">

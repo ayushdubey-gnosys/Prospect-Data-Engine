@@ -2,6 +2,8 @@ const TargetList = require("../../models/targetList.model");
 const Company = require("../../models/company.model");
 const Tag = require("../../models/tag.model");
 const User = require("../../models/user.model");
+const Notification = require("../../models/notification.model");
+const { sendNotificationToUser } = require("../../utils/sseManager");
 const { sendAssignmentEmail } = require("../../utils/emailService");
 
 // Helper to build filter query, similar to company.controller.js getCompanies
@@ -264,6 +266,26 @@ const assignTargetList = async (req, res, next) => {
     }
 
     await targetList.save();
+
+    // Create Notification
+    try {
+      const newNotif = await Notification.create({
+        user: userId,
+        title: "Target List Assigned",
+        message: `You have been assigned target list "${targetList.name}" by ${req.user.name}.${description ? ` Note: ${description}` : ""}`,
+        type: "target_list_assigned",
+        targetListId: targetList._id,
+        isRead: false,
+      });
+
+      // Send real-time SSE push notification immediately
+      sendNotificationToUser(userId, {
+        type: "new_notification",
+        notification: newNotif,
+      });
+    } catch (notifErr) {
+      console.error("Failed to create/send notification:", notifErr);
+    }
 
     // Send email
     await sendAssignmentEmail(

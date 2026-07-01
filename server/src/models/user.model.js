@@ -38,6 +38,16 @@ const userSchema = new mongoose.Schema(
     resetPasswordOTPExpires: {
       type: Date,
     },
+
+    otpAttemptsCount: {
+      type: Number,
+      default: 0,
+    },
+
+    otpWindowStart: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
