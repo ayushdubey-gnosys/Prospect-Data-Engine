@@ -176,7 +176,7 @@ const LandingPage = () => {
       {/* ======================================= */}
       <section id="necessity" className="space-y-12 scroll-mt-8">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-mono uppercase tracking-widest text-indigo-600 font-semibold block">// PROJECT NECESSITY &amp; CORE SOLUTION</span>
+          <span className="text-xs font-mono uppercase tracking-widest text-indigo-600 font-semibold block">PROJECT NECESSITY &amp; CORE SOLUTION</span>
           <h2 className="text-3xl sm:text-5xl font-semibold text-slate-900 tracking-tight">
             Solving Scattered Spreadsheet Chaos
           </h2>
@@ -260,7 +260,7 @@ const LandingPage = () => {
       {/* ======================================= */}
       <section className="space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-mono uppercase tracking-widest text-blue-600 font-semibold block">// CORE PLATFORM ARCHITECTURE</span>
+          <span className="text-xs font-mono uppercase tracking-widest text-blue-600 font-semibold block">CORE PLATFORM ARCHITECTURE</span>
           <h2 className="text-3xl sm:text-5xl font-semibold text-slate-900 tracking-tight">
             Comprehensive Platform Scope
           </h2>
@@ -299,7 +299,7 @@ const LandingPage = () => {
                   </p>
 
                   <div className="space-y-3 pt-2">
-                    <span className="text-xs font-mono font-semibold text-indigo-600 uppercase tracking-wider block">// Operational Checklist</span>
+                    <span className="text-xs font-mono font-semibold text-indigo-600 uppercase tracking-wider block">Operational Checklist</span>
                     <ul className="space-y-3 text-sm text-slate-600 font-normal">
                       {pillar.points.map((pt, idx) => (
                         <li key={idx} className="flex items-start gap-3">
@@ -327,7 +327,7 @@ const LandingPage = () => {
       <section className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 shadow-sm space-y-10">
         <div className="border-b border-slate-100 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-mono font-semibold text-amber-600 uppercase tracking-wider block">// CAMPAIGN EXECUTION WORKFLOW</span>
+            <span className="text-xs font-mono font-semibold text-amber-600 uppercase tracking-wider block">CAMPAIGN EXECUTION WORKFLOW</span>
             <h2 className="text-3xl font-semibold text-slate-900 tracking-tight">Target List &amp; Lead Updation Lifecycle</h2>
           </div>
           <div className="px-4 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium self-start sm:self-auto">
@@ -425,7 +425,7 @@ const LandingPage = () => {
           <div className="absolute -left-20 -bottom-20 h-80 w-80 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
 
           <div className="space-y-4 max-w-2xl mx-auto relative z-10">
-            <span className="text-xs font-mono uppercase tracking-widest text-indigo-400 font-semibold block">// FUTURE GROWTH &amp; SCALE</span>
+            <span className="text-xs font-mono uppercase tracking-widest text-indigo-400 font-semibold block">FUTURE GROWTH &amp; SCALE</span>
             <h2 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight">
               Ready to Centralize Your Prospecting Hub?
             </h2>

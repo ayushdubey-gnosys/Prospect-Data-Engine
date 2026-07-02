@@ -2,8 +2,17 @@ import React, { useState } from 'react';
 
 const Footer = () => {
   const [showMailPicker, setShowMailPicker] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const recipient = 'support@gnosysdigital.com';
+
+  const handleCopyEmail = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(recipient).catch(() => { });
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const subject = 'Inquiry - Prospect Data Engine';
 
   const mailOptions = [
@@ -35,43 +44,38 @@ const Footer = () => {
     setShowMailPicker(false);
   };
 
-  const handleSystemDefault = () => {
-    window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}`;
-    setShowMailPicker(false);
-  };
-
   return (
-    <footer className="w-full bg-zinc-900 text-zinc-300 border-t border-zinc-800/80 pt-16 pb-12 mt-auto select-none relative">
+    <footer className="w-full bg-gray-100 text-zinc-800 border-t border-gray-300 pt-16 pb-12 mt-auto select-none relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-14 lg:px-20">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-14 border-b border-zinc-800/80">
-          
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-14 border-b border-gray-300">
+
           {/* Col 1: Brand Info */}
           <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
               <img src="/img.png" alt="PDE Logo" className="h-9 w-auto object-contain" />
-              <span className="font-bold text-white text-lg tracking-tight">Prospect Data Engine</span>
+              <span className="font-bold text-zinc-900 text-lg tracking-tight">Prospect Data Engine</span>
             </div>
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed max-w-sm font-normal">
+            <p className="text-zinc-800 text-xs sm:text-sm leading-relaxed max-w-sm font-normal">
               Enterprise-grade centralized database consolidation, rapid file deduplication scan, and accountable B2B campaign management node.
             </p>
           </div>
 
           {/* Col 2: Platform Links */}
           <div className="md:col-span-3 space-y-4">
-            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-indigo-400">
-              // PLATFORM
+            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-900">
+              PLATFORM
             </h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-zinc-400">
-              <li className="hover:text-white transition-colors cursor-pointer">
+            <ul className="space-y-2.5 text-xs sm:text-sm text-zinc-800">
+              <li className="hover:text-indigo-600 transition-colors cursor-pointer">
                 Centralized DB Consolidation
               </li>
-              <li className="hover:text-white transition-colors cursor-pointer">
+              <li className="hover:text-indigo-600 transition-colors cursor-pointer">
                 Rapid File Dedup Engine
               </li>
-              <li className="hover:text-white transition-colors cursor-pointer">
+              <li className="hover:text-indigo-600 transition-colors cursor-pointer">
                 Regenerate History Filter
               </li>
-              <li className="hover:text-white transition-colors cursor-pointer">
+              <li className="hover:text-indigo-600 transition-colors cursor-pointer">
                 Target Campaign Lifecycle
               </li>
             </ul>
@@ -79,27 +83,27 @@ const Footer = () => {
 
           {/* Col 3: Compliance & Security */}
           <div className="md:col-span-4 space-y-4">
-            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-indigo-400">
-              // COMPLIANCE & SECURITY
+            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-900">
+              COMPLIANCE & SECURITY
             </h4>
-            <ul className="space-y-3 text-xs sm:text-sm text-zinc-400">
-              <li className="hover:text-white transition-colors">
+            <ul className="space-y-3 text-xs sm:text-sm text-zinc-800">
+              <li className="hover:text-indigo-600 transition-colors">
                 Enterprise RBAC Access Control
               </li>
-              <li className="hover:text-white transition-colors">
+              <li className="hover:text-indigo-600 transition-colors">
                 Zero Duplicate Record Guarantee
               </li>
-              <li className="hover:text-white transition-colors">
+              <li className="hover:text-indigo-600 transition-colors">
                 High-Throughput Stream Processing
               </li>
             </ul>
 
             <div className="pt-3">
-              <div className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-1">// DIRECT SUPPORT</div>
+              <div className="text-xs font-mono text-zinc-700 uppercase tracking-wider mb-1">DIRECT SUPPORT</div>
               <button
                 onClick={() => setShowMailPicker(true)}
                 type="button"
-                className="text-xs sm:text-sm text-indigo-400 hover:text-indigo-300 font-medium underline decoration-indigo-500/40 hover:decoration-indigo-300 transition-colors cursor-pointer text-left block"
+                className="text-xs sm:text-sm text-indigo-700 hover:text-indigo-900 font-medium underline decoration-indigo-500/40 hover:decoration-indigo-700 transition-colors cursor-pointer text-left block"
               >
                 Contact Us: {recipient}
               </button>
@@ -109,15 +113,15 @@ const Footer = () => {
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-normal">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-800 font-normal">
           <div>
             &copy; {new Date().getFullYear()} Prospect Data Engine. All rights reserved.
           </div>
-          
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800/80 shadow-inner">
+
+          <div className="flex items-center gap-2 py-1.5 bg-transparent">
             <span>Precision Engineered by</span>
             <img src="/img.png" alt="Gnosys Digital" className="h-5 w-auto object-contain" />
-            <span className="font-semibold text-zinc-200 tracking-wide">Gnosys Digital</span>
+            <span className="font-semibold text-zinc-900 tracking-wide">Gnosys Digital</span>
           </div>
         </div>
 
@@ -137,8 +141,26 @@ const Footer = () => {
                   </div>
                   <h3 className="text-base font-bold text-gray-900 tracking-tight">Choose Your Mail Service</h3>
                 </div>
-                <p className="text-xs text-gray-600 pl-0.5">
-                  Send email to <span className="text-indigo-700 font-mono font-semibold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200/60">{recipient}</span>
+                <p className="text-xs text-gray-600 pl-0.5 flex items-center gap-1.5 flex-wrap pt-0.5">
+                  Send email to
+                  <span
+                    onClick={handleCopyEmail}
+                    title="Click to copy email address"
+                    className="text-indigo-700 font-mono font-semibold bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md border border-indigo-200/80 cursor-pointer inline-flex items-center gap-1.5 transition-all group shadow-2xs"
+                  >
+                    <span>{recipient}</span>
+                    {copied ? (
+                      <span className="flex items-center gap-0.5 text-emerald-600 font-sans font-bold">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </span>
+                    ) : (
+                      <svg className="w-3.5 h-3.5 text-indigo-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                    )}
+                  </span>
                 </p>
               </div>
               <button
@@ -172,29 +194,8 @@ const Footer = () => {
                   </div>
                 </button>
               ))}
-
-              <button
-                onClick={handleSystemDefault}
-                className="w-full text-left p-3.5 rounded-xl bg-gray-100 hover:bg-white border border-gray-300 hover:border-gray-400 shadow-sm transition-all duration-200 flex items-center justify-between group cursor-pointer"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-9 h-9 rounded-xl bg-gray-700 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-transform group-hover:scale-105">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800 group-hover:text-gray-950 transition-colors">Default System Mail Client</span>
-                    <span className="text-xs text-gray-500">Use configured desktop app (Outlook, Apple Mail, etc.)</span>
-                  </div>
-                </div>
-                <div className="text-gray-400 group-hover:text-gray-600 transition-colors pr-1">
-                  <svg className="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </button>
             </div>
+
 
             <div className="pt-3 border-t border-gray-300 flex justify-end">
               <button
