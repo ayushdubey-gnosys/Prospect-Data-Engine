@@ -11,21 +11,22 @@ const Footer = () => {
       name: 'Gmail (Web)',
       desc: 'Open compose window directly in Google Mail',
       url: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipient)}&su=${encodeURIComponent(subject)}`,
-    },
-    {
-      name: 'TD Webmail (Roundcube)',
-      desc: 'Open Gnosys Digital enterprise webmail',
-      url: `https://mail.gnosysdigital.com/?_task=mail&_action=compose&_to=${encodeURIComponent(recipient)}&_subject=${encodeURIComponent(subject)}`,
+      badge: 'bg-red-500 text-white',
+      letter: 'G',
     },
     {
       name: 'Yahoo Mail (Web)',
       desc: 'Open compose window in Yahoo Mail',
       url: `https://compose.mail.yahoo.com/?to=${encodeURIComponent(recipient)}&subject=${encodeURIComponent(subject)}`,
+      badge: 'bg-purple-600 text-white',
+      letter: 'Y',
     },
     {
       name: 'Outlook Web (Live / O365)',
       desc: 'Open compose window in Microsoft Outlook Web',
       url: `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(recipient)}&subject=${encodeURIComponent(subject)}`,
+      badge: 'bg-blue-600 text-white',
+      letter: 'O',
     },
   ];
 
@@ -124,46 +125,81 @@ const Footer = () => {
 
       {/* Interactive Mail Provider Picker Modal */}
       {showMailPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-zinc-700/80 rounded-2xl p-6 max-w-md w-full shadow-2xl text-left space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <div>
-                <h3 className="text-base font-semibold text-white">Choose Your Mail Service</h3>
-                <p className="text-xs text-zinc-400 mt-0.5">Send email to <span className="text-indigo-400 font-mono">{recipient}</span></p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-gray-200 border border-gray-300/80 rounded-2xl p-6 max-w-md w-full shadow-2xl text-left space-y-5 text-gray-800">
+            <div className="flex items-start justify-between border-b border-gray-300 pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-indigo-600 text-white rounded-lg shadow-sm">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-base font-bold text-gray-900 tracking-tight">Choose Your Mail Service</h3>
+                </div>
+                <p className="text-xs text-gray-600 pl-0.5">
+                  Send email to <span className="text-indigo-700 font-mono font-semibold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200/60">{recipient}</span>
+                </p>
               </div>
               <button
                 onClick={() => setShowMailPicker(false)}
-                className="text-zinc-400 hover:text-white text-lg font-bold px-2.5 py-1 rounded-lg bg-zinc-800/60 hover:bg-zinc-800"
+                className="text-gray-500 hover:text-gray-800 text-lg font-bold w-8 h-8 flex items-center justify-center rounded-lg bg-gray-300/70 hover:bg-gray-300 transition-colors shadow-sm cursor-pointer"
               >
                 &times;
               </button>
             </div>
 
-            <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
               {mailOptions.map((opt) => (
                 <button
                   key={opt.name}
                   onClick={() => handleOpenProvider(opt.url)}
-                  className="w-full text-left p-3 rounded-xl bg-zinc-800/50 hover:bg-indigo-600/20 border border-zinc-700/60 hover:border-indigo-500 transition-all group flex flex-col gap-0.5"
+                  className="w-full text-left p-3.5 rounded-xl bg-white hover:bg-indigo-50/70 border border-gray-300/80 hover:border-indigo-400 shadow-sm hover:shadow transition-all duration-200 group flex items-center justify-between cursor-pointer"
                 >
-                  <span className="text-sm font-semibold text-zinc-200 group-hover:text-indigo-300">{opt.name}</span>
-                  <span className="text-xs text-zinc-400">{opt.desc}</span>
+                  <div className="flex items-center gap-3.5">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm transition-transform group-hover:scale-105 ${opt.badge}`}>
+                      {opt.letter}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{opt.name}</span>
+                      <span className="text-xs text-gray-500">{opt.desc}</span>
+                    </div>
+                  </div>
+                  <div className="text-gray-400 group-hover:text-indigo-600 transition-colors pr-1">
+                    <svg className="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </button>
               ))}
 
               <button
                 onClick={handleSystemDefault}
-                className="w-full text-left p-3 rounded-xl bg-zinc-800/30 hover:bg-zinc-800 border border-zinc-700/40 hover:border-zinc-600 transition-all flex flex-col gap-0.5"
+                className="w-full text-left p-3.5 rounded-xl bg-gray-100 hover:bg-white border border-gray-300 hover:border-gray-400 shadow-sm transition-all duration-200 flex items-center justify-between group cursor-pointer"
               >
-                <span className="text-sm font-semibold text-zinc-300">Default System Mail Client</span>
-                <span className="text-xs text-zinc-500">Use configured desktop app (Outlook, Apple Mail, etc.)</span>
+                <div className="flex items-center gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-gray-700 text-white flex items-center justify-center font-bold text-sm shadow-sm transition-transform group-hover:scale-105">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-800 group-hover:text-gray-950 transition-colors">Default System Mail Client</span>
+                    <span className="text-xs text-gray-500">Use configured desktop app (Outlook, Apple Mail, etc.)</span>
+                  </div>
+                </div>
+                <div className="text-gray-400 group-hover:text-gray-600 transition-colors pr-1">
+                  <svg className="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
               </button>
             </div>
 
-            <div className="pt-2 border-t border-zinc-800/80 flex justify-end">
+            <div className="pt-3 border-t border-gray-300 flex justify-end">
               <button
                 onClick={() => setShowMailPicker(false)}
-                className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-white bg-zinc-800 rounded-xl transition-colors"
+                className="px-5 py-2 text-xs font-semibold text-gray-700 hover:text-gray-950 bg-gray-300 hover:bg-gray-400/70 rounded-xl transition-all cursor-pointer shadow-sm"
               >
                 Cancel
               </button>

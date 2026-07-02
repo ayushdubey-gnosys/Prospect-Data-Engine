@@ -22,7 +22,7 @@ const AboutPage = () => {
 
   return (
     <div className="w-full bg-transparent min-h-screen flex flex-col justify-between">
-      <div className="max-w-7xl mx-auto px-4 pt-24 pb-6 sm:px-6 sm:pt-28 sm:pb-8 space-y-8 relative w-full flex-1">
+      <div className={`max-w-7xl mx-auto px-4 pb-6 sm:px-6 sm:pb-8 space-y-8 relative w-full flex-1 ${isAuthenticated ? 'pt-1 sm:pt-2' : 'pt-24 sm:pt-28'}`}>
         
         {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl border border-gray-200 bg-black text-white">
