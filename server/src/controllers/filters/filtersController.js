@@ -1,5 +1,6 @@
 const Company = require("../../models/company.model");
 const Tag = require("../../models/tag.model");
+const companyService = require("../../services/companyService");
 
 const resolveTagId = async (tagName) => {
   if (!tagName) return null;
@@ -17,6 +18,7 @@ const getCountries = async (req, res, next) => {
       const tagId = await resolveTagId(tag);
       if (tagId) filter.tags = tagId;
     }
+    companyService.addStatusFilter(filter, req.query.leadStatus || req.query.status);
 
     const countries = await Company.distinct("country", filter);
     res.json({ data: countries.filter(Boolean).sort() });
@@ -35,6 +37,7 @@ const getCities = async (req, res, next) => {
       const tagId = await resolveTagId(tag);
       if (tagId) filter.tags = tagId;
     }
+    companyService.addStatusFilter(filter, req.query.leadStatus || req.query.status);
     
     const cities = await Company.distinct("city", filter);
     res.json({ data: cities.filter(Boolean).sort() });
@@ -53,6 +56,7 @@ const getIndustries = async (req, res, next) => {
       const tagId = await resolveTagId(tag);
       if (tagId) filter.tags = tagId;
     }
+    companyService.addStatusFilter(filter, req.query.leadStatus || req.query.status);
 
     const industries = await Company.distinct("industry", filter);
     res.json({ data: industries.filter(Boolean).sort() });
@@ -68,6 +72,7 @@ const getTags = async (req, res, next) => {
     if (country) filter.country = country;
     if (city) filter.city = city;
     if (industry) filter.industry = industry;
+    companyService.addStatusFilter(filter, req.query.leadStatus || req.query.status);
 
     const tagIds = await Company.distinct("tags", filter);
     const tags = await Tag.find({ _id: { $in: tagIds } });

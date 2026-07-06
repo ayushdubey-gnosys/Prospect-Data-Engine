@@ -3,6 +3,7 @@ const UploadedFile = require("../../models/uploadedFile.model");
 const Tag = require("../../models/tag.model");
 const User = require("../../models/user.model");
 const Activity = require("../../models/activity.model");
+const companyService = require("../../services/companyService");
 
 const createCompany = async (req, res) => {
   try {
@@ -91,6 +92,8 @@ const getCompanies = async (req, res) => {
         filters.tags = null;
       }
     }
+
+    companyService.addStatusFilter(filters, req.query.leadStatus || req.query.status);
 
     const total = await Company.countDocuments(filters);
 

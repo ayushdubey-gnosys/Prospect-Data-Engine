@@ -26,6 +26,7 @@ const fetchCompanies = async (searchParams, page = 1, limit = 10) => {
   if (searchParams.country) query.append('country', searchParams.country);
   if (searchParams.tag) query.append('tag', searchParams.tag);
   if (searchParams.search) query.append('search', searchParams.search);
+  if (searchParams.leadStatus) query.append('leadStatus', searchParams.leadStatus);
   query.append('page', page);
   query.append('limit', limit);
 
@@ -60,6 +61,7 @@ const CompaniesPage = () => {
     industry: '',
     country: '',
     tag: '',
+    leadStatus: '',
   });
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -82,12 +84,13 @@ const CompaniesPage = () => {
   // Fetch Tags
   // =========================
   const { data: tagsList = [] } = useQuery({
-    queryKey: ['filters', 'tags', filters.industry, filters.city, filters.country],
+    queryKey: ['filters', 'tags', filters.industry, filters.city, filters.country, filters.leadStatus],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (filters.industry) queryParams.append('industry', filters.industry);
       if (filters.city) queryParams.append('city', filters.city);
       if (filters.country) queryParams.append('country', filters.country);
+      if (filters.leadStatus) queryParams.append('leadStatus', filters.leadStatus);
       const res = await api.get(`/filters/tags?${queryParams.toString()}`);
       return res.data.data;
     },
@@ -97,12 +100,13 @@ const CompaniesPage = () => {
   // Fetch Countries
   // =========================
   const { data: countriesList = [] } = useQuery({
-    queryKey: ['filters', 'countries', filters.industry, filters.city, filters.tag],
+    queryKey: ['filters', 'countries', filters.industry, filters.city, filters.tag, filters.leadStatus],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (filters.industry) queryParams.append('industry', filters.industry);
       if (filters.city) queryParams.append('city', filters.city);
       if (filters.tag) queryParams.append('tag', filters.tag);
+      if (filters.leadStatus) queryParams.append('leadStatus', filters.leadStatus);
       const res = await api.get(`/filters/countries?${queryParams.toString()}`);
       return res.data.data;
     },
@@ -112,12 +116,13 @@ const CompaniesPage = () => {
   // Fetch Cities
   // =========================
   const { data: citiesList = [] } = useQuery({
-    queryKey: ['filters', 'cities', filters.country, filters.industry, filters.tag],
+    queryKey: ['filters', 'cities', filters.country, filters.industry, filters.tag, filters.leadStatus],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.industry) queryParams.append('industry', filters.industry);
       if (filters.tag) queryParams.append('tag', filters.tag);
+      if (filters.leadStatus) queryParams.append('leadStatus', filters.leadStatus);
       const res = await api.get(`/filters/cities?${queryParams.toString()}`);
       return res.data.data;
     },
@@ -127,12 +132,13 @@ const CompaniesPage = () => {
   // Fetch Industries
   // =========================
   const { data: industriesList = [] } = useQuery({
-    queryKey: ['filters', 'industries', filters.country, filters.city, filters.tag],
+    queryKey: ['filters', 'industries', filters.country, filters.city, filters.tag, filters.leadStatus],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
       if (filters.country) queryParams.append('country', filters.country);
       if (filters.city) queryParams.append('city', filters.city);
       if (filters.tag) queryParams.append('tag', filters.tag);
+      if (filters.leadStatus) queryParams.append('leadStatus', filters.leadStatus);
       const res = await api.get(`/filters/industries?${queryParams.toString()}`);
       return res.data.data;
     },
@@ -205,6 +211,7 @@ const CompaniesPage = () => {
       if (filters.country) query.append('country', filters.country);
       if (filters.tag) query.append('tag', filters.tag);
       if (filters.search) query.append('search', filters.search);
+      if (filters.leadStatus) query.append('leadStatus', filters.leadStatus);
       query.append('columns', selectedColumns.join(','));
       query.append('format', format);
       query.append('_t', Date.now().toString());
@@ -608,22 +615,44 @@ const CompaniesPage = () => {
         </div>
 
         <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
-          {/* Top Controls: Search and Limit */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between">
-            <div className="relative flex-1 max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
+          {/* Top Controls: Search, Lead Status Filter, and Limit */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1 w-full sm:w-auto items-center">
+              <div className="relative flex-1 w-full sm:max-w-md">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm"
+                  placeholder="Search companies by name..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                />
               </div>
-              <input
-                type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-xs sm:text-sm"
-                placeholder="Search companies by name..."
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              />
+
+              {/* Lead Status Filter right next to Search Bar */}
+              <div className="w-full sm:w-auto min-w-[170px]">
+                <select
+                  className="w-full border border-gray-300 rounded-lg py-2 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs sm:text-sm bg-white cursor-pointer font-medium text-gray-700 shadow-sm transition-colors hover:border-gray-400"
+                  value={filters.leadStatus || ''}
+                  onChange={(e) => setFilters({ ...filters, leadStatus: e.target.value })}
+                >
+                  <option value="">All Lead Statuses</option>
+                  <option value="New">New</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="Contacted">Contacted</option>
+                  <option value="Meeting Scheduled">Meeting Scheduled</option>
+                  <option value="Proposal Sent">Proposal Sent</option>
+                  <option value="Negotiation">Negotiation</option>
+                  <option value="Won">Won</option>
+                  <option value="Lost">Lost</option>
+                  <option value="On Hold">On Hold</option>
+                </select>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0">
+            <div className="flex items-center justify-between sm:justify-start gap-2 shrink-0 w-full sm:w-auto">
               <span className="text-xs sm:text-sm font-medium text-gray-700">Rows per page:</span>
               <select
                 className="border border-gray-300 rounded-lg p-1.5 sm:p-2 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer"
@@ -699,7 +728,7 @@ const CompaniesPage = () => {
             {/* Reset Button */}
             <Button
               type="button"
-              onClick={() => setFilters({ search: '', city: '', industry: '', country: '', tag: '' })}
+              onClick={() => setFilters({ search: '', city: '', industry: '', country: '', tag: '', leadStatus: '' })}
               variant="secondary"
               className="col-span-2 sm:col-span-1 w-full sm:w-auto shrink-0 py-2 text-xs sm:text-sm"
             >

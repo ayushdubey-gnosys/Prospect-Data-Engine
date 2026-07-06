@@ -165,6 +165,50 @@ const bulkInsertCompanies = async (
 // BUILD FILTER QUERY
 // ==========================================
 
+const addStatusFilter = (query, statusVal) => {
+  if (!statusVal || statusVal === 'All Statuses' || statusVal === 'all') return;
+
+  let statusCondition = null;
+  if (statusVal === 'New') {
+    statusCondition = {
+      $or: [
+        { 'leadStatus.status': 'New' },
+        { 'leadStatus.status': 'none' },
+        { leadStatus: { $exists: false } },
+        { 'leadStatus.status': { $exists: false } },
+        { 'leadStatus.status': null }
+      ]
+    };
+  } else if (statusVal === 'Won') {
+    statusCondition = { 'leadStatus.status': { $in: ['Won', 'converted'] } };
+  } else if (statusVal === 'Lost') {
+    statusCondition = { 'leadStatus.status': { $in: ['Lost', 'dead'] } };
+  } else {
+    statusCondition = { 'leadStatus.status': statusVal };
+  }
+
+  if (statusCondition) {
+    if (statusCondition.$or) {
+      if (query.$or) {
+        query.$and = query.$and || [];
+        query.$and.push({ $or: query.$or });
+        query.$and.push(statusCondition);
+        delete query.$or;
+      } else if (query.$and) {
+        query.$and.push(statusCondition);
+      } else {
+        query.$or = statusCondition.$or;
+      }
+    } else {
+      if (query.$and) {
+        query.$and.push(statusCondition);
+      } else {
+        Object.assign(query, statusCondition);
+      }
+    }
+  }
+};
+
 const buildFilterQuery = ({
   fileId,
   city,
@@ -172,6 +216,8 @@ const buildFilterQuery = ({
   country,
   search,
   tagId,
+  leadStatus,
+  status,
 }) => {
   const query = { fileId };
 
@@ -211,6 +257,8 @@ const buildFilterQuery = ({
       { phone: regex },
     ];
   }
+
+  addStatusFilter(query, leadStatus || status);
 
   return query;
 };
@@ -488,4 +536,5 @@ module.exports = {
   getDistinctIndustries,
   getDistinctCountries,
   getDistinctTags,
+  addStatusFilter,
 };

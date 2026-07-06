@@ -1,5 +1,6 @@
 const Company = require("../../models/company.model");
 const exportService = require("../../services/exportService");
+const companyService = require("../../services/companyService");
 
 const exportCompanies = async (req, res) => {
   try {
@@ -31,6 +32,10 @@ const exportCompanies = async (req, res) => {
       }
     }
 
+    if (req.query.search) {
+      filters.company_name = { $regex: req.query.search, $options: "i" };
+    }
+    companyService.addStatusFilter(filters, req.query.leadStatus || req.query.status);
 
     // Fetch all companies matching filters (excluding tags for simplicity or map them)
     const companies = await Company.find(filters).populate("tags").lean();
@@ -198,6 +203,11 @@ const regenerateExport = async (req, res) => {
         query.tags = null;
       }
     }
+
+    if (savedFilters.search) {
+      query.company_name = { $regex: savedFilters.search, $options: "i" };
+    }
+    companyService.addStatusFilter(query, savedFilters.leadStatus || savedFilters.status);
 
     const companies = await Company.find(query).populate("tags").lean();
 
