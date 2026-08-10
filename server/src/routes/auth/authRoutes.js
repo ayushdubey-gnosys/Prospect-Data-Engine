@@ -19,7 +19,7 @@ const router = express.Router();
 
 
 router.post("/login", login);
-router.post("/register", protect, register);
+router.post("/register", register);
 router.post("/refresh-token", refreshAccessToken);
 router.get("/me", protect, meController);
 router.post("/logout", protect, logout);

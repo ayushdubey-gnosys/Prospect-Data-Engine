@@ -17,6 +17,15 @@ import {
 } from "lucide-react";
 import Footer from "../../../layouts/Footer";
 
+const AnimatedBorderCard = ({ children, className = "", innerClassName = "" }) => (
+  <div className={`group relative flex flex-col overflow-hidden hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-md bg-slate-200/60 p-[1.5px] ${className}`}>
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_270deg,#10b981_300deg,#3b82f6_360deg)] animate-[spin_3s_linear_infinite] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+    <div className={`relative z-10 bg-white w-full h-full ${innerClassName}`}>
+      {children}
+    </div>
+  </div>
+);
+
 const AboutPage = () => {
   const { isAuthenticated } = useAuth();
 
@@ -25,7 +34,7 @@ const AboutPage = () => {
       <div className={`max-w-7xl mx-auto px-4 pb-6 sm:px-6 sm:pb-8 space-y-8 relative w-full flex-1 ${isAuthenticated ? 'pt-1 sm:pt-2' : 'pt-24 sm:pt-28'}`}>
         
         {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl border border-gray-200 bg-black text-white">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-bl from-zinc-900 via-zinc-800 to-zinc-950 text-white">
 
         <div className="absolute inset-0 opacity-20">
           <div className="absolute -top-20 -right-20 w-80 h-80 bg-white rounded-full blur-3xl" />
@@ -39,7 +48,7 @@ const AboutPage = () => {
             Prospect Data Engine
           </div>
 
-          <h1 className="mt-6 text-4xl sm:text-5xl font-semibold leading-tight max-w-4xl">
+          <h1 className="mt-6 text-4xl sm:text-5xl font-normal leading-tight max-w-4xl">
             Centralized business data management platform for sales and marketing teams
           </h1>
 
@@ -57,12 +66,12 @@ const AboutPage = () => {
       {/* About PDE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <div className="bg-white border border-gray-200 rounded-3xl p-8">
+        <AnimatedBorderCard className="rounded-3xl" innerClassName="rounded-[22px] p-8">
           <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-5">
             <Building2 className="w-7 h-7 text-gray-800" />
           </div>
 
-          <h2 className="text-2xl font-semibold text-gray-900">
+          <h2 className="text-2xl font-normal text-gray-900">
             What is PDE?
           </h2>
 
@@ -73,14 +82,14 @@ const AboutPage = () => {
             sources, apply advanced filters, manage tags, and export structured
             datasets for outreach campaigns and CRM integrations.
           </p>
-        </div>
+        </AnimatedBorderCard>
 
-        <div className="bg-white border border-gray-200 rounded-3xl p-8">
+        <AnimatedBorderCard className="rounded-3xl" innerClassName="rounded-[22px] p-8">
           <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-5">
             <ShieldCheck className="w-7 h-7 text-gray-800" />
           </div>
 
-          <h2 className="text-2xl font-semibold text-gray-900">
+          <h2 className="text-2xl font-normal text-gray-900">
             Core Objective
           </h2>
 
@@ -91,7 +100,7 @@ const AboutPage = () => {
             PDE is not a CRM platform. Instead, it works as the data backbone
             for outbound sales and marketing operations.
           </p>
-        </div>
+        </AnimatedBorderCard>
 
       </div>
 
@@ -99,7 +108,7 @@ const AboutPage = () => {
       <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8">
 
         <div className="mb-8">
-          <h2 className="text-3xl font-semibold text-gray-900">
+          <h2 className="text-3xl font-normal text-gray-900">
             Platform Features
           </h2>
 
@@ -111,10 +120,10 @@ const AboutPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
 
           {/* Card */}
-          <div className="border border-gray-200 rounded-2xl p-6 hover:bg-gray-50 transition">
+          <AnimatedBorderCard className="rounded-2xl" innerClassName="rounded-[14px] p-6 hover:bg-gray-50 transition">
             <UploadCloud className="w-8 h-8 text-gray-800 mb-4" />
 
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-normal text-gray-900">
               Data Import System
             </h3>
 
@@ -123,13 +132,13 @@ const AboutPage = () => {
               database system. The platform supports structured company data
               imports from multiple sources.
             </p>
-          </div>
+          </AnimatedBorderCard>
 
           {/* Card */}
-          <div className="border border-gray-200 rounded-2xl p-6 hover:bg-gray-50 transition">
+          <AnimatedBorderCard className="rounded-2xl" innerClassName="rounded-[14px] p-6 hover:bg-gray-50 transition">
             <Filter className="w-8 h-8 text-gray-800 mb-4" />
 
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-normal text-gray-900">
               Advanced Filtering
             </h3>
 
@@ -138,13 +147,13 @@ const AboutPage = () => {
               turnover, tags, source, and custom field selection before
               exporting records.
             </p>
-          </div>
+          </AnimatedBorderCard>
 
           {/* Card */}
-          <div className="border border-gray-200 rounded-2xl p-6 hover:bg-gray-50 transition">
+          <AnimatedBorderCard className="rounded-2xl" innerClassName="rounded-[14px] p-6 hover:bg-gray-50 transition">
             <Tags className="w-8 h-8 text-gray-800 mb-4" />
 
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-normal text-gray-900">
               Tag Management
             </h3>
 
@@ -152,13 +161,13 @@ const AboutPage = () => {
               Users can create and manage tags for better company segmentation
               and data organization inside the centralized database system.
             </p>
-          </div>
+          </AnimatedBorderCard>
 
           {/* Card */}
-          <div className="border border-gray-200 rounded-2xl p-6 hover:bg-gray-50 transition">
+          <AnimatedBorderCard className="rounded-2xl" innerClassName="rounded-[14px] p-6 hover:bg-gray-50 transition">
             <FileSpreadsheet className="w-8 h-8 text-gray-800 mb-4" />
 
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-normal text-gray-900">
               Export Engine
             </h3>
 
@@ -166,13 +175,13 @@ const AboutPage = () => {
               Export filtered company data into Excel and CSV formats with
               customizable column selection based on business requirements.
             </p>
-          </div>
+          </AnimatedBorderCard>
 
           {/* Card */}
-          <div className="border border-gray-200 rounded-2xl p-6 hover:bg-gray-50 transition">
+          <AnimatedBorderCard className="rounded-2xl" innerClassName="rounded-[14px] p-6 hover:bg-gray-50 transition">
             <History className="w-8 h-8 text-gray-800 mb-4" />
 
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-normal text-gray-900">
               Activity History
             </h3>
 
@@ -180,13 +189,13 @@ const AboutPage = () => {
               Track complete upload and export history including which user
               imported or exported data, along with date and time management.
             </p>
-          </div>
+          </AnimatedBorderCard>
 
           {/* Card */}
-          <div className="border border-gray-200 rounded-2xl p-6 hover:bg-gray-50 transition">
+          <AnimatedBorderCard className="rounded-2xl" innerClassName="rounded-[14px] p-6 hover:bg-gray-50 transition">
             <Search className="w-8 h-8 text-gray-800 mb-4" />
 
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-normal text-gray-900">
               Search & Segmentation
             </h3>
 
@@ -194,7 +203,7 @@ const AboutPage = () => {
               Quickly search and segment company records using combined filters
               for better targeting and outbound campaign management.
             </p>
-          </div>
+          </AnimatedBorderCard>
 
         </div>
       </div>
@@ -203,10 +212,10 @@ const AboutPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
         {/* Admin */}
-        <div className="bg-white border border-gray-200 rounded-3xl p-8">
+        <AnimatedBorderCard className="rounded-3xl" innerClassName="rounded-[22px] p-8">
           <Users className="w-10 h-10 text-gray-900 mb-5" />
 
-          <h3 className="text-2xl font-semibold text-gray-900">
+          <h3 className="text-2xl font-normal text-gray-900">
             Admin
           </h3>
 
@@ -216,13 +225,13 @@ const AboutPage = () => {
             <li>• Manage tags and users</li>
             <li>• Track complete activity history</li>
           </ul>
-        </div>
+        </AnimatedBorderCard>
 
         {/* Sales */}
-        <div className="bg-white border border-gray-200 rounded-3xl p-8">
+        <AnimatedBorderCard className="rounded-3xl" innerClassName="rounded-[22px] p-8">
           <UploadCloud className="w-10 h-10 text-gray-900 mb-5" />
 
-          <h3 className="text-2xl font-semibold text-gray-900">
+          <h3 className="text-2xl font-normal text-gray-900">
             Sales User
           </h3>
 
@@ -232,13 +241,13 @@ const AboutPage = () => {
             <li>• View and filter records</li>
             <li>• Track upload history</li>
           </ul>
-        </div>
+        </AnimatedBorderCard>
 
         {/* Marketing */}
-        <div className="bg-white border border-gray-200 rounded-3xl p-8">
+        <AnimatedBorderCard className="rounded-3xl" innerClassName="rounded-[22px] p-8">
           <Layers3 className="w-10 h-10 text-gray-900 mb-5" />
 
-          <h3 className="text-2xl font-semibold text-gray-900">
+          <h3 className="text-2xl font-normal text-gray-900">
             Marketing User
           </h3>
 
@@ -248,13 +257,13 @@ const AboutPage = () => {
             <li>• Select export columns</li>
             <li>• Track export history</li>
           </ul>
-        </div>
+        </AnimatedBorderCard>
 
         {/* Cold Mail User */}
-        <div className="bg-white border border-gray-200 rounded-3xl p-8">
+        <AnimatedBorderCard className="rounded-3xl" innerClassName="rounded-[22px] p-8">
           <Target className="w-10 h-10 text-gray-900 mb-5" />
 
-          <h3 className="text-2xl font-semibold text-gray-900">
+          <h3 className="text-2xl font-normal text-gray-900">
             Cold Mail User
           </h3>
 
@@ -264,18 +273,18 @@ const AboutPage = () => {
             <li>• Contact leads and update status</li>
             <li>• Track outreach progress</li>
           </ul>
-        </div>
+        </AnimatedBorderCard>
 
       </div>
 
       {/* Target List Flow Section */}
-      <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10">
+      <AnimatedBorderCard className="rounded-3xl" innerClassName="rounded-[22px] p-8 sm:p-10">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
             <Target className="w-7 h-7 text-gray-800" />
           </div>
           <div>
-            <h2 className="text-3xl font-semibold text-gray-900">
+            <h2 className="text-3xl font-normal text-gray-900">
               Target List Management Flow
             </h2>
             <p className="text-gray-500 mt-1">
@@ -293,8 +302,8 @@ const AboutPage = () => {
             Once the target list is created, it is directly assigned to either a <strong>Sales User</strong> or a <strong>Cold Mail User</strong>. Upon assignment, the user automatically receives an email notification informing them about their new leads, keeping them fully updated.
           </p>
 
-          <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
-            <h4 className="font-semibold text-gray-900 mb-4">Lead Updation Flow</h4>
+          <div className="p-6 bg-white rounded-2xl border border-zinc-300 shadow-sm">
+            <h4 className="font-normal text-gray-900 mb-4">Lead Updation Flow</h4>
             <ul className="list-disc list-inside space-y-3 text-sm">
               <li><strong>Review Assignment:</strong> The assigned user accesses their target list to review the allocated companies and prospects.</li>
               <li><strong>Outreach:</strong> The user contacts the leads via email or calls. Cold Mail Users are restricted to read-only access for core data but can fully operate on their assigned lists.</li>
@@ -304,12 +313,12 @@ const AboutPage = () => {
             </ul>
           </div>
         </div>
-      </div>
+      </AnimatedBorderCard>
 
       {/* Workflow */}
-      <div className="bg-black text-white rounded-3xl p-8 sm:p-10">
+      <div className="bg-gradient-to-bl from-zinc-900 via-zinc-800 to-zinc-950 border border-white/10 text-white rounded-3xl p-8 sm:p-10">
 
-        <h2 className="text-3xl font-semibold">
+        <h2 className="text-3xl font-normal">
           PDE Workflow
         </h2>
 
@@ -353,7 +362,7 @@ const AboutPage = () => {
 
         {/* Target List Workflow Flowchart */}
         <div className="mt-12 border-t border-white/10 pt-10">
-          <h2 className="text-2xl font-semibold text-white">
+          <h2 className="text-2xl font-normal text-white">
             Target List Workflow
           </h2>
           <p className="text-white/70 mt-2 max-w-3xl leading-relaxed text-sm">

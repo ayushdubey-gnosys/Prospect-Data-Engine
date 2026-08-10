@@ -42,18 +42,14 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route
         path="/register"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <RegisterPage />
-          </ProtectedRoute>
-        }
+        element={<RegisterPage />}
       />
 
       {/* Main Layout Route - Public so unauthenticated users see the sidebar */}
       <Route path="/" element={<DashboardLayout />}>
         {/* Show AboutPage if logged in, otherwise Landing Page */}
         <Route index element={user ? <AboutPage /> : <LandingPage />} />
-        
+
         {/* Protected Inner Routes */}
         <Route path="dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="companies" element={<ProtectedRoute><CompaniesPage /></ProtectedRoute>} />

@@ -20,7 +20,7 @@ const Footer = () => {
       name: 'Gmail (Web)',
       desc: 'Open compose window directly in Google Mail',
       url: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipient)}&su=${encodeURIComponent(subject)}`,
-      badge: 'bg-red-500 text-white',
+      badge: 'bg-rose-500 text-white',
       letter: 'G',
     },
     {
@@ -45,67 +45,86 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full bg-gray-100 text-zinc-800 border-t border-gray-300 pt-16 pb-12 mt-auto select-none relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-14 lg:px-20">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-14 border-b border-gray-300">
+    <footer className="w-full bg-gradient-to-bl from-zinc-900 via-zinc-800 to-zinc-950 text-white border-t border-blue-200/20 pt-16 pb-10 mt-auto select-none relative overflow-hidden">
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-14 lg:px-20 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16 border-b border-zinc-700">
 
           {/* Col 1: Brand Info */}
-          <div className="md:col-span-5 space-y-4">
+          <div className="md:col-span-5 space-y-6">
             <div className="flex items-center gap-3">
-              <img src="/img.png" alt="PDE Logo" className="h-9 w-auto object-contain" />
-              <span className="font-bold text-zinc-900 text-lg tracking-tight">Prospect Data Engine</span>
+              <div className="bg-white/5 p-2 rounded-xl backdrop-blur-sm border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+                <img src="/img.png" alt="PDE Logo" className="h-8 w-auto object-contain brightness-110" />
+              </div>
+              <span className="font-normal  text-white text-2xl tracking-tight">Prospect Data Engine</span>
             </div>
-            <p className="text-zinc-800 text-xs sm:text-sm leading-relaxed max-w-sm font-normal">
+            <p className="text-white text-sm leading-relaxed max-w-sm font-light">
               Enterprise-grade centralized database consolidation, rapid file deduplication scan, and accountable B2B campaign management node.
             </p>
+            <div className="flex items-center gap-4 pt-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20">
+                <div className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
+                <span className="text-xs text-white font-medium tracking-wide">All systems operational</span>
+              </div>
+            </div>
           </div>
 
           {/* Col 2: Platform Links */}
-          <div className="md:col-span-3 space-y-4">
-            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-900">
-              PLATFORM
+          <div className="md:col-span-3 space-y-6">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white">
+              Platform
             </h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-zinc-800">
-              <li className="hover:text-indigo-600 transition-colors cursor-pointer">
-                Centralized DB Consolidation
-              </li>
-              <li className="hover:text-indigo-600 transition-colors cursor-pointer">
-                Rapid File Dedup Engine
-              </li>
-              <li className="hover:text-indigo-600 transition-colors cursor-pointer">
-                Regenerate History Filter
-              </li>
-              <li className="hover:text-indigo-600 transition-colors cursor-pointer">
-                Target Campaign Lifecycle
-              </li>
+            <ul className="space-y-4 text-sm text-slate-300 font-medium">
+              {[
+                'Centralized DB Consolidation',
+                'Rapid File Dedup Engine',
+                'Regenerate History Filter',
+                'Target Campaign Lifecycle'
+              ].map((item) => (
+                <li key={item} className="group flex items-center gap-2 cursor-pointer">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 group-hover:bg-white group-hover:scale-110 transition-all duration-300"></span>
+                  <span className="text-slate-300 group-hover:text-white transition-colors duration-300">{item}</span>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Col 3: Compliance & Security */}
-          <div className="md:col-span-4 space-y-4">
-            <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-900">
-              COMPLIANCE & SECURITY
+          <div className="md:col-span-4 space-y-6">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white">
+              Compliance & Security
             </h4>
-            <ul className="space-y-3 text-xs sm:text-sm text-zinc-800">
-              <li className="hover:text-indigo-600 transition-colors">
-                Enterprise RBAC Access Control
-              </li>
-              <li className="hover:text-indigo-600 transition-colors">
-                Zero Duplicate Record Guarantee
-              </li>
-              <li className="hover:text-indigo-600 transition-colors">
-                High-Throughput Stream Processing
-              </li>
+            <ul className="space-y-4 text-sm text-slate-300 font-medium">
+              {[
+                'Enterprise RBAC Access Control',
+                'Zero Duplicate Record Guarantee',
+                'High-Throughput Stream Processing'
+              ].map((item) => (
+                <li key={item} className="group flex items-center gap-2 cursor-default">
+                  <svg className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span className="text-slate-300 group-hover:text-white transition-colors duration-300">{item}</span>
+                </li>
+              ))}
             </ul>
 
-            <div className="pt-3">
-              <div className="text-xs font-mono text-zinc-700 uppercase tracking-wider mb-1">DIRECT SUPPORT</div>
+            <div className="pt-4 mt-4 border-t border-zinc-700">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-3">Direct Support</h4>
               <button
                 onClick={() => setShowMailPicker(true)}
                 type="button"
-                className="text-xs sm:text-sm text-indigo-700 hover:text-indigo-900 font-medium underline decoration-indigo-500/40 hover:decoration-indigo-700 transition-colors cursor-pointer text-left block"
+                className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer w-full shadow-sm hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
               >
-                Contact Us: {recipient}
+                <div className="p-2 rounded-lg bg-white/10 text-white group-hover:scale-110 group-hover:bg-white/20 transition-all">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="text-left flex-1">
+                  <div className="text-xs text-white">Contact Us</div>
+                  <div className="text-sm font-medium text-white truncate">{recipient}</div>
+                </div>
               </button>
             </div>
           </div>
@@ -113,15 +132,19 @@ const Footer = () => {
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-800 font-normal">
-          <div>
-            &copy; {new Date().getFullYear()} Prospect Data Engine. All rights reserved.
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-white">
+          <div className="flex items-center gap-1.5">
+            <span className="text-white">&copy; {new Date().getFullYear()} Dwarkadhish NeuralStack Limited.</span>
+            <span className="text-white">All rights reserved.</span>
           </div>
 
-          <div className="flex items-center gap-2 py-1.5 bg-transparent">
-            <span>Precision Engineered by</span>
-            <img src="/img.png" alt="Gnosys Digital" className="h-5 w-auto object-contain" />
-            <span className="font-semibold text-zinc-900 tracking-wide">Gnosys Digital</span>
+          <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+            <span className="text-white">Precision Engineered by</span>
+            <div className="w-px h-3 bg-white/30"></div>
+            <div className="flex items-center gap-2 group cursor-pointer">
+              <img src="/img.png" alt="Gnosys Digital" className="h-4 w-auto object-contain brightness-90 group-hover:brightness-110 transition-all" />
+              <span className="font-semibold text-white tracking-wide transition-colors">Gnosys Digital</span>
+            </div>
           </div>
         </div>
 
@@ -129,35 +152,35 @@ const Footer = () => {
 
       {/* Interactive Mail Provider Picker Modal */}
       {showMailPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-gray-200 border border-gray-300/80 rounded-2xl p-6 max-w-md w-full shadow-2xl text-left space-y-5 text-gray-800">
-            <div className="flex items-start justify-between border-b border-gray-300 pb-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-indigo-600 text-white rounded-lg shadow-sm">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-md w-full shadow-[0_0_50px_rgba(0,0,0,0.5)] text-left space-y-6 text-white transform animate-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between border-b border-zinc-800 pb-5">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-white/10 text-white rounded-xl border border-white/20">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h3 className="text-base font-bold text-gray-900 tracking-tight">Choose Your Mail Service</h3>
+                  <h3 className="text-lg font-bold text-white tracking-tight">Choose Mail Service</h3>
                 </div>
-                <p className="text-xs text-gray-600 pl-0.5 flex items-center gap-1.5 flex-wrap pt-0.5">
+                <p className="text-sm text-white pl-1 flex items-center gap-2 flex-wrap">
                   Send email to
                   <span
                     onClick={handleCopyEmail}
                     title="Click to copy email address"
-                    className="text-indigo-700 font-mono font-semibold bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md border border-indigo-200/80 cursor-pointer inline-flex items-center gap-1.5 transition-all group shadow-2xs"
+                    className="text-white font-mono font-medium bg-white/10 hover:bg-white/20 px-2 py-1 rounded border border-white/20 cursor-pointer inline-flex items-center gap-1.5 transition-all group"
                   >
                     <span>{recipient}</span>
                     {copied ? (
-                      <span className="flex items-center gap-0.5 text-emerald-600 font-sans font-bold">
+                      <span className="flex items-center gap-0.5 text-white">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
                       </span>
                     ) : (
-                      <svg className="w-3.5 h-3.5 text-indigo-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      <svg className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                       </svg>
                     )}
                   </span>
@@ -165,30 +188,30 @@ const Footer = () => {
               </div>
               <button
                 onClick={() => setShowMailPicker(false)}
-                className="text-gray-500 hover:text-gray-800 text-lg font-bold w-8 h-8 flex items-center justify-center rounded-lg bg-gray-300/70 hover:bg-gray-300 transition-colors shadow-sm cursor-pointer"
+                className="text-white hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
               >
                 &times;
               </button>
             </div>
 
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
               {mailOptions.map((opt) => (
                 <button
                   key={opt.name}
                   onClick={() => handleOpenProvider(opt.url)}
-                  className="w-full text-left p-3.5 rounded-xl bg-white hover:bg-indigo-50/70 border border-gray-300/80 hover:border-indigo-400 shadow-sm hover:shadow transition-all duration-200 group flex items-center justify-between cursor-pointer"
+                  className="w-full text-left p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all duration-200 group flex items-center justify-between cursor-pointer"
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm transition-transform group-hover:scale-105 ${opt.badge}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shadow-lg transition-transform group-hover:scale-105 ${opt.badge}`}>
                       {opt.letter}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{opt.name}</span>
-                      <span className="text-xs text-gray-500">{opt.desc}</span>
+                      <span className="text-sm font-semibold text-white transition-colors">{opt.name}</span>
+                      <span className="text-xs text-white mt-0.5">{opt.desc}</span>
                     </div>
                   </div>
-                  <div className="text-gray-400 group-hover:text-indigo-600 transition-colors pr-1">
-                    <svg className="w-4 h-4 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="text-white transition-colors">
+                    <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -196,11 +219,10 @@ const Footer = () => {
               ))}
             </div>
 
-
-            <div className="pt-3 border-t border-gray-300 flex justify-end">
+            <div className="pt-4 border-t border-zinc-800 flex justify-end">
               <button
                 onClick={() => setShowMailPicker(false)}
-                className="px-5 py-2 text-xs font-semibold text-gray-700 hover:text-gray-950 bg-gray-300 hover:bg-gray-400/70 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="px-6 py-2.5 text-sm font-semibold text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all cursor-pointer shadow-sm"
               >
                 Cancel
               </button>

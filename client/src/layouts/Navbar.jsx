@@ -41,13 +41,13 @@ const Navbar = ({ onToggleSidebar, showMenuButton }) => {
               <Menu className="h-5 w-5" />
             </button>
           )}
-          <div 
+          <div
             onClick={() => navigate('/dashboard')}
             className="flex items-center gap-1.5 sm:gap-2 text-sm cursor-pointer hover:opacity-80 transition-opacity min-w-0"
           >
             <img src="/img.png" alt="PDE Logo" className="h-6 sm:h-8 w-auto object-contain shrink-0" />
             <div className="flex items-center space-x-1 sm:space-x-2 min-w-0">
-              <span className="font-bold text-slate-900 text-xs sm:text-sm tracking-tight truncate">
+              <span className="font-extrabold bg-gradient-to-r from-zinc-950 to-zinc-600 bg-clip-text text-transparent text-xs sm:text-sm tracking-tight truncate">
                 Prospect Data Engine
               </span>
               <span className="text-slate-400 font-semibold shrink-0 hidden sm:inline">/</span>
@@ -58,19 +58,15 @@ const Navbar = ({ onToggleSidebar, showMenuButton }) => {
           </div>
         </div>
       ) : (
-        <div 
+        <div
           onClick={() => navigate('/')}
           className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 mr-1 shrink"
         >
           <img src="/img.png" alt="PDE Logo" className="h-7 sm:h-9 md:h-10 w-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-200 shrink-0" />
           <div className="flex flex-col justify-center -space-y-0.5 min-w-0">
-            <span className="font-extrabold text-slate-900 text-xs sm:text-base md:text-lg tracking-tight truncate">
+            <span className="font-medium text-zinc-800  text-xs sm:text-base md:text-2xl tracking-tight truncate drop-shadow-sm">
               Prospect Data Engine
             </span>
-            <div className="flex items-center gap-1 text-[9px] sm:text-[11px] font-medium text-slate-500 tracking-wide truncate">
-              <Terminal className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-indigo-600 shrink-0" />
-              <span className="truncate">by Gnosys digital</span>
-            </div>
           </div>
         </div>
       )}
@@ -101,13 +97,13 @@ const Navbar = ({ onToggleSidebar, showMenuButton }) => {
             <div className="flex items-center gap-1.5 sm:gap-4">
               <button
                 onClick={() => navigate('/about')}
-                className="text-[11px] sm:text-sm font-semibold text-slate-600 hover:text-indigo-600 px-2 sm:px-3 py-1.5 sm:py-2 transition-colors cursor-pointer whitespace-nowrap"
+                className="text-[11px] sm:text-sm font-semibold text-slate-600 hover:text-zinc-950 px-2 sm:px-3 py-1.5 sm:py-2 transition-colors cursor-pointer whitespace-nowrap"
               >
                 About PDE
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-semibold text-[11px] sm:text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer whitespace-nowrap"
+                className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-slate-900 hover:bg-zinc-950 text-white font-semibold text-[11px] sm:text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer whitespace-nowrap"
               >
                 Sign In
               </button>
@@ -117,18 +113,18 @@ const Navbar = ({ onToggleSidebar, showMenuButton }) => {
               <NotificationBell />
               <button
                 onClick={handleLogout}
-              className="
+                className="
                 flex items-center text-xs sm:text-sm font-semibold text-slate-700 
                 hover:text-red-700 bg-slate-50 hover:bg-red-50 
                 border border-slate-200 hover:border-red-200 
                 rounded-lg px-2.5 sm:px-3 py-1.5 transition-all duration-150 
                 focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer whitespace-nowrap shrink-0
               "
-              title="Disconnect"
-            >
-              <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-slate-500 shrink-0" />
-              <span>Disconnect</span>
-            </button>
+                title="Disconnect"
+              >
+                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-slate-500 shrink-0" />
+                <span>Disconnect</span>
+              </button>
             </div>
           )}
         </div>

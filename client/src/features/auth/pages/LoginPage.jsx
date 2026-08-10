@@ -119,7 +119,7 @@ const LoginPage = () => {
 
           {/* Bottom */}
           <div className="flex items-center gap-2 text-sm text-white/60">
-            <span>© 2026 Gnosys Digital </span>
+            <span>&copy; {new Date().getFullYear()} Dwarkadhish NeuralStack Limited</span>
           </div>
 
         </div>
